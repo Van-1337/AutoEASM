@@ -1,0 +1,14 @@
+*.html
+!Report Example.html
+*.txt
+!Scan/**/*.txt
+*.zip
+*.cfg
+*.docx
+*.jpg
+blind-xss.yaml
+
+.idea/
+__pycache__/
+Logs/
+test/

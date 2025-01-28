@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>EASM Report</title>
+    <style>
+        /* Обнуляем отступы и устанавливаем box-sizing */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Стили для фиксированной боковой панели */
+        .sidebar {
+            position: fixed; /* Фиксированное позиционирование */
+            top: 0;
+            left: 0;
+            width: 200px;
+            height: 100%; /* Полная высота окна */
+            background-color: #f4f4f4;
+            border-right: 1px solid #ccc;
+            overflow-x: hidden; /* Отключение горизонтальной прокрутки */
+            padding-top: 20px;
+        }
+        .sidebar button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.3s;
+            font-size: 16px;
+        }
+        .sidebar button:hover {
+            background-color: #ddd;
+        }
+        .sidebar button.active {
+            background-color: #ccc;
+        }
+        /* Стили для содержимого вкладок */
+        .content {
+            margin-left: 200px; /* Отступ для боковой панели */
+            padding: 20px;
+            flex: 1;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Для демонстрации прокрутки */
+        .tab-content p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <button class="tablink active" onclick="openTab(event, 'Overview')">General information</button>
+        <button class="tablink" onclick="openTab(event, 'FoundNetworkAssets')">Found network services</button>
+        <button class="tablink" onclick="openTab(event, 'FoundHTTPAssets')">Found websites</button>
+        <button class="tablink" onclick="openTab(event, 'SecurityFindings')">Security findings</button>
+        <button class="tablink" onclick="openTab(event, 'Fuzzed')">Interesting directories</button>
+        <button class="tablink" onclick="openTab(event, 'Bypass403')">403 bypass</button>
+        <button class="tablink" onclick="openTab(event, 'SocialMedia')">Social media takeover</button>
+        <button class="tablink" onclick="openTab(event, 'Postleaks')">Postman leaks</button>
+        <button class="tablink" onclick="openTab(event, 'Leakix')">Leakix results</button>
+    </div>
+
+    <div class="content">
+
+<div id="Overview" class="tab-content active">
+<h2>General information</h2><br>
+<p><b>Scanned domains:</b> vulnweb.com<br>
+<b>Generated on:</b> Mon, 13 Jan 2025, 02:40:33<br>
+<b>Level of detail:</b> 3<br>
+<b>Load level:</b> 2<br>
+<b>Flags:</b> -v</p>
+</div>
+
+
+<div id="FoundNetworkAssets" class="tab-content">
+<h2>Found network services</h2>
+<p>
+<br> <a href="rest.vulnweb.com:80">rest.vulnweb.com:80</a>
+<br> <a href="localhost.vulnweb.com:135">localhost.vulnweb.com:135</a>
+<br> <a href="localhost.vulnweb.com:445">localhost.vulnweb.com:445</a>
+<br> <a href="--tu.vulnweb.com:80">--tu.vulnweb.com:80</a>
+<br> <a href="--6p.vulnweb.com:80">--6p.vulnweb.com:80</a>
+<br> <a href="-2fl.vulnweb.com:80">-2fl.vulnweb.com:80</a>
+<br> <a href="-06r.vulnweb.com:80">-06r.vulnweb.com:80</a>
+<br> <a href="--xq.vulnweb.com:80">--xq.vulnweb.com:80</a>
+<br> <a href="-0hq.vulnweb.com:80">-0hq.vulnweb.com:80</a>
+<br> <a href="-0rq.vulnweb.com:80">-0rq.vulnweb.com:80</a>
+<br> <a href="-22y.vulnweb.com:80">-22y.vulnweb.com:80</a>
+<br> <a href="edu-rost.rutestasp.vulnweb.com:80">edu-rost.rutestasp.vulnweb.com:80</a>
+<br> <a href="-08u.vulnweb.com:80">-08u.vulnweb.com:80</a>
+<br> <a href="amarant.vulnweb.com:80">amarant.vulnweb.com:80</a>
+<br> <a href="-07r.vulnweb.com:80">-07r.vulnweb.com:80</a>
+<br> <a href="-24t.vulnweb.com:80">-24t.vulnweb.com:80</a>
+<br> <a href="--1m.vulnweb.com:80">--1m.vulnweb.com:80</a>
+<br> <a href="--ux.vulnweb.com:80">--ux.vulnweb.com:80</a>
+<br> <a href="222.vulnweb.com:80">222.vulnweb.com:80</a>
+<br> <a href="b3.vulnweb.com:80">b3.vulnweb.com:80</a>
+<br> <a href="autoconfig.vulnweb.com:80">autoconfig.vulnweb.com:80</a>
+<br> <a href="-1x3.vulnweb.com:80">-1x3.vulnweb.com:80</a>
+<br> <a href="232.vulnweb.com:80">232.vulnweb.com:80</a>
+<br> <a href="atl60.vulnweb.com:80">atl60.vulnweb.com:80</a>
+<br> <a href="--c0.vulnweb.com:80">--c0.vulnweb.com:80</a>
+<br> <a href="-285.vulnweb.com:80">-285.vulnweb.com:80</a>
+<br> <a href="236.vulnweb.com:80">236.vulnweb.com:80</a>
+<br> <a href="_dmarc.vulnweb.com:80">_dmarc.vulnweb.com:80</a>
+<br> <a href="-2iw.vulnweb.com:80">-2iw.vulnweb.com:80</a>
+<br> <a href="antivirus1addondomain2460monitor.vulnweb.com:80">antivirus1addondomain2460monitor.vulnweb.com:80</a>
+<br> <a href="-1f-.vulnweb.com:80">-1f-.vulnweb.com:80</a>
+<br> <a href="-2lm.vulnweb.com:80">-2lm.vulnweb.com:80</a>
+<br> <a href="autoconfig.demo.vulnweb.com:80">autoconfig.demo.vulnweb.com:80</a>
+<br> <a href="-2fn.vulnweb.com:80">-2fn.vulnweb.com:80</a>
+<br> <a href="api.vulnweb.com:80">api.vulnweb.com:80</a>
+<br> <a href="-www.vulnweb.com:80">-www.vulnweb.com:80</a>
+<br> <a href="-101.vulnweb.com:80">-101.vulnweb.com:80</a>
+<br> <a href="anderton.vulnweb.com:80">anderton.vulnweb.com:80</a>
+<br> <a href="blog.vulnweb.com:80">blog.vulnweb.com:80</a>
+<br> <a href="--54.vulnweb.com:80">--54.vulnweb.com:80</a>
+<br> <a href="-0c8.vulnweb.com:80">-0c8.vulnweb.com:80</a>
+<br> <a href="-2r8.vulnweb.com:80">-2r8.vulnweb.com:80</a>
+<br> <a href="-01e.vulnweb.com:80">-01e.vulnweb.com:80</a>
+<br> <a href="ec2-52-199-56-100.ap-northeast-1.compute.vulnweb.com:80">ec2-52-199-56-100.ap-northeast-1.compute.vulnweb.com:80</a>
+<br> <a href="76.vulnweb.com:80">76.vulnweb.com:80</a>
+<br> <a href="-0am.vulnweb.com:80">-0am.vulnweb.com:80</a>
+<br> <a href="-0jx.vulnweb.com:80">-0jx.vulnweb.com:80</a>
+<br> <a href="0.ca-central-1.compute.vulnweb.com:80">0.ca-central-1.compute.vulnweb.com:80</a>
+<br> <a href="dhcp.vulnweb.com:80">dhcp.vulnweb.com:80</a>
+<br> <a href="abnahme.vulnweb.com:80">abnahme.vulnweb.com:80</a>
+<br> <a href="-1ch.vulnweb.com:80">-1ch.vulnweb.com:80</a>
+<br> <a href="-2-x.vulnweb.com:80">-2-x.vulnweb.com:80</a>
+<br> <a href="acp.vulnweb.com:80">acp.vulnweb.com:80</a>
+<br> <a href="-0a4.vulnweb.com:80">-0a4.vulnweb.com:80</a>
+<br> <a href="-2u0.vulnweb.com:80">-2u0.vulnweb.com:80</a>
+<br> <a href="ec2-18-196-167-245.eu-central-1.compute.vulnweb.com:80">ec2-18-196-167-245.eu-central-1.compute.vulnweb.com:80</a>
+<br> <a href="227.vulnweb.com:80">227.vulnweb.com:80</a>
+<br> <a href="-0n-.vulnweb.com:80">-0n-.vulnweb.com:80</a>
+<br> <a href="bing.com.vulnweb.com:80">bing.com.vulnweb.com:80</a>
+<br> <a href="birdie.vulnweb.com:80">birdie.vulnweb.com:80</a>
+<br> <a href="app.vulnweb.com:80">app.vulnweb.com:80</a>
+<br> <a href="development.vulnweb.com:80">development.vulnweb.com:80</a>
+<br> <a href="33.vulnweb.com:80">33.vulnweb.com:80</a>
+<br> <a href="dd.vulnweb.com:80">dd.vulnweb.com:80</a>
+<br> <a href="0-30.ap-northeast-1.compute.vulnweb.com:80">0-30.ap-northeast-1.compute.vulnweb.com:80</a>
+<br> <a href="comune.vulnweb.com:80">comune.vulnweb.com:80</a>
+<br> <a href="a.vulnweb.com:80">a.vulnweb.com:80</a>
+<br> <a href="73.vulnweb.com:80">73.vulnweb.com:80</a>
+<br> <a href="ec2-3-138-71-17.us-east-2.compute.vulnweb.com:80">ec2-3-138-71-17.us-east-2.compute.vulnweb.com:80</a>
+<br> <a href="blogger.com.vulnweb.com:80">blogger.com.vulnweb.com:80</a>
+<br> <a href="digilander.vulnweb.com:80">digilander.vulnweb.com:80</a>
+<br> <a href="b0-p5rxx4le-eu-north-1c.s3.eu-north-1.vpce.vulnweb.com:80">b0-p5rxx4le-eu-north-1c.s3.eu-north-1.vpce.vulnweb.com:80</a>
+<br> <a href="california.vulnweb.com:80">california.vulnweb.com:80</a>
+<br> <a href="13c7926dfc9cbda78.gr7.ap-southeast-2.eks.vulnweb.com:80">13c7926dfc9cbda78.gr7.ap-southeast-2.eks.vulnweb.com:80</a>
+<br> <a href="amorumlugarestranho.vulnweb.com:80">amorumlugarestranho.vulnweb.com:80</a>
+<br> <a href="209.vulnweb.com:80">209.vulnweb.com:80</a>
+<br> <a href="devel.vulnweb.com:80">devel.vulnweb.com:80</a>
+<br> <a href="5burl-3dhttp-3a-2f-2fwww.vulnweb.com:80">5burl-3dhttp-3a-2f-2fwww.vulnweb.com:80</a>
+<br> <a href="cl.vulnweb.com:80">cl.vulnweb.com:80</a>
+<br> <a href="8-miwe3e1b-us-east-1a.s3.us-east-1.vpce.vulnweb.com:80">8-miwe3e1b-us-east-1a.s3.us-east-1.vpce.vulnweb.com:80</a>
+<br> <a href="ec2-18-144-166-85.us-west-1.compute.vulnweb.com:80">ec2-18-144-166-85.us-west-1.compute.vulnweb.com:80</a>
+<br> <a href="bssp4nti.vulnweb.com:80">bssp4nti.vulnweb.com:80</a>
+<br> <a href="b.vulnweb.com:80">b.vulnweb.com:80</a>
+<br> <a href="-0zh.vulnweb.com:80">-0zh.vulnweb.com:80</a>
+<br> <a href="dsl.vulnweb.com:80">dsl.vulnweb.com:80</a>
+<br> <a href="-1kr.vulnweb.com:80">-1kr.vulnweb.com:80</a>
+<br> <a href="ec2-3-0-244-55.ap-southeast-1.compute.vulnweb.com:80">ec2-3-0-244-55.ap-southeast-1.compute.vulnweb.com:80</a>
+<br> <a href="belliott.vulnweb.com:80">belliott.vulnweb.com:80</a>
+<br> <a href="553.yl4.us-east-1.eks.vulnweb.com:80">553.yl4.us-east-1.eks.vulnweb.com:80</a>
+<br> <a href="achr.vulnweb.com:80">achr.vulnweb.com:80</a>
+<br> <a href="ad.vulnweb.com:80">ad.vulnweb.com:80</a>
+<br> <a href="admin.vulnweb.com:80">admin.vulnweb.com:80</a>
+<br> <a href="domain.vulnweb.com:80">domain.vulnweb.com:80</a>
+<br> <a href="ec2-13-126-45-50.ap-south-1.compute.vulnweb.com:80">ec2-13-126-45-50.ap-south-1.compute.vulnweb.com:80</a>
+<br> <a href="beta.vulnweb.com:80">beta.vulnweb.com:80</a>
+<br> <a href="252fwww.vulnweb.com:80">252fwww.vulnweb.com:80</a>
+<br> <a href="aconcagua.vulnweb.com:80">aconcagua.vulnweb.com:80</a>
+<br> <a href="ericr.vulnweb.com:80">ericr.vulnweb.com:80</a>
+<br> <a href="8-72-96.compute-1.vulnweb.com:80">8-72-96.compute-1.vulnweb.com:80</a>
+<br> <a href="ec2-3-211-45-81.compute-1.vulnweb.com:80">ec2-3-211-45-81.compute-1.vulnweb.com:80</a>
+<br> <a href="ec2-3-24-147-190.ap-southeast-2.compute.vulnweb.com:80">ec2-3-24-147-190.ap-southeast-2.compute.vulnweb.com:80</a>
+<br> <a href="cloud.vulnweb.com:80">cloud.vulnweb.com:80</a>
+<br> <a href="dev2.vulnweb.com:80">dev2.vulnweb.com:80</a>
+<br> <a href="cse.vulnweb.com:80">cse.vulnweb.com:80</a>
+<br> <a href="5cwww.vulnweb.com:80">5cwww.vulnweb.com:80</a>
+<br> <a href="alpha.vulnweb.com:80">alpha.vulnweb.com:80</a>
+<br> <a href="ec2-44-233-190-131.us-west-2.compute.vulnweb.com:80">ec2-44-233-190-131.us-west-2.compute.vulnweb.com:80</a>
+<br> <a href="--wo.vulnweb.com:80">--wo.vulnweb.com:80</a>
+<br> <a href="as69.vulnweb.com:80">as69.vulnweb.com:80</a>
+<br> <a href="erqccz1e.vulnweb.com:80">erqccz1e.vulnweb.com:80</a>
+<br> <a href="devsql.vulnweb.com:80">devsql.vulnweb.com:80</a>
+<br> <a href="blogs.vulnweb.com:80">blogs.vulnweb.com:80</a>
+<br> <a href="ec2-34-245-105-2.eu-west-1.compute.vulnweb.com:80">ec2-34-245-105-2.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="3atestphp.vulnweb.com:80">3atestphp.vulnweb.com:80</a>
+<br> <a href="ec2-54-171-215-132.eu-west-1.compute.vulnweb.com:80">ec2-54-171-215-132.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="es.vulnweb.com:80">es.vulnweb.com:80</a>
+<br> <a href="a2zbanglamusic.vulnweb.com:80">a2zbanglamusic.vulnweb.com:80</a>
+<br> <a href="dev.vulnweb.com:80">dev.vulnweb.com:80</a>
+<br> <a href="erd.vulnweb.com:80">erd.vulnweb.com:80</a>
+<br> <a href="board.vulnweb.com:80">board.vulnweb.com:80</a>
+<br> <a href="-0hr.vulnweb.com:80">-0hr.vulnweb.com:80</a>
+<br> <a href="-2o3.vulnweb.com:80">-2o3.vulnweb.com:80</a>
+<br> <a href="129.eu-west-1.compute.vulnweb.com:80">129.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="comtestasp.vulnweb.com:80">comtestasp.vulnweb.com:80</a>
+<br> <a href="as122.vulnweb.com:80">as122.vulnweb.com:80</a>
+<br> <a href="baidu.vulnweb.com:80">baidu.vulnweb.com:80</a>
+<br> <a href="5-10-180.ap-southeast-1.compute.vulnweb.com:80">5-10-180.ap-southeast-1.compute.vulnweb.com:80</a>
+<br> <a href="-17s.vulnweb.com:80">-17s.vulnweb.com:80</a>
+<br> <a href="ec2-44-241-72-100.us-west-2.compute.vulnweb.com:80">ec2-44-241-72-100.us-west-2.compute.vulnweb.com:80</a>
+<br> <a href="3dtestasp.vulnweb.com:80">3dtestasp.vulnweb.com:80</a>
+<br> <a href="feeds.vulnweb.com:80">feeds.vulnweb.com:80</a>
+<br> <a href="ec2-52-69-195-99.ap-northeast-1.compute.vulnweb.com:80">ec2-52-69-195-99.ap-northeast-1.compute.vulnweb.com:80</a>
+<br> <a href="ec2-54-77-197-39.eu-west-1.compute.vulnweb.com:80">ec2-54-77-197-39.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="desktop.vulnweb.com:80">desktop.vulnweb.com:80</a>
+<br> <a href="creek-prod-1456087410.us-west-2.elb.vulnweb.com:80">creek-prod-1456087410.us-west-2.elb.vulnweb.com:80</a>
+<br> <a href="773.us-east-1.elb.vulnweb.com:80">773.us-east-1.elb.vulnweb.com:80</a>
+<br> <a href="aiz.vulnweb.com:80">aiz.vulnweb.com:80</a>
+<br> <a href="ec2-52-18-233-14.eu-west-1.compute.vulnweb.com:80">ec2-52-18-233-14.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="7ctestasp.vulnweb.com:80">7ctestasp.vulnweb.com:80</a>
+<br> <a href="gd2.vulnweb.com:80">gd2.vulnweb.com:80</a>
+<br> <a href="ff.vulnweb.com:80">ff.vulnweb.com:80</a>
+<br> <a href="9074.eu-central-1.elb.vulnweb.com:80">9074.eu-central-1.elb.vulnweb.com:80</a>
+<br> <a href="acnygaa.vulnweb.com:80">acnygaa.vulnweb.com:80</a>
+<br> <a href="gd3.vulnweb.com:80">gd3.vulnweb.com:80</a>
+<br> <a href="ec2-13-239-8-119.ap-southeast-2.compute.vulnweb.com:80">ec2-13-239-8-119.ap-southeast-2.compute.vulnweb.com:80</a>
+<br> <a href="ceejandem.vulnweb.com:80">ceejandem.vulnweb.com:80</a>
+<br> <a href="d-s5u2r875pi.execute-api.eu-central-1.vulnweb.com:80">d-s5u2r875pi.execute-api.eu-central-1.vulnweb.com:80</a>
+<br> <a href="games.vulnweb.com:80">games.vulnweb.com:80</a>
+<br> <a href="forum.vulnweb.com:80">forum.vulnweb.com:80</a>
+<br> <a href="dot.vulnweb.com:80">dot.vulnweb.com:80</a>
+<br> <a href="ec2-54-168-249-160.ap-northeast-1.compute.vulnweb.com:80">ec2-54-168-249-160.ap-northeast-1.compute.vulnweb.com:80</a>
+<br> <a href="fractals.vulnweb.com:80">fractals.vulnweb.com:80</a>
+<br> <a href="forums.vulnweb.com:80">forums.vulnweb.com:80</a>
+<br> <a href="8-131-139.us-west-2.compute.vulnweb.com:80">8-131-139.us-west-2.compute.vulnweb.com:80</a>
+<br> <a href="29cd17f3faa.elb.us-east-1.vulnweb.com:80">29cd17f3faa.elb.us-east-1.vulnweb.com:80</a>
+<br> <a href="ec2-54-171-93-86.eu-west-1.compute.vulnweb.com:80">ec2-54-171-93-86.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="7.ap-southeast-2.compute.vulnweb.com:80">7.ap-southeast-2.compute.vulnweb.com:80</a>
+<br> <a href="9ac83b4d29c705000a7dc1-1759549683.eu-west-1.elb.vulnweb.com:80">9ac83b4d29c705000a7dc1-1759549683.eu-west-1.elb.vulnweb.com:80</a>
+<br> <a href="groups.vulnweb.com:80">groups.vulnweb.com:80</a>
+<br> <a href="ec2-3-1-186-7.ap-southeast-1.compute.vulnweb.com:80">ec2-3-1-186-7.ap-southeast-1.compute.vulnweb.com:80</a>
+<br> <a href="gd4.vulnweb.com:80">gd4.vulnweb.com:80</a>
+<br> <a href="gd5.vulnweb.com:80">gd5.vulnweb.com:80</a>
+<br> <a href="h3.vulnweb.com:80">h3.vulnweb.com:80</a>
+<br> <a href="ec2-35-164-39-246.us-west-2.compute.vulnweb.com:80">ec2-35-164-39-246.us-west-2.compute.vulnweb.com:80</a>
+<br> <a href="cn.vulnweb.com:80">cn.vulnweb.com:80</a>
+<br> <a href="ec2-34-198-129-215.compute-1.vulnweb.com:80">ec2-34-198-129-215.compute-1.vulnweb.com:80</a>
+<br> <a href="h4.vulnweb.com:80">h4.vulnweb.com:80</a>
+<br> <a href="elflegend-1780865389.ap-southeast-1.elb.vulnweb.com:80">elflegend-1780865389.ap-southeast-1.elb.vulnweb.com:80</a>
+<br> <a href="homepage1.vulnweb.com:80">homepage1.vulnweb.com:80</a>
+<br> <a href="homepage2.vulnweb.com:80">homepage2.vulnweb.com:80</a>
+<br> <a href="home.vulnweb.com:80">home.vulnweb.com:80</a>
+<br> <a href="htestphp.vulnweb.com:80">htestphp.vulnweb.com:80</a>
+<br> <a href="html5.vulnweb.com:80">html5.vulnweb.com:80</a>
+<br> <a href="homepage.vulnweb.com:80">homepage.vulnweb.com:80</a>
+<br> <a href="htttestphp.vulnweb.com:80">htttestphp.vulnweb.com:80</a>
+<br> <a href="h7.vulnweb.com:80">h7.vulnweb.com:80</a>
+<br> <a href="digital-defense-load-balancer-1314805317.us-east-1.elb.vulnweb.com:80">digital-defense-load-balancer-1314805317.us-east-1.elb.vulnweb.com:80</a>
+<br> <a href="8652.us-west-2.elb.vulnweb.com:80">8652.us-west-2.elb.vulnweb.com:80</a>
+<br> <a href="h6.vulnweb.com:80">h6.vulnweb.com:80</a>
+<br> <a href="h2.vulnweb.com:80">h2.vulnweb.com:80</a>
+<br> <a href="httestphp.vulnweb.com:80">httestphp.vulnweb.com:80</a>
+<br> <a href="httpwww.vulnweb.com:80">httpwww.vulnweb.com:80</a>
+<br> <a href="httptestsaspnet.vulnweb.com:80">httptestsaspnet.vulnweb.com:80</a>
+<br> <a href="internal-addondomain2460.vulnweb.com:80">internal-addondomain2460.vulnweb.com:80</a>
+<br> <a href="homepage3.vulnweb.com:80">homepage3.vulnweb.com:80</a>
+<br> <a href="httptestasp.vulnweb.com:80">httptestasp.vulnweb.com:80</a>
+<br> <a href="http.vulnweb.com:80">http.vulnweb.com:80</a>
+<br> <a href="jabatestphp.vulnweb.com:80">jabatestphp.vulnweb.com:80</a>
+<br> <a href="informatik.vulnweb.com:80">informatik.vulnweb.com:80</a>
+<br> <a href="5-87-139.eu-west-1.compute.vulnweb.com:80">5-87-139.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="january2009edtestasp.vulnweb.com:80">january2009edtestasp.vulnweb.com:80</a>
+<br> <a href="infolab.vulnweb.com:80">infolab.vulnweb.com:80</a>
+<br> <a href="id.vulnweb.com:80">id.vulnweb.com:80</a>
+<br> <a href="iimahd.vulnweb.com:80">iimahd.vulnweb.com:80</a>
+<br> <a href="hotelresidenceitalia.com.vulnweb.com:80">hotelresidenceitalia.com.vulnweb.com:80</a>
+<br> <a href="k5.vulnweb.com:80">k5.vulnweb.com:80</a>
+<br> <a href="kb.vulnweb.com:80">kb.vulnweb.com:80</a>
+<br> <a href="experts.vulnweb.com:80">experts.vulnweb.com:80</a>
+<br> <a href="internal-addondomain2460html5-oauth2-developerdeveloper.vulnweb.com:80">internal-addondomain2460html5-oauth2-developerdeveloper.vulnweb.com:80</a>
+<br> <a href="jenkins.vulnweb.com:80">jenkins.vulnweb.com:80</a>
+<br> <a href="internal-addondomain2460html8-wpmulti1wpmulti1.vulnweb.com:80">internal-addondomain2460html8-wpmulti1wpmulti1.vulnweb.com:80</a>
+<br> <a href="gd.vulnweb.com:80">gd.vulnweb.com:80</a>
+<br> <a href="local.vulnweb.com:80">local.vulnweb.com:80</a>
+<br> <a href="iucevivc.vulnweb.com:80">iucevivc.vulnweb.com:80</a>
+<br> <a href="html.vulnweb.com:80">html.vulnweb.com:80</a>
+<br> <a href="matrix.vulnweb.com:80">matrix.vulnweb.com:80</a>
+<br> <a href="live2.vulnweb.com:80">live2.vulnweb.com:80</a>
+<br> <a href="k3.vulnweb.com:80">k3.vulnweb.com:80</a>
+<br> <a href="justelb-399153471.us-west-2.elb.vulnweb.com:80">justelb-399153471.us-west-2.elb.vulnweb.com:80</a>
+<br> <a href="kish.vulnweb.com:80">kish.vulnweb.com:80</a>
+<br> <a href="kimmac.vulnweb.com:80">kimmac.vulnweb.com:80</a>
+<br> <a href="matt-and-becky.vulnweb.com:80">matt-and-becky.vulnweb.com:80</a>
+<br> <a href="ludden.vulnweb.com:80">ludden.vulnweb.com:80</a>
+<br> <a href="mail.vulnweb.com:80">mail.vulnweb.com:80</a>
+<br> <a href="mrpyug49.vulnweb.com:80">mrpyug49.vulnweb.com:80</a>
+<br> <a href="llebeig.vulnweb.com:80">llebeig.vulnweb.com:80</a>
+<br> <a href="mysql.vulnweb.com:80">mysql.vulnweb.com:80</a>
+<br> <a href="maven.vulnweb.com:80">maven.vulnweb.com:80</a>
+<br> <a href="ncc.vulnweb.com:80">ncc.vulnweb.com:80</a>
+<br> <a href="myhome.vulnweb.com:80">myhome.vulnweb.com:80</a>
+<br> <a href="odincovo.vulnweb.com:80">odincovo.vulnweb.com:80</a>
+<br> <a href="people.vulnweb.com:80">people.vulnweb.com:80</a>
+<br> <a href="members.vulnweb.com:80">members.vulnweb.com:80</a>
+<br> <a href="mx.vulnweb.com:80">mx.vulnweb.com:80</a>
+<br> <a href="mvn.vulnweb.com:80">mvn.vulnweb.com:80</a>
+<br> <a href="ntestphp.vulnweb.com:80">ntestphp.vulnweb.com:80</a>
+<br> <a href="pentest.vulnweb.com:80">pentest.vulnweb.com:80</a>
+<br> <a href="passport.vulnweb.com:80">passport.vulnweb.com:80</a>
+<br> <a href="mx0.vulnweb.com:80">mx0.vulnweb.com:80</a>
+<br> <a href="info.vulnweb.com:80">info.vulnweb.com:80</a>
+<br> <a href="ppp.vulnweb.com:80">ppp.vulnweb.com:80</a>
+<br> <a href="onyx.vulnweb.com:80">onyx.vulnweb.com:80</a>
+<br> <a href="it.vulnweb.com:80">it.vulnweb.com:80</a>
+<br> <a href="old2.vulnweb.com:80">old2.vulnweb.com:80</a>
+<br> <a href="nn.vulnweb.com:80">nn.vulnweb.com:80</a>
+<br> <a href="printer2.vulnweb.com:80">printer2.vulnweb.com:80</a>
+<br> <a href="remus.vulnweb.com:80">remus.vulnweb.com:80</a>
+<br> <a href="s3-ap-northeast-1.vulnweb.com:80">s3-ap-northeast-1.vulnweb.com:80</a>
+<br> <a href="quizadmin.vulnweb.com:80">quizadmin.vulnweb.com:80</a>
+<br> <a href="pic.vulnweb.com:80">pic.vulnweb.com:80</a>
+<br> <a href="prof.vulnweb.com:80">prof.vulnweb.com:80</a>
+<br> <a href="k4.vulnweb.com:80">k4.vulnweb.com:80</a>
+<br> <a href="seth.vulnweb.com:80">seth.vulnweb.com:80</a>
+<br> <a href="server1.vulnweb.com:80">server1.vulnweb.com:80</a>
+<br> <a href="microwaved-burrito.vulnweb.com:80">microwaved-burrito.vulnweb.com:80</a>
+<br> <a href="nti.internal-addondomain2460html8-wpmulti1wpmulti1.vulnweb.com:80">nti.internal-addondomain2460html8-wpmulti1wpmulti1.vulnweb.com:80</a>
+<br> <a href="pup.vulnweb.com:80">pup.vulnweb.com:80</a>
+<br> <a href="math.vulnweb.com:80">math.vulnweb.com:80</a>
+<br> <a href="rootsweb.vulnweb.com:80">rootsweb.vulnweb.com:80</a>
+<br> <a href="resnet.vulnweb.com:80">resnet.vulnweb.com:80</a>
+<br> <a href="resources.vulnweb.com:80">resources.vulnweb.com:80</a>
+<br> <a href="news.vulnweb.com:80">news.vulnweb.com:80</a>
+<br> <a href="satudata.vulnweb.com:80">satudata.vulnweb.com:80</a>
+<br> <a href="ss.vulnweb.com:80">ss.vulnweb.com:80</a>
+<br> <a href="snoopy.vulnweb.com:80">snoopy.vulnweb.com:80</a>
+<br> <a href="phptest.vulnweb.com:80">phptest.vulnweb.com:80</a>
+<br> <a href="search-es-spoon-kr-api-product-eltsagishrb2ve2pcda6i46a6u.ap-northeast-1.es.vulnweb.com:80">search-es-spoon-kr-api-product-eltsagishrb2ve2pcda6i46a6u.ap-northeast-1.es.vulnweb.com:80</a>
+<br> <a href="mpk.vulnweb.com:80">mpk.vulnweb.com:80</a>
+<br> <a href="markus.vulnweb.com:80">markus.vulnweb.com:80</a>
+<br> <a href="staging.vulnweb.com:80">staging.vulnweb.com:80</a>
+<br> <a href="symposium.vulnweb.com:80">symposium.vulnweb.com:80</a>
+<br> <a href="sita.vulnweb.com:80">sita.vulnweb.com:80</a>
+<br> <a href="shiratdevorah.vulnweb.com:80">shiratdevorah.vulnweb.com:80</a>
+<br> <a href="static.vulnweb.com:80">static.vulnweb.com:80</a>
+<br> <a href="my.vulnweb.com:80">my.vulnweb.com:80</a>
+<br> <a href="svn.vulnweb.com:80">svn.vulnweb.com:80</a>
+<br> <a href="tesphp.vulnweb.com:80">tesphp.vulnweb.com:80</a>
+<br> <a href="tera.vulnweb.com:80">tera.vulnweb.com:80</a>
+<br> <a href="syslog.vulnweb.com:80">syslog.vulnweb.com:80</a>
+<br> <a href="support.vulnweb.com:80">support.vulnweb.com:80</a>
+<br> <a href="ntestasp.vulnweb.com:80">ntestasp.vulnweb.com:80</a>
+<br> <a href="secure.vulnweb.com:80">secure.vulnweb.com:80</a>
+<br> <a href="s3.us-gov-east-1.vulnweb.com:80">s3.us-gov-east-1.vulnweb.com:80</a>
+<br> <a href="tastasp.vulnweb.com:80">tastasp.vulnweb.com:80</a>
+<br> <a href="systems.vulnweb.com:80">systems.vulnweb.com:80</a>
+<br> <a href="testasp.rieilgakm115411testasp.vulnweb.com:80">testasp.rieilgakm115411testasp.vulnweb.com:80</a>
+<br> <a href="testhtml1.vulnweb.com:80">testhtml1.vulnweb.com:80</a>
+<br> <a href="testap.vulnweb.com:80">testap.vulnweb.com:80</a>
+<br> <a href="testaps.vulnweb.com:80">testaps.vulnweb.com:80</a>
+<br> <a href="testnet.vulnweb.com:80">testnet.vulnweb.com:80</a>
+<br> <a href="testhtml3.vulnweb.com:80">testhtml3.vulnweb.com:80</a>
+<br> <a href="testapp.vulnweb.com:80">testapp.vulnweb.com:80</a>
+<br> <a href="testaspx.vulnweb.com:80">testaspx.vulnweb.com:80</a>
+<br> <a href="testoho.vulnweb.com:80">testoho.vulnweb.com:80</a>
+<br> <a href="testruby.vulnweb.com:80">testruby.vulnweb.com:80</a>
+<br> <a href="test.php.vulnweb.com:80">test.php.vulnweb.com:80</a>
+<br> <a href="testpy.vulnweb.com:80">testpy.vulnweb.com:80</a>
+<br> <a href="testjsp.vulnweb.com:80">testjsp.vulnweb.com:80</a>
+<br> <a href="rt9.vulnweb.com:80">rt9.vulnweb.com:80</a>
+<br> <a href="testhtml4.vulnweb.com:80">testhtml4.vulnweb.com:80</a>
+<br> <a href="testhtml5.vulnweb.com:80">testhtml5.vulnweb.com:80</a>
+<br> <a href="testphpnet.vulnweb.com:80">testphpnet.vulnweb.com:80</a>
+<br> <a href="server.vulnweb.com:80">server.vulnweb.com:80</a>
+<br> <a href="rebellion-elbtierw-1o0qfb5e4esgi-1933385980.us-west-2.elb.vulnweb.com:80">rebellion-elbtierw-1o0qfb5e4esgi-1933385980.us-west-2.elb.vulnweb.com:80</a>
+<br> <a href="tripod.vulnweb.com:80">tripod.vulnweb.com:80</a>
+<br> <a href="testpho.vulnweb.com:80">testpho.vulnweb.com:80</a>
+<br> <a href="top100.vulnweb.com:80">top100.vulnweb.com:80</a>
+<br> <a href="testpphp.vulnweb.com:80">testpphp.vulnweb.com:80</a>
+<br> <a href="tetphp.vulnweb.com:80">tetphp.vulnweb.com:80</a>
+<br> <a href="tetsphp.vulnweb.com:80">tetsphp.vulnweb.com:80</a>
+<br> <a href="testphp1.vulnweb.com:80">testphp1.vulnweb.com:80</a>
+<br> <a href="u201dtestphp.vulnweb.com:80">u201dtestphp.vulnweb.com:80</a>
+<br> <a href="testph.vulnweb.com:80">testph.vulnweb.com:80</a>
+<br> <a href="u003etestasp.vulnweb.com:80">u003etestasp.vulnweb.com:80</a>
+<br> <a href="users.vulnweb.com:80">users.vulnweb.com:80</a>
+<br> <a href="user.vulnweb.com:80">user.vulnweb.com:80</a>
+<br> <a href="varnish.vulnweb.com:80">varnish.vulnweb.com:80</a>
+<br> <a href="ttestasp.vulnweb.com:80">ttestasp.vulnweb.com:80</a>
+<br> <a href="union.vulnweb.com:80">union.vulnweb.com:80</a>
+<br> <a href="uni.vulnweb.com:80">uni.vulnweb.com:80</a>
+<br> <a href="vulnweb.comtestasp.vulnweb.com:80">vulnweb.comtestasp.vulnweb.com:80</a>
+<br> <a href="virus.vulnweb.com:80">virus.vulnweb.com:80</a>
+<br> <a href="testarsp.vulnweb.com:80">testarsp.vulnweb.com:80</a>
+<br> <a href="virus0316.vulnweb.com:80">virus0316.vulnweb.com:80</a>
+<br> <a href="corp.vulnweb.com:80">corp.vulnweb.com:80</a>
+<br> <a href="qa.vulnweb.com:80">qa.vulnweb.com:80</a>
+<br> <a href="help.vulnweb.com:80">help.vulnweb.com:80</a>
+<br> <a href="manager.vulnweb.com:80">manager.vulnweb.com:80</a>
+<br> <a href="-2q9.vulnweb.com:80">-2q9.vulnweb.com:80</a>
+<br> <a href="class.vulnweb.com:80">class.vulnweb.com:80</a>
+<br> <a href="club.vulnweb.com:80">club.vulnweb.com:80</a>
+<br> <a href="michael.vulnweb.com:80">michael.vulnweb.com:80</a>
+<br> <a href="sunny.vulnweb.com:80">sunny.vulnweb.com:80</a>
+<br> <a href="-2iu.vulnweb.com:80">-2iu.vulnweb.com:80</a>
+<br> <a href="cyberga.vulnweb.com:80">cyberga.vulnweb.com:80</a>
+<br> <a href="images.vulnweb.com:80">images.vulnweb.com:80</a>
+<br> <a href="testhtml.vulnweb.com:80">testhtml.vulnweb.com:80</a>
+<br> <a href="wf.vulnweb.com:80">wf.vulnweb.com:80</a>
+<br> <a href="testasp.vulnweb.comtestasp.vulnweb.com:80">testasp.vulnweb.comtestasp.vulnweb.com:80</a>
+<br> <a href="229.vulnweb.com:80">229.vulnweb.com:80</a>
+<br> <a href="web5340.vulnweb.com:80">web5340.vulnweb.com:80</a>
+<br> <a href="testmetasploitable.vulnweb.com:80">testmetasploitable.vulnweb.com:80</a>
+<br> <a href="wade.vulnweb.com:80">wade.vulnweb.com:80</a>
+<br> <a href="webtierssl-1657747348.us-west-1.elb.vulnweb.com:80">webtierssl-1657747348.us-west-1.elb.vulnweb.com:80</a>
+<br> <a href="www-test.vulnweb.com:80">www-test.vulnweb.com:80</a>
+<br> <a href="wsdtest2.vulnweb.com:80">wsdtest2.vulnweb.com:80</a>
+<br> <a href="www.christ.vulnweb.com:80">www.christ.vulnweb.com:80</a>
+<br> <a href="tharunaya-cricket.vulnweb.com:80">tharunaya-cricket.vulnweb.com:80</a>
+<br> <a href="wsdtest6.vulnweb.com:80">wsdtest6.vulnweb.com:80</a>
+<br> <a href="www.ads.vulnweb.com:80">www.ads.vulnweb.com:80</a>
+<br> <a href="www.htttestphp.vulnweb.com:80">www.htttestphp.vulnweb.com:80</a>
+<br> <a href="www.bing.com.vulnweb.com:80">www.bing.com.vulnweb.com:80</a>
+<br> <a href="www.lyngor.vulnweb.com:80">www.lyngor.vulnweb.com:80</a>
+<br> <a href="www.gd.vulnweb.com:80">www.gd.vulnweb.com:80</a>
+<br> <a href="www.gd4.vulnweb.com:80">www.gd4.vulnweb.com:80</a>
+<br> <a href="u201ctestphp.vulnweb.com:80">u201ctestphp.vulnweb.com:80</a>
+<br> <a href="www.acc.vulnweb.com:80">www.acc.vulnweb.com:80</a>
+<br> <a href="www2s.vulnweb.com:80">www2s.vulnweb.com:80</a>
+<br> <a href="www.test.php.vulnweb.com:80">www.test.php.vulnweb.com:80</a>
+<br> <a href="www.status.vulnweb.com:80">www.status.vulnweb.com:80</a>
+<br> <a href="www.dealer.vulnweb.com:80">www.dealer.vulnweb.com:80</a>
+<br> <a href="vulnphp.vulnweb.com:80">vulnphp.vulnweb.com:80</a>
+<br> <a href="www5f.vulnweb.com:80">www5f.vulnweb.com:80</a>
+<br> <a href="vpn.vulnweb.com:80">vpn.vulnweb.com:80</a>
+<br> <a href="www.restasp.vulnweb.com:80">www.restasp.vulnweb.com:80</a>
+<br> <a href="www.testhtmpl5.vulnweb.com:80">www.testhtmpl5.vulnweb.com:80</a>
+<br> <a href="www2u.vulnweb.com:80">www2u.vulnweb.com:80</a>
+<br> <a href="www.shopindia.vulnweb.com:80">www.shopindia.vulnweb.com:80</a>
+<br> <a href="www.virus.vulnweb.com:80">www.virus.vulnweb.com:80</a>
+<br> <a href="www.or-zue74zu.vulnweb.com:80">www.or-zue74zu.vulnweb.com:80</a>
+<br> <a href="wenku.vulnweb.com:80">wenku.vulnweb.com:80</a>
+<br> <a href="www7b.vulnweb.com:80">www7b.vulnweb.com:80</a>
+<br> <a href="www7a.vulnweb.com:80">www7a.vulnweb.com:80</a>
+<br> <a href="www4b.vulnweb.com:80">www4b.vulnweb.com:80</a>
+<br> <a href="xroads.vulnweb.com:80">xroads.vulnweb.com:80</a>
+<br> <a href="zz.vulnweb.com:80">zz.vulnweb.com:80</a>
+<br> <a href="content.vulnweb.com:80">content.vulnweb.com:80</a>
+<br> <a href="viruswall.vulnweb.com:80">viruswall.vulnweb.com:80</a>
+<br> <a href="cdatestasp.vulnweb.com:80">cdatestasp.vulnweb.com:80</a>
+<br> <a href="cs.vulnweb.com:80">cs.vulnweb.com:80</a>
+<br> <a href="tempphp.vulnweb.com:80">tempphp.vulnweb.com:80</a>
+<br> <a href="www.wpmulti1.vulnweb.com:80">www.wpmulti1.vulnweb.com:80</a>
+<br> <a href="meriash.vulnweb.com:80">meriash.vulnweb.com:80</a>
+<br> <a href="ftestasp.vulnweb.com:80">ftestasp.vulnweb.com:80</a>
+<br> <a href="quarantine51.vulnweb.com:80">quarantine51.vulnweb.com:80</a>
+<br> <a href="slyrf.vulnweb.com:80">slyrf.vulnweb.com:80</a>
+<br> <a href="mx1.vulnweb.com:80">mx1.vulnweb.com:80</a>
+<br> <a href="451518.us-east-1.elb.vulnweb.com:80">451518.us-east-1.elb.vulnweb.com:80</a>
+<br> <a href="ww5.vulnweb.com:80">ww5.vulnweb.com:80</a>
+<br> <a href="u003erest.vulnweb.com:80">u003erest.vulnweb.com:80</a>
+<br> <a href="www.2.fc.vulnweb.com:80">www.2.fc.vulnweb.com:80</a>
+<br> <a href="www-staging.vulnweb.com:80">www-staging.vulnweb.com:80</a>
+<br> <a href="www.test.vulnweb.com:80">www.test.vulnweb.com:80</a>
+<br> <a href="www.estphp.vulnweb.com:80">www.estphp.vulnweb.com:80</a>
+<br> <a href="www.cs-galore.vulnweb.com:80">www.cs-galore.vulnweb.com:80</a>
+<br> <a href="www.phptest.vulnweb.com:80">www.phptest.vulnweb.com:80</a>
+<br> <a href="-259.vulnweb.com:80">-259.vulnweb.com:80</a>
+<br> <a href="administration.vulnweb.com:80">administration.vulnweb.com:80</a>
+<br> <a href="textphp.vulnweb.com:80">textphp.vulnweb.com:80</a>
+<br> <a href="hh.vulnweb.com:80">hh.vulnweb.com:80</a>
+<br> <a href="stats.vulnweb.com:80">stats.vulnweb.com:80</a>
+<br> <a href="-0-3.vulnweb.com:80">-0-3.vulnweb.com:80</a>
+<br> <a href="ec2-54-165-160-54.compute-1.vulnweb.com:80">ec2-54-165-160-54.compute-1.vulnweb.com:80</a>
+<br> <a href="www5d.vulnweb.com:80">www5d.vulnweb.com:80</a>
+<br> <a href="www.gd5.vulnweb.com:80">www.gd5.vulnweb.com:80</a>
+<br> <a href="3testphp.vulnweb.com:80">3testphp.vulnweb.com:80</a>
+<br> <a href="grc2go.vulnweb.com:80">grc2go.vulnweb.com:80</a>
+<br> <a href="-1eb.vulnweb.com:80">-1eb.vulnweb.com:80</a>
+<br> <a href="1977voltios.vulnweb.com:80">1977voltios.vulnweb.com:80</a>
+<br> <a href="secure-antivirus1.vulnweb.com:80">secure-antivirus1.vulnweb.com:80</a>
+<br> <a href="testapsnet.vulnweb.com:80">testapsnet.vulnweb.com:80</a>
+<br> <a href="tedtphp.vulnweb.com:80">tedtphp.vulnweb.com:80</a>
+<br> <a href="amazonassociates.vulnweb.com:80">amazonassociates.vulnweb.com:80</a>
+<br> <a href="restphp.vulnweb.com:80">restphp.vulnweb.com:80</a>
+<br> <a href="118.vulnweb.com:80">118.vulnweb.com:80</a>
+<br> <a href="6-114-85.ap-south-1.compute.vulnweb.com:80">6-114-85.ap-south-1.compute.vulnweb.com:80</a>
+<br> <a href="ec2-54-155-162-168.eu-west-1.compute.vulnweb.com:80">ec2-54-155-162-168.eu-west-1.compute.vulnweb.com:80</a>
+<br> <a href="-21m.vulnweb.com:80">-21m.vulnweb.com:80</a>
+<br> <a href="httptestphp.vulnweb.com:80">httptestphp.vulnweb.com:80</a>
+<br> <a href="--l-.vulnweb.com:80">--l-.vulnweb.com:80</a>
+<br> <a href="-2i-.vulnweb.com:80">-2i-.vulnweb.com:80</a>
+<br> <a href="testjava.vulnweb.com:80">testjava.vulnweb.com:80</a>
+<br> <a href="cybersec.vulnweb.com:80">cybersec.vulnweb.com:80</a>
+<br> <a href="6-134.ap-northeast-2.compute.vulnweb.com:80">6-134.ap-northeast-2.compute.vulnweb.com:80</a>
+<br> <a href="ec2-13-210-145-106.ap-southeast-2.compute.vulnweb.com:80">ec2-13-210-145-106.ap-southeast-2.compute.vulnweb.com:80</a>
+<br> <a href="pop.vulnweb.com:80">pop.vulnweb.com:80</a>
+<br> <a href="sites.vulnweb.com:80">sites.vulnweb.com:80</a>
+<br> <a href="webmail.vulnweb.com:80">webmail.vulnweb.com:80</a>
+<br> <a href="-09j.vulnweb.com:80">-09j.vulnweb.com:80</a>
+<br> <a href="-0t.vulnweb.com:80">-0t.vulnweb.com:80</a>
+<br> <a href="descom-emh.vulnweb.com:80">descom-emh.vulnweb.com:80</a>
+<br> <a href="-0q7.vulnweb.com:80">-0q7.vulnweb.com:80</a>
+<br> <a href="111-181.ap-northeast-2.compute.vulnweb.com:80">111-181.ap-northeast-2.compute.vulnweb.com:80</a>
+<br> <a href="comp.vulnweb.com:80">comp.vulnweb.com:80</a>
+<br> <a href="--52.vulnweb.com:80">--52.vulnweb.com:80</a>
+<br> <a href="7-48.compute-1.vulnweb.com:80">7-48.compute-1.vulnweb.com:80</a>
+<br> <a href="blogger.com-lab.vulnweb.com:80">blogger.com-lab.vulnweb.com:80</a>
+<br> <a href="2ftestasp.vulnweb.com:80">2ftestasp.vulnweb.com:80</a>
+<br> <a href="--rm.vulnweb.com:80">--rm.vulnweb.com:80</a>
+<br> <a href="ec2-3-19-67-24.us-east-2.compute.vulnweb.com:80">ec2-3-19-67-24.us-east-2.compute.vulnweb.com:80</a>
+<br> <a href="janus-go.hkgf3k.ng.0001.apse1.cache.vulnweb.com:80">janus-go.hkgf3k.ng.0001.apse1.cache.vulnweb.com:80</a>
+<br> <a href="internal-wfxwexis-elb-wfxwexis-qa-aws-707023658.us-east-2.elb.vulnweb.com:80">internal-wfxwexis-elb-wfxwexis-qa-aws-707023658.us-east-2.elb.vulnweb.com:80</a>
+<br> <a href="tetstphp.vulnweb.com:80">tetstphp.vulnweb.com:80</a>
+<br> <a href="www.hotelresidenceitalia.com.vulnweb.com:80">www.hotelresidenceitalia.com.vulnweb.com:80</a>
+<br> <a href="www.textphp.vulnweb.com:80">www.textphp.vulnweb.com:80</a>
+<br> <a href="zzz.vulnweb.com:80">zzz.vulnweb.com:80</a>
+<br> <a href="www5a.vulnweb.com:80">www5a.vulnweb.com:80</a>
+<br> <a href="testephp.vulnweb.com:80">testephp.vulnweb.com:80</a>
+<br> <a href="hosttestphp.vulnweb.com:80">hosttestphp.vulnweb.com:80</a>
+<br> <a href="mailer2.vulnweb.com:80">mailer2.vulnweb.com:80</a>
+<br> <a href="new.vulnweb.com:80">new.vulnweb.com:80</a>
+<br> <a href="freebitco.in.vulnweb.com:80">freebitco.in.vulnweb.com:80</a>
+<br> <a href="www.tetphp.vulnweb.com:80">www.tetphp.vulnweb.com:80</a>
+<br> <a href="webcom.sc.test.vulnweb.com:80">webcom.sc.test.vulnweb.com:80</a>
+<br> <a href="poc-beer.timestream.us-east-1.vulnweb.com:80">poc-beer.timestream.us-east-1.vulnweb.com:80</a>
+<br> <a href="edu-rost.ruwww.vulnweb.com:80">edu-rost.ruwww.vulnweb.com:80</a>
+<br> <a href="univ.vulnweb.com:80">univ.vulnweb.com:80</a>
+<br> <a href="httptestaspnet.vulnweb.com:80">httptestaspnet.vulnweb.com:80</a>
+<br> <a href="host.vulnweb.com:80">host.vulnweb.com:80</a>
+<br> <a href="ip1.vulnweb.com:80">ip1.vulnweb.com:80</a>
+<br> <a href="order.vulnweb.com:80">order.vulnweb.com:80</a>
+<br> <a href="search.vulnweb.com:80">search.vulnweb.com:80</a>
+<br> <a href="vpce-086b77785dac1f7f4-7zi41i8m-us-west-2c.s3.us-west-2.vpce.vulnweb.com:80">vpce-086b77785dac1f7f4-7zi41i8m-us-west-2c.s3.us-west-2.vpce.vulnweb.com:80</a>
+<br> <a href="live.vulnweb.com:80">live.vulnweb.com:80</a>
+<br> <a href="www.spb.vulnweb.com:80">www.spb.vulnweb.com:80</a>
+<br> <a href="www.sinodixsea.com.vulnweb.com:80">www.sinodixsea.com.vulnweb.com:80</a>
+<br> <a href="www.china.vulnweb.com:80">www.china.vulnweb.com:80</a>
+<br> <a href="gd6.vulnweb.com:80">gd6.vulnweb.com:80</a>
+<br> <a href="www5b.vulnweb.com:80">www5b.vulnweb.com:80</a>
+<br> <a href="3-3-69.us-east-2.compute.vulnweb.com:80">3-3-69.us-east-2.compute.vulnweb.com:80</a>
+<br> <a href="k2.vulnweb.com:80">k2.vulnweb.com:80</a>
+<br> <a href="www.brillbulldogs.vulnweb.com:80">www.brillbulldogs.vulnweb.com:80</a>
+<br> <a href="ku1720.vulnweb.com:80">ku1720.vulnweb.com:80</a>
+<br> <a href="agamemnon.vulnweb.com:80">agamemnon.vulnweb.com:80</a>
+<br> <a href="teste.vulnweb.com:80">teste.vulnweb.com:80</a>
+<br> <a href="localhost.vulnweb.com:20000">localhost.vulnweb.com:20000</a>
+<br> <a href="localhost.vulnweb.com:5357">localhost.vulnweb.com:5357</a>
+<br> <a href="testasp.vulnweb.com:80">testasp.vulnweb.com:80</a>
+<br> <a href="testaspnet.vulnweb.com:80">testaspnet.vulnweb.com:80</a>
+<br> <a href="rest.vulnweb.com:8081">rest.vulnweb.com:8081</a>
+</p>
+</div>
+
+<div id="FoundHTTPAssets" class="tab-content">
+<h2>Found websites</h2>
+<br><p>
+<a href="http://localhost.vulnweb.com:5357">http://localhost.vulnweb.com:5357</a> <br>
+<a href="http://rest.vulnweb.com">http://rest.vulnweb.com</a> <br>
+<a href="http://rest.vulnweb.com81">http://rest.vulnweb.com81</a> <br>
+<a href="http://testasp.vulnweb.com">http://testasp.vulnweb.com</a> <br>
+<a href="http://testaspnet.vulnweb.com">http://testaspnet.vulnweb.com</a> <br>
+<a href="http://testhtml5.vulnweb.com">http://testhtml5.vulnweb.com</a> <br>
+</p>
+</div>
+
+<div id="SecurityFindings" class="tab-content">
+<h1>Nuclei Security Findings</h1><br>
+
+        <h2>Main findings</h2><br>
+No findings this time :( <br><br><br><h2>Config findings</h2><br>
+<h3>Issues with medium severity</h3><br>
+<p>
+[default-sql-dump] [http] [medium] http://rest.vulnweb.com/db.sql [paths="/db.sql"] <br>
+</p>
+<h3>Issues with low severity</h3><br>
+<p>
+[phpinfo-files] [http] [low] http://rest.vulnweb.com/info.php ["7.1.26"] [paths="/info.php"] <br>
+</p>
+<h3>Issues with info severity</h3><br>
+<p>
+[caa-fingerprint] [dns] [info] rest.vulnweb.com81 <br>
+[http-missing-security-headers:strict-transport-security] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:x-frame-options] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:cross-origin-embedder-policy] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:cross-origin-opener-policy] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:cross-origin-resource-policy] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:content-security-policy] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:permissions-policy] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:x-content-type-options] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:x-permitted-cross-domain-policies] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:referrer-policy] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[http-missing-security-headers:clear-site-data] [http] [info] http://localhost.vulnweb.com:5357 <br>
+[spf-record-detect] [dns] [info] localhost.vulnweb.com ["v=spf1 -all""] <br>
+[txt-fingerprint] [dns] [info] localhost.vulnweb.com [""v=spf1 -all""] <br>
+[caa-fingerprint] [dns] [info] localhost.vulnweb.com <br>
+[missing-sri] [http] [info] http://testhtml5.vulnweb.com ["https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js","http://bxss.s3.amazonaws.com/ad.js","http://code.jquery.com/jquery-1.9.1.min.js","http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"] <br>
+[aspx-debug-mode] [http] [info] http://testaspnet.vulnweb.com/Foobar-debug.aspx <br>
+[cookies-without-httponly] [javascript] [info] testasp.vulnweb.com ["ASPSESSIONIDQQSTSASS"] <br>
+[cookies-without-secure] [javascript] [info] testasp.vulnweb.com ["ASPSESSIONIDQQSTSASS"] <br>
+[nginx-version] [http] [info] http://testhtml5.vulnweb.com ["nginx/1.19.0"] <br>
+[apache-detect] [http] [info] http://rest.vulnweb.com ["Apache/2.4.25 (Debian)"] <br>
+[php-detect] [http] [info] http://rest.vulnweb.com ["7.1.26"] <br>
+[options-method] [http] [info] http://testhtml5.vulnweb.com ["HEAD, OPTIONS, GET"] <br>
+[form-detection] [http] [info] http://testhtml5.vulnweb.com <br>
+[options-method] [http] [info] http://rest.vulnweb.com ["GET"] <br>
+[http-missing-security-headers:permissions-policy] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:x-frame-options] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:x-content-type-options] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:clear-site-data] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-resource-policy] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:strict-transport-security] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:content-security-policy] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-embedder-policy] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-opener-policy] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:x-permitted-cross-domain-policies] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:referrer-policy] [http] [info] http://testhtml5.vulnweb.com <br>
+[http-missing-security-headers:x-frame-options] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:clear-site-data] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:referrer-policy] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-embedder-policy] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-opener-policy] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:strict-transport-security] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:content-security-policy] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:permissions-policy] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:x-content-type-options] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:x-permitted-cross-domain-policies] [http] [info] http://rest.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-resource-policy] [http] [info] http://rest.vulnweb.com <br>
+[cookies-without-httponly-secure] [http] [info] http://testasp.vulnweb.com <br>
+[caa-fingerprint] [dns] [info] testhtml5.vulnweb.com <br>
+[spf-record-detect] [dns] [info] testhtml5.vulnweb.com ["v=spf1 -all""] <br>
+[txt-fingerprint] [dns] [info] testhtml5.vulnweb.com [""v=spf1 -all""] <br>
+[caa-fingerprint] [dns] [info] rest.vulnweb.com <br>
+[robots-txt-endpoint] [http] [info] http://testaspnet.vulnweb.com/robots.txt <br>
+[microsoft-iis-version] [http] [info] http://testaspnet.vulnweb.com ["Microsoft-IIS/8.5"] <br>
+[robots-txt-endpoint] [http] [info] http://testasp.vulnweb.com/robots.txt <br>
+[microsoft-iis-version] [http] [info] http://testasp.vulnweb.com ["Microsoft-IIS/8.5"] <br>
+[php-errors] [http] [info] http://testaspnet.vulnweb.com ["Stack Trace:"] <br>
+[options-method] [http] [info] http://testaspnet.vulnweb.com ["OPTIONS, TRACE, GET, HEAD, POST"] <br>
+[options-method] [http] [info] http://testasp.vulnweb.com ["OPTIONS, TRACE, GET, HEAD, POST"] <br>
+[http-missing-security-headers:strict-transport-security] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:x-content-type-options] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:x-permitted-cross-domain-policies] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-embedder-policy] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-opener-policy] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-resource-policy] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:content-security-policy] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:permissions-policy] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:x-frame-options] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:referrer-policy] [http] [info] http://testaspnet.vulnweb.com <br>
+[http-missing-security-headers:clear-site-data] [http] [info] http://testaspnet.vulnweb.com <br>
+[aspnet-version-detect] [http] [info] http://testaspnet.vulnweb.com ["2.0.50727"] <br>
+[old-copyright] [http] [info] http://testasp.vulnweb.com ["Copyright 2019"] <br>
+[http-missing-security-headers:cross-origin-embedder-policy] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-resource-policy] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:strict-transport-security] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:permissions-policy] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:x-content-type-options] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:x-permitted-cross-domain-policies] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:referrer-policy] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:clear-site-data] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:cross-origin-opener-policy] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:content-security-policy] [http] [info] http://testasp.vulnweb.com <br>
+[http-missing-security-headers:x-frame-options] [http] [info] http://testasp.vulnweb.com <br>
+[spf-record-detect] [dns] [info] testaspnet.vulnweb.com ["v=spf1 -all""] <br>
+[txt-fingerprint] [dns] [info] testaspnet.vulnweb.com [""google-site-verification:0I73u7E64LVLWuS-nT9ssWHaHOI36n65prWVTGJklFo"",""v=spf1 -all""] <br>
+[caa-fingerprint] [dns] [info] testaspnet.vulnweb.com <br>
+[spf-record-detect] [dns] [info] testasp.vulnweb.com ["v=spf1 -all""] <br>
+[txt-fingerprint] [dns] [info] testasp.vulnweb.com [""v=spf1 -all"",""google-site-verification:9QFopDZwL4Fw1z9RU7_L1QQqIpeZNgyuufqN44mRG8w""] <br>
+[caa-fingerprint] [dns] [info] testasp.vulnweb.com <br>
+</p>
+<h3>Issues with unknown severity</h3><br>
+<p>
+[dns-rebinding:IPv4] [dns] [unknown] localhost.vulnweb.com ["127.0.0.1"] <br>
+</p>
+<br><br><h2>DAST scanning findings</h2><br>
+<h3>Issues with high severity</h3><br>
+<p>
+[windows-lfi-fuzz] [http] [high] http://testasp.vulnweb.com/Templatize.asp?item=../../windows/win.ini [GET] <br>
+</p>
+<br><br><h2>Leaked tokens findings</h2><br>
+No findings this time :( <br></div>
+
+<div id="Fuzzed" class="tab-content">
+<h2>Fuzzed files and directories</h2><br>
+<br><h3>Endpoints with 200 code</h3><br>
+<p>
+http://rest.vulnweb.com/docs/ <br>
+http://rest.vulnweb.com/config.php <br>
+http://rest.vulnweb.com/db <br>
+http://rest.vulnweb.com/db.sql <br>
+http://testhtml5.vulnweb.com/examples <br>
+http://rest.vulnweb.com/info.php <br>
+http://testasp.vulnweb.com/login.asp <br>
+http://testasp.vulnweb.com/Default.asp <br>
+http://testasp.vulnweb.com/robots.txt <br>
+http://testaspnet.vulnweb.com/robots.txt <br>
+http://testaspnet.vulnweb.com/test.txt <br>
+</p>
+<br><h3>Endpoints with 401 code</h3><br>
+<p>
+http://testhtml5.vulnweb.com/admin/ <br>
+</p>
+<br><h3>Endpoints with 403 code</h3><br>
+<p>
+http://testasp.vulnweb.com/aspnet_client/ <br>
+http://testaspnet.vulnweb.com/aspnet_client/ <br>
+http://testasp.vulnweb.com/cgi-bin/ <br>
+http://testhtml5.vulnweb.com/cgi-bin/ <br>
+http://testaspnet.vulnweb.com/cgi-bin/ <br>
+http://testasp.vulnweb.com/html/ <br>
+http://testasp.vulnweb.com/images/ <br>
+http://testaspnet.vulnweb.com/images/ <br>
+http://testasp.vulnweb.com/jscripts/ <br>
+http://testasp.vulnweb.com/jscripts/tiny_mce/ <br>
+http://testaspnet.vulnweb.com/jscripts/ <br>
+http://testaspnet.vulnweb.com/jscripts/tiny_mce/ <br>
+http://testasp.vulnweb.com/templates/ <br>
+http://testaspnet.vulnweb.com/temp/ <br>
+http://testaspnet.vulnweb.com/TEMP/ <br>
+http://testasp.vulnweb.com/Trace.axd <br>
+</p>
+<br><h3>Endpoints with 405 code</h3><br>
+<p>
+http://testhtml5.vulnweb.com/login <br>
+</p>
+</div>
+
+<div id="Bypass403" class="tab-content">
+<h2>403 and 401 bypass results</h2><br>
+<i>Please note that 403 bypass tools often gives false positives</i><br><br>
+<b>===== http://testasp.vulnweb.com/aspnet_client/ =====</b><br>
+==CASE SENSITIVE==<br>
+aspnet_client: 301<br>
+<br><br>
+<b>===== http://testaspnet.vulnweb.com/aspnet_client/ =====</b><br>
+==CASE SENSITIVE==<br>
+aspnet_client: 301<br>
+<br><br>
+<b>===== http://testasp.vulnweb.com/cgi-bin/ =====</b><br>
+==CASE SENSITIVE==<br>
+cgi-bin: 301<br>
+<br><br>
+<b>===== http://testasp.vulnweb.com/html/ =====</b><br>
+==CASE SENSITIVE==<br>
+html: 301<br>
+<br><br>
+<b>===== http://testaspnet.vulnweb.com/images/ =====</b><br>
+==CASE SENSITIVE==<br>
+images: 301<br>
+<br><br>
+<b>===== http://testasp.vulnweb.com/jscripts/ =====</b><br>
+==CASE SENSITIVE==<br>
+jscripts: 301<br>
+<br><br>
+<b>===== http://testasp.vulnweb.com/jscripts/tiny_mce/ =====</b><br>
+==CASE SENSITIVE==<br>
+tiny_mce: 301<br>
+Tiny_mce/: 301<br>
+<br><br>
+<b>===== http://testaspnet.vulnweb.com/jscripts/ =====</b><br>
+==CASE SENSITIVE==<br>
+Jscripts/: 301<br>
+jscripts: 301<br>
+<br><br>
+<b>===== http://testaspnet.vulnweb.com/jscripts/tiny_mce/ =====</b><br>
+==CASE SENSITIVE==<br>
+tiny_mce: 301<br>
+<br><br>
+<b>===== http://testasp.vulnweb.com/templates/ =====</b><br>
+==CASE SENSITIVE==<br>
+Templates/: 301<br>
+<br><br>
+<b>===== http://testaspnet.vulnweb.com/TEMP/ =====</b><br>
+==CASE SENSITIVE==<br>
+TEMP: 301<br>
+<br><br>
+<b>===== http://testhtml5.vulnweb.com/admin/ =====</b><br>
+==CASE SENSITIVE==<br>
+admin: 308<br>
+==BUG BOUNTY TIPS==<br>
+/admin//: 308<br>
+<br><br>
+</div>
+
+<div id="SocialMedia" class="tab-content">
+<h2>Inactive social media links</h2><br>
+Inactive <a href="http://www.facebook.com/Acunetix">http://www.facebook.com/Acunetix</a> link on the <a href="http://testhtml5.vulnweb.com">http://testhtml5.vulnweb.com</a> page.<br><br></div>
+
+<div id="Postleaks" class="tab-content">
+<h2>Postman leaks</h2><br>
+<h3>vulnweb.com results</h3>
+<a href="https://www.postman.com/search?q=vulnweb.com&scope=all&type=all">Postman collection search link</a><br>
+<br>
+[+] (ID:056e27bd-88df-42d5-9676-f399e1d73ddf) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:e9b8ad57-bcf7-4a84-b3a2-c6255e275796) POST: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:6bb170eb-d83a-4778-bb80-cfd54384b650) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback = test</b> <br>
+<br>
+[+] (ID:920e9a7d-63da-4282-93ab-13a1c8222be6) POST: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:31d9adb0-e51b-420c-ab63-8aec490ab12b) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:c1cd55b6-843d-4ddf-af68-0c2c95b5d53c) POST: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:8ff564eb-50ff-41dd-85db-3a69b0f88174) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:b328a3b1-bd60-44c1-ad3a-9ac1b3df23e8) POST: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:9900b3ff-f561-489b-b393-fd624b8fc8f2) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/users/:username?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/users/:username?callback = test</b> <br>
+<br>
+[+] (ID:0d727c7e-949a-486f-a106-be6d329bf426) PUT: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:b7488d55-b397-4b7a-9ea9-e20b2979c11f) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:94850ca8-63cb-4953-a9b4-04a5607fefa7) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:f4c0a6bd-52b7-4e6c-874e-d4517eaa11bf) PUT: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:ccdb6471-2c10-462d-b3a4-f87b3a6ea227) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:adffd580-bcbe-4c2d-a944-4985fcd044cc) POST: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:e7a3ebdb-f7f7-4aaa-ad42-a97d60f46f2e) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback = test</b> <br>
+<br>
+[+] (ID:ee477659-ff94-4b78-bdab-380a675c2119) POST: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:9b45930c-51fa-4269-861a-a7695ef97b0d) PUT: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:be04d31b-e712-46e6-a202-15574d0bd6b7) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:75950538-25f5-4be3-a9e9-a2473a9802c2) PUT: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:34349042-4bf7-4748-b2e3-ab2066a54e11) POST: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:9b289a3e-5331-42ef-8f19-1b763c6b4619) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:53f68dcb-1e8d-416e-a21d-b7e7e1ccad7a) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:4253af59-e07f-4a10-bd63-47fe98a276fc) GET: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:30b67245-12d3-4392-b457-94686eb27c70) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:583fe017-85ab-468d-a303-2baed690eac8) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:638ffc58-9a4e-4863-b38f-10cf255209e4) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:223042d7-f6e6-42ea-bf53-41534a8d8159) PUT: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:0f703d1b-4912-4ee2-a10b-443f77517f64) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:833f50c7-3870-4713-b86e-10d0362ce5b0) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:a5e25a41-1856-4773-8b33-b6a40ac88c09) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:0034b1f9-5fc5-479f-9ad8-fe170eb0dd75) GET: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Authentication items: {'type': 'basic', 'basic': [{'key': 'password', 'value': '123456', 'type': 'string'}, {'key': 'username', 'value': 'admin', 'type': 'string'}]} <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<b> > Potential secret found: password = 123456</b> <br>
+<br>
+[+] (ID:75c27087-a042-4d46-995c-783dbb84837d) POST: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:19b8848c-c2df-444b-b716-2b4e7d5de5c7) POST: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:fd10270d-96e1-44a8-90d9-88890d819c49) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:974fce0f-bb70-46da-a7df-ef8ed14830ff) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback = test</b> <br>
+<br>
+[+] (ID:af23204f-b67b-4be6-a4fb-d94f7bde5aaa) PUT: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:938ed7ce-1ff3-443a-bed5-bbdf91b92933) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:85cc72f4-c058-4b0b-8110-75f27e39ad69) PUT: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:7e20ed65-8416-465f-93b7-055505a6a921) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:1d5a9a7d-f0ec-470a-8dcb-571b9e88267d) POST: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:60c50909-b583-4dd1-9317-4cd71efcd7d3) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:64b02547-6c46-45e0-8b18-873d03539f82) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback = test</b> <br>
+<br>
+[+] (ID:adc85443-0cb6-4e69-9ede-2bd9021ecf89) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback = test</b> <br>
+<br>
+[+] (ID:933c9652-4a3a-4c64-a1f2-a641f859dbfe) GET: 'http://rest.vulnweb.com/basic_authentication/api/' <br>
+ - Headers: [Host='rest.vulnweb.com'] <br>
+<br>
+[+] (ID:20d4b19a-3277-4cc4-8d65-0d9fba9fd627) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:0a7daa22-bfd9-4517-85e3-11c44a510108) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback = test</b> <br>
+<br>
+[+] (ID:2b27eac0-5f68-41ce-9e0b-5e92559f8d1f) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:5dd3f7ae-361e-40e1-a3fc-b42e9ba965d6) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/users/:username?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/users/:username?callback = test</b> <br>
+<br>
+[+] (ID:bebe130d-caf1-4433-a417-af4c7f0f6631) POST: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:49c1c95b-d2a1-46af-8ee1-937e8030fea1) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/users/:username?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/users/:username?callback = test</b> <br>
+<br>
+[+] (ID:b821d8fa-fecf-4c46-bee9-8c555fcd9a9f) GET: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:9bdb47f4-ec3c-48ea-ab84-5bad474205ad) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback = test</b> <br>
+<br>
+[+] (ID:98ddb9da-adaf-4d1f-b83e-e978824e816b) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:7890897d-2232-443e-81cc-d543e16582d7) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:208f1897-0100-482b-b689-be0253681691) PUT: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:98b75c7b-3e78-419e-b6ad-3f7dec678729) POST: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:05907768-dde2-4e78-9c66-7b50407dfe70) POST: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:19d7a44a-61aa-4457-b7fe-2b955095cd73) PUT: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:392f48ce-62f5-41fc-a7ed-4080f4831f9a) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:a1ea1761-5d98-4669-ba94-c8cacf2f4216) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback = test</b> <br>
+<br>
+[+] (ID:a35bbeb4-8f30-4230-ae52-a970133a370c) PUT: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:343c00c8-b405-4522-b4c0-b5e092061436) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:8aaa1e84-d229-4673-b314-9a573ec0cbd4) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:4d92aff2-3e19-49c9-b354-1999d86b0f45) POST: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:f665ecb3-ec96-4667-857e-d5db9d8ba003) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback = test</b> <br>
+<br>
+[+] (ID:46e21ab0-83a2-4aa9-859b-cd06f7e6f334) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/users/:username?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/users/:username?callback = test</b> <br>
+<br>
+[+] (ID:7073bd50-a1ef-4fba-9b92-8f7ef8709137) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:84d4a5b5-5928-4f6d-9526-efb579ef67b3) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/users/:username?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/users/:username?callback = test</b> <br>
+<br>
+[+] (ID:a3150ffc-1623-4747-9c60-1969e2ac3392) POST: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:6f765027-6e4c-4564-a831-c3e4387987f9) POST: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:712c5311-8a00-4e7f-a80c-8ae82c0a7a42) PUT: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:911f8b4f-91ea-46f3-b868-e72bd2abc52f) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:2c771b01-1e9d-477e-9387-1c70e09067d1) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:71bf103a-5d72-43f3-a430-73c79007991e) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:e94e1432-d7b8-445e-bc22-b084a41c35a1) GET: 'http://rest.vulnweb.com/basic_authentication/api/' <br>
+ - Authentication items: {'type': 'basic', 'basic': [{'key': 'password', 'value': '123456', 'type': 'string'}, {'key': 'username', 'value': 'admin', 'type': 'string'}]} <br>
+ - Headers: [Host='rest.vulnweb.com'] <br>
+<b> > Potential secret found: password = 123456</b> <br>
+<br>
+[+] (ID:63345e37-5ea3-442b-ba9b-3ed35ca493f9) PUT: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:f3ecb794-d6a4-4274-a888-753791068307) PUT: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:0a28ffd5-ac54-463f-80a8-07490905caea) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback = test</b> <br>
+<br>
+[+] (ID:1fc0f11c-7464-4cfb-a77f-4507a49b3740) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/posts/:postId?callback = test</b> <br>
+<br>
+[+] (ID:211126cc-37e4-4a21-92fd-5ccad2013b34) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:6fb422f8-9f31-438d-a37d-9eed1960564a) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:70666dd8-b6fe-41e5-93d4-3f1023becf2f) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:a406bbc3-fcc8-4464-bbbd-9aaeae4d52cb) PUT: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:8764ecde-9f15-4f70-a0d7-2f8e554b7278) POST: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:8e131072-ad99-41e8-bb2b-9f60a6e80b21) PUT: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:c60f0769-26eb-4b4d-bac3-11045f8f8c84) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:e9557adc-80a7-4937-8046-cf711911f347) GET: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:e432a0eb-d235-4b71-b160-5ad0d199c1ce) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:59d4ae81-4b2e-415b-bba1-591250751eda) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:63d206bc-0790-46d2-b1ac-60bf04b1382c) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/comments/:commentId?callback = test</b> <br>
+<br>
+[+] (ID:e1f59d9c-c8bb-4ca6-bce4-f04660e957e9) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username/posts' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:0f391ab1-38e5-4304-8ac1-e3a447650579) GET: 'http://rest.vulnweb.com/basic_authentication/api/' <br>
+ - Headers: [Host='rest.vulnweb.com'] <br>
+<br>
+[+] (ID:e7485f8c-7eb9-4cce-87d9-9231727c60bb) POST: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:1fa913b9-bad4-441a-a2a3-8f0a1c73d564) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:c67ab236-b312-42b0-91ff-b2d12836152b) PUT: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:136cf756-f989-4924-895a-8c0de5325cc3) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:9b92cea8-f1ba-4ebe-8ac8-92c803f92575) GET: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:34063ef1-82d7-49d9-91a3-70c3c6c27b95) PUT: 'http://rest.vulnweb.com/basic_authentication/api/comments/:commentId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/json'][Accept='application/json'] <br>
+<br>
+[+] (ID:73f19a7a-1159-4c86-a631-ba856b641147) PUT: 'http://rest.vulnweb.com/basic_authentication/api/users/:username' <br>
+ - Headers: [Host='rest.vulnweb.com'][Content-type='application/xml'][Accept='application/xml'] <br>
+<br>
+[+] (ID:9eb42f74-4ffc-4a48-a32c-90cb63a0154c) DELETE: 'http://rest.vulnweb.com/basic_authentication/api/users/:username?callback=test' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+ - Query parameters: [callback='test'] <br>
+<b> > Potential secret found: http://rest.vulnweb.com/basic_authentication/api/users/:username?callback = test</b> <br>
+<br>
+[+] (ID:ca14bf73-31cd-46bc-b387-1c03882a0210) GET: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:0abd848c-49ff-476d-bebb-00e5ae837fed) GET: 'http://rest.vulnweb.com/basic_authentication/api/posts/:postId' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+<br>
+[+] (ID:ca67def5-fb60-4c1f-9c7a-a7ef638706a0) GET: 'http://rest.vulnweb.com/basic_authentication/api/users' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/xml'] <br>
+<br>
+[+] (ID:58ba501e-73b2-4eab-afbf-629d7169b07d) GET: 'http://rest.vulnweb.com/basic_authentication/api/comments' <br>
+ - Headers: [Host='rest.vulnweb.com'][Accept='application/json'] <br>
+
+<br><br><br>
+</div>
+
+<div id="Leakix" class="tab-content">
+<h2>Leakix results</h2><br>
+<details><summary><b>Apache server-status page is publicly available</b> on <a href="http://43.228.86.31">http://43.228.86.31</a> <i>(<b>medium</b> severity)</i>.  <a href="https://leakix.net/domain/43.228.86.31">More info here</a></summary><br><pre>The server-status page (usually /server-status) allows server administrators to find out how well their server is performing.
+
+This is a HTML page that gives the current server statistics such as the server version, up time,cpu, ram, and information about requests made to the server.
+
+This information can be very useful if the application is sent sensitive information as GET requests. If you monitor this page you might be able to find CSRF tokens, API keys, hidden paths, and other sensitive information being sent to the server.
+
+https://medium.com/@ghostlulzhacks/apache-server-status-a70abed83f5a
+</pre></details><br><br><details><summary><b>Apache server-status page is publicly available</b> on <a href="https://43.228.86.31">https://43.228.86.31</a> <i>(<b>medium</b> severity)</i>.  <a href="https://leakix.net/domain/43.228.86.31">More info here</a></summary><br><pre>The server-status page (usually /server-status) allows server administrators to find out how well their server is performing.
+
+This is a HTML page that gives the current server statistics such as the server version, up time,cpu, ram, and information about requests made to the server.
+
+This information can be very useful if the application is sent sensitive information as GET requests. If you monitor this page you might be able to find CSRF tokens, API keys, hidden paths, and other sensitive information being sent to the server.
+
+https://medium.com/@ghostlulzhacks/apache-server-status-a70abed83f5a
+</pre></details><br><br><details><summary><b>Apache server-status page is publicly available</b> on <a href="http://112.78.40.213">http://112.78.40.213</a> <i>(<b>medium</b> severity)</i>.  <a href="https://leakix.net/domain/112.78.40.213">More info here</a></summary><br><pre>The server-status page (usually /server-status) allows server administrators to find out how well their server is performing.
+
+This is a HTML page that gives the current server statistics such as the server version, up time,cpu, ram, and information about requests made to the server.
+
+This information can be very useful if the application is sent sensitive information as GET requests. If you monitor this page you might be able to find CSRF tokens, API keys, hidden paths, and other sensitive information being sent to the server.
+
+https://medium.com/@ghostlulzhacks/apache-server-status-a70abed83f5a
+</pre></details><br><br></div>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            // Скрыть все содержимое вкладок
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            // Убрать активный класс со всех кнопок
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            // Показать текущую вкладку и добавить активный класс к кнопке
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+
+</body>
+</html>
