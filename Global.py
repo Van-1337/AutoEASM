@@ -108,4 +108,4 @@ NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/exa
 LeakixFindings = []
 Byp4xxResult = ""  # Text in HTML format
 
-LeakixAPIKey = "ey_isbLxEfCF60qYBWAazg3VYWiTMLFhkxrDeGurHvqASY1c"
+LeakixAPIKey = "CHANGEME"  # Change to your key
