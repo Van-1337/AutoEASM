@@ -1,3 +1,5 @@
+## Description
+
 **EASM** (External Attack Surface Management) **automated tool** allows a quick scan of all domains and subdomains of any company with the help of different utilities and gets a list of important issues for verification. This automation allows the automatic testing of domains regularly with limited resources of the security team.
 
 ## Used utilities
@@ -14,6 +16,13 @@
 | uro       | [uro: declutters url lists for crawling/pentesting](https://github.com/s0md3v/uro)                                                                                                                                                                                                                                                                                          | **Uro** is designed to simplify handling URL lists for security testing, which can be cumbersome due to uninteresting or duplicate content.                                                                                                                          |
 | LeakiX    | [LeakiX](https://leakix.net/ "https://leakix.net/")                                                                                                                                                                                                                                                                                                                         | **LeakiX** is a cybersecurity company that specializes in providing businesses with comprehensive visibility into their internet-facing assets. It provides tools and analysis to detect vulnerabilities in systems and networks.                                    |
 | Postleaks | [postleaks: Search for sensitive data in Postman public library.](https://github.com/cosad3s/postleaks)                                                                                                                                                                                                                                                                     | **Postleaks** script is aimed at searching for confidential information in the Postman public library.                                                                                                                                                               |
+
+
+&nbsp;
+
+
+![Flowchart](https://github.com/user-attachments/assets/9cbe1745-2065-463f-8fb8-43451f63b3f4)
+&nbsp;
 
 ## Installation
 
