@@ -177,7 +177,7 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
                                                           NaabuRate=Threads[Global.LoadLevel]['NaabuRate'], NaabuPorts=Details[Global.DetailsLevel]['NaabuPorts'],
                                                           NaabuFlags=Details[Global.DetailsLevel]['NaabuFlags'], includeRoots=include_roots_command)
         if console_output:
-            print("[*] Getting open network services on subdomains...")
+            print("[*] Searching subdomains and getting open network services...")
     else:
         command = DNSX_Naabu_command.substitute(dnsxThreads=Threads[Global.LoadLevel]['DNSX'], NaabuThreads=Threads[Global.LoadLevel]['NaabuThreads'],
                                                 NaabuRate=Threads[Global.LoadLevel]['NaabuRate'], NaabuPorts=Details[Global.DetailsLevel]['NaabuPorts'],

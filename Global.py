@@ -52,22 +52,22 @@ DetailsLevel = 2
 Details = {1: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'NucleiCritical': "high,critical",  # NucleiCritical is also currently using for DAST
                'NucleiConfigCritical': 'medium,high,critical', 'NucleiTokensCritical': 'low,medium,high,critical',
                'FeroxbusterAdditionalFlags': '-X "<html"', 'PostleaksAditionalFlags': '--strict',
-               'KatanaAdditionalFlagsD': '-iqp -kf -d 2 -ct 120', 'Byp4xx_flags': '-xV -xX -xS -xD',
+               'KatanaAdditionalFlagsD': '-iqp -kf all -d 2 -ct 120', 'Byp4xx_flags': '-xV -xX -xS -xD',
                'TimeoutModifier': 0.7},
            2: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'NucleiCritical': "medium,high,critical",
                'NucleiConfigCritical': 'low,medium,high,critical', 'NucleiTokensCritical': 'info,low,medium,high,critical',
                'FeroxbusterAdditionalFlags': "", 'PostleaksAditionalFlags': '--strict',
-               'KatanaAdditionalFlagsD': '-iqp -kf -d 3 -ct 180', 'Byp4xx_flags': '-xV -xX -xS -xD',
+               'KatanaAdditionalFlagsD': '-iqp -kf all -d 3 -ct 180', 'Byp4xx_flags': '-xV -xX -xS -xD',
                'TimeoutModifier': 1},
            3: {'NaabuPorts': 1000, 'NaabuFlags': '-sa', 'WAFfiltering': True, 'NucleiCritical': "low,medium,high,critical",
                'NucleiConfigCritical': 'info,low,medium,high,critical,unknown', 'NucleiTokensCritical': 'info,low,medium,high,critical,unknown',
                'FeroxbusterAdditionalFlags': "", 'PostleaksAditionalFlags': '',
-               'KatanaAdditionalFlagsD': '-iqp -kf -d 4 -ct 720', 'Byp4xx_flags': '',
+               'KatanaAdditionalFlagsD': '-iqp -kf all -d 4 -ct 600', 'Byp4xx_flags': '',
                'TimeoutModifier': 2.5},
            4: {'NaabuPorts': 1000, 'NaabuFlags': '-sa', 'WAFfiltering': False, 'NucleiCritical': "info,low,medium,high,critical,unknown",
                'NucleiConfigCritical': 'info,low,medium,high,critical,unknown', 'NucleiTokensCritical': 'info,low,medium,high,critical,unknown',
                'FeroxbusterAdditionalFlags': "", 'PostleaksAditionalFlags': '',
-               'KatanaAdditionalFlagsD': '-kf -d 5 -ct 2100', 'Byp4xx_flags': '',
+               'KatanaAdditionalFlagsD': '-kf all -d 5 -ct 2100', 'Byp4xx_flags': '',
                'TimeoutModifier': 10}}  # Get certain arguments by DetailsLevel and tool
 
 Subfinder_DNSX_Naabu_command = Template("(subfinder -silent -all -dL Scan/root_domains.txt $includeRoots) | dnsx -silent -t $dnsxThreads -retry 5 -a | naabu $NaabuFlags -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent")

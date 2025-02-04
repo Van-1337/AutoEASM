@@ -34,7 +34,7 @@ if __name__ == '__main__':
                         print("Domains file is empty!")
                         sys.exit(1)
                     for j in range(0, len(Domains)):
-                        Domains[j] = get_host_from_url(Domains[j])
+                        Domains[j] = get_host_from_url(Domains[j].strip())
                 else:
                     print(f"{filename} file is not exist. Please recheck the file name")
                     sys.exit(1)
