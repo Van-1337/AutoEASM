@@ -37,11 +37,11 @@ SENDING TO PROXY:
 
 LoadLevel = 2
 Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 15, 'HTTPXrate': 70,
-               'NucleiRate': 70, 'NucleiParallels': 10, 'FeroxbusterParallels': 10, 'FeroxbusterThreads': 5,
+               'NucleiRate': 50, 'NucleiParallels': 10, 'FeroxbusterParallels': 10, 'FeroxbusterThreads': 5,
                'FeroxbusterTimeLimit': '30m', 'KatanaAdditionalFlagsT': '-p 7 -rl 70', 'byp4xx_threads': 10,
                'TimeoutModifier': 4},
            2: {'DNSX': 200, 'NaabuThreads': 100, 'NaabuRate': 220, 'HTTPXthreads': 80, 'HTTPXrate': 200,
-               'NucleiRate': 160, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
+               'NucleiRate': 150, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
                'FeroxbusterTimeLimit': '25m', 'KatanaAdditionalFlagsT': '-p 20', 'byp4xx_threads': 25,
                'TimeoutModifier': 1},
            3: {'DNSX': 500, 'NaabuThreads': 200, 'NaabuRate': 500, 'HTTPXthreads': 200, 'HTTPXrate': 500,
