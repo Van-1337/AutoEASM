@@ -1,4 +1,4 @@
-from Global import Domains, Services, HTTPAssets, Flags, AssetsWithWAF, NucleiFindings, NotExistingSocialLinks,\
+from Global import Domains, HTTPAssets, Flags, AssetsWithWAF, NucleiFindings, NotExistingSocialLinks,\
     NucleiConfigFindings, FuzzedDirectories, NucleiTokensFindings, NucleiDASTFindings, LeakixFindings
 import Global
 from datetime import datetime
@@ -8,14 +8,15 @@ import os
 
 def CreateReport(report_name="Report"):
     print("[*] Report creation...")
-    ReportFile = open(report_name+".html", "w", encoding="utf-8")
+    prepath = "/app/output/" if "--docker" in Flags else ""
+    ReportFile = open(prepath+report_name+".html", "w", encoding="utf-8")
     ReportFile.write(get_report_start())
     ReportFile.write(get_report_content())
     ReportFile.write(get_report_end())
     ReportFile.close()
     print(f"[+] Report has been generated! File name is {report_name+'.html'}")
     print("[N] Note: if you think that some findings may be missing in the report, check Logs directory")
-    if "-do" not in Flags:
+    if "-do" not in Flags and "--docker" not in Flags:
         file_path = os.path.abspath(report_name+".html")
         webbrowser.open(f"file://{file_path}")
 
@@ -264,7 +265,7 @@ def get_report_content():
         if Global.PostleaksResult:
             postleaks_text += Global.PostleaksResult
         else:
-            postleaks_text += "No Postman leaks this time :("
+            postleaks_text += "No Postman leaks this time."
         postleaks_text += "</div>"
         return postleaks_text
 

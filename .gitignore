@@ -1,12 +1,14 @@
 *.html
 !Report Example.html
 *.txt
-!Scan/**/*.txt
+!Scan/templates/*
+!Scan/fuzz.txt
 *.zip
 *.cfg
 *.docx
 *.jpg
 blind-xss.yaml
+test.py
 
 .idea/
 __pycache__/

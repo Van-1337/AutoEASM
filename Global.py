@@ -1,5 +1,6 @@
 from sys import argv
 from string import Template
+import os
 
 HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -p <proxy> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dd] [-dc] [-db] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf]
 
@@ -108,4 +109,4 @@ NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/exa
 LeakixFindings = []
 Byp4xxResult = ""  # Text in HTML format
 
-LeakixAPIKey = "CHANGEME"  # Change to your key
+LeakixAPIKey = os.environ.get("LeakIX_API_key", "CHANGEME")  # Change CHANGEME to your API key
