@@ -102,7 +102,10 @@ if __name__ == '__main__':
         sys.exit(0)
     if Global.LeakixAPIKey == "CHANGEME":
         Flags.append('-dl')
-        print("[!] LeakIX key not specified in the Global.py file! LeakIX check will be skipped.")
+        if "--docker" in Flags:
+            print("[!] LeakIX key not specified in the docker parameters, this check will be skipped! Use -e LeakIX_API_key=\"changeme\"")
+        else:
+            print("[!] LeakIX key not specified in the Global.py file! LeakIX check will be skipped.")
 
     Scan.Control.scanning()
     CreateReport(report_file)

@@ -36,6 +36,7 @@ go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
 go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 go install -v github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest
+go install -v github.com/projectdiscovery/katana/cmd/katana@latest
 pip install requests
 pip install postleaks
 pip install uro
@@ -51,6 +52,26 @@ For **Windows** no additional commands are required.
 4. Change the Leakix API key at the end of the Global.py file. A free key for 3000 requests per month can be obtained [here](https://leakix.net/settings/api).
 
 5. \[*Optional, but preferable*\] Add your API keys to subfinder using [this instruction](https://docs.projectdiscovery.io/tools/subfinder/install#post-install-configuration) (for Windows, file with API keys is `C:\Users\*user*\AppData\Roaming\subfinder\provider-config.yaml`). We suggest adding at least Securitytrails free key, but you can also add other available keys.
+
+## Docker using
+
+1. Go to the docker directory: `cd docker`
+2. *\[Optional\]* Specify available API keys to provider-config.yaml file. We advice specify at least securitytrails key. For example:
+```
+securitytrails:
+  - AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+```
+3. Build the docker container (use sudo on linux):
+`docker build --no-cache -t easm-automate .`
+4. Run the docker using the command below. If there will be a question about access to host files - allow this (it is required to copy the report to the host). If the container does not start after that - enter the command again.
+
+**Windows:**
+`docker run --rm -it -v %cd%\Report:/app/output -v %cd%\provider-config.yaml:/root/.config/subfinder/provider-config.yaml -e LeakIX_API_key="leakIX_key" easm-automate -d domain.com`
+
+**Linux:**
+`sudo docker run --rm -it -v "$(pwd)/Report":/app/output -v "$(pwd)/provider-config.yaml":/root/.config/subfinder/provider-config.yaml -e LeakIX_API_key="leakIX_key" easm-automate -d domain.com`
+
+Parameter *"-e LeakIX_API_key="leakIX_key"* can be deleted if you don't have a leakIX key.
 
 ## Usage
 
@@ -76,11 +97,7 @@ For example, `-ll 1` can be used if the hosts can go down from the load, or `-ld
 ## Notes
 
 - Please remember that if you do not save or rename an old report - it will be overwritten.
-
 - You can press Ctrl+C to skip the current stage of scanning (all results obtained so far will be saved). Quickly press Ctrl+C again to finish the program completely. The first stage cannot be skipped.
-
 - If you think that the report does not contain the results of some utilities, review the outputs of the utilities in the Logs folder. Note that only the results of the last scan are stored there. Also in this folder, you can view the real-time output of the utilities
-
 - You can use multiple -d arguments to scan multiple domains (-d site1.com -d site2.com -d site3.com)
-
 - Do not run the utility several times at the same time from the same directory!

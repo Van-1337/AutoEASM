@@ -15,7 +15,8 @@ def CreateReport(report_name="Report"):
     ReportFile.write(get_report_end())
     ReportFile.close()
     print(f"[+] Report has been generated! File name is {report_name+'.html'}")
-    print("[N] Note: if you think that some findings may be missing in the report, check Logs directory")
+    if "--docker" not in Flags:
+        print("[N] Note: if you think that some findings may be missing in the report, check Logs directory")
     if "-do" not in Flags and "--docker" not in Flags:
         file_path = os.path.abspath(report_name+".html")
         webbrowser.open(f"file://{file_path}")

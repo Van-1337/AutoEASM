@@ -38,15 +38,15 @@ SENDING TO PROXY:
 
 LoadLevel = 2
 Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 15, 'HTTPXrate': 70,
-               'NucleiRate': 50, 'NucleiParallels': 10, 'FeroxbusterParallels': 10, 'FeroxbusterThreads': 5,
+               'NucleiRate': 40, 'NucleiParallels': 10, 'FeroxbusterParallels': 10, 'FeroxbusterThreads': 5,
                'FeroxbusterTimeLimit': '30m', 'KatanaAdditionalFlagsT': '-p 7 -rl 70', 'byp4xx_threads': 10,
                'TimeoutModifier': 4},
            2: {'DNSX': 200, 'NaabuThreads': 100, 'NaabuRate': 220, 'HTTPXthreads': 80, 'HTTPXrate': 200,
-               'NucleiRate': 150, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
+               'NucleiRate': 135, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
                'FeroxbusterTimeLimit': '25m', 'KatanaAdditionalFlagsT': '-p 20', 'byp4xx_threads': 25,
                'TimeoutModifier': 1},
            3: {'DNSX': 500, 'NaabuThreads': 200, 'NaabuRate': 500, 'HTTPXthreads': 200, 'HTTPXrate': 500,
-               'NucleiRate': 500, 'NucleiParallels': 40, 'FeroxbusterParallels': 25, 'FeroxbusterThreads': 20,
+               'NucleiRate': 350, 'NucleiParallels': 40, 'FeroxbusterParallels': 25, 'FeroxbusterThreads': 20,
                'FeroxbusterTimeLimit': '20m', 'KatanaAdditionalFlagsT': '-p 25', 'byp4xx_threads': 40,
                'TimeoutModifier': 0.4}}  # Get threads amount by LoadLevel and tool
 DetailsLevel = 2
@@ -109,4 +109,4 @@ NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/exa
 LeakixFindings = []
 Byp4xxResult = ""  # Text in HTML format
 
-LeakixAPIKey = os.environ.get("LeakIX_API_key", "CHANGEME")  # Change CHANGEME to your API key
+LeakixAPIKey = os.environ.get("LeakIX_API_key", "ey_isbLxEfCF60qYBWAazg3VYWiTMLFhkxrDeGurHvqASY1c")  # Change CHANGEME to your API key
