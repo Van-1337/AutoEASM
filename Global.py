@@ -109,4 +109,4 @@ NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/exa
 LeakixFindings = []
 Byp4xxResult = ""  # Text in HTML format
 
-LeakixAPIKey = os.environ.get("LeakIX_API_key", "ey_isbLxEfCF60qYBWAazg3VYWiTMLFhkxrDeGurHvqASY1c")  # Change CHANGEME to your API key
+LeakixAPIKey = os.environ.get("LeakIX_API_key", "CHANGEME")  # Change CHANGEME to your API key

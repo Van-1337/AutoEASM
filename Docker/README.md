@@ -1,4 +1,6 @@
-1. Go to the docker directory: `cd docker`
+## Docker using
+
+1. Go to the docker directory: `cd Docker`
 2. \[Optional\] Specify available API keys to provider-config.yaml file. We advice specify at least securitytrails key. For example:
 ```
 securitytrails:
