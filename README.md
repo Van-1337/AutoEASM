@@ -49,7 +49,7 @@ cd EASM-automate/ ; chmod +x Scan/byp4xx.go
 ```
 For **Windows** no additional commands are required.
 
-4. Change the Leakix API key at the end of the Global.py file. A free key for 3000 requests per month can be obtained [here](https://leakix.net/settings/api).
+4. \[*Optional, but preferable*\] Change the Leakix API key at the end of the Global.py file OR specify it in the LeakIX_API_key environment variable. A free key for 3000 requests per month can be obtained [here](https://leakix.net/settings/api).
 
 5. \[*Optional, but preferable*\] Add your API keys to subfinder using [this instruction](https://docs.projectdiscovery.io/tools/subfinder/install#post-install-configuration) (for Windows, file with API keys is `C:\Users\*user*\AppData\Roaming\subfinder\provider-config.yaml`). We suggest adding at least Securitytrails free key, but you can also add other available keys.
 
