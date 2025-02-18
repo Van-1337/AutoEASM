@@ -91,7 +91,7 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
     try:
         result = subprocess.run(command, shell=True, capture_output=True, text=True, input=input_data)
     except KeyboardInterrupt:
-        print("[!] Command interrupted! Press Ctrl+C in next 5 seconds again if you want to full exit")
+        print("[!] Command aborted! Press Ctrl+C within the next 5 seconds if you want to exit completely.")
         time.sleep(5)
         interrupted = True
     if interrupted or result.returncode == 0:
