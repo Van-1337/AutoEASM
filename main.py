@@ -27,6 +27,8 @@ if __name__ == '__main__':
         elif sys.argv[i] == '-f':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 filename = sys.argv[i + 1]
+                if "--docker" in Flags:
+                    filename = "/src/" + filename
                 if os.path.exists(filename):
                     with open(filename, "r", encoding="utf-8") as file:
                         Domains.extend([line.strip() for line in file.readlines()])

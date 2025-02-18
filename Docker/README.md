@@ -1,7 +1,7 @@
 ## Docker using
 
 1. Go to the docker directory: `cd Docker`
-2. \[Optional\] Specify available API keys to provider-config.yaml file. We advice specify at least securitytrails key. For example:
+2. *\[Optional\]* Specify available API keys to provider-config.yaml file. We advice specify at least securitytrails key. For example:
 ```
 securitytrails:
   - AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -16,4 +16,4 @@ securitytrails:
 **Linux:**
 `sudo docker run --rm -it -v "$(pwd)/Report":/app/output -v "$(pwd)/provider-config.yaml":/root/.config/subfinder/provider-config.yaml -e LeakIX_API_key="leakIX_key" easm-automate -d domain.com`
 
-Parameter "-e LeakIX_API_key="leakIX_key" can be deleted if you don't have a leakIX key.
+Parameter `-e LeakIX_API_key="leakIX_key"` can be deleted if you don't have a leakIX key.

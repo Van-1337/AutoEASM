@@ -49,7 +49,7 @@ cd EASM-automate/ ; chmod +x Scan/byp4xx.go
 ```
 For **Windows** no additional commands are required.
 
-4. \[*Optional, but preferable*\] Change the Leakix API key at the end of the Global.py file OR specify it in the LeakIX_API_key environment variable. A free key for 3000 requests per month can be obtained [here](https://leakix.net/settings/api).
+4. \[*Optional, but preferable*\] Change the Leakix API key at the end of the Global.py file **OR** specify it in the `LeakIX_API_key` environment variable. A free key for 3000 requests per month can be obtained [here](https://leakix.net/settings/api).
 
 5. \[*Optional, but preferable*\] Add your API keys to subfinder using [this instruction](https://docs.projectdiscovery.io/tools/subfinder/install#post-install-configuration) (for Windows, file with API keys is `C:\Users\*user*\AppData\Roaming\subfinder\provider-config.yaml`). We suggest adding at least Securitytrails free key, but you can also add other available keys.
 
@@ -71,7 +71,13 @@ securitytrails:
 **Linux:**
 `sudo docker run --rm -it -v "$(pwd)/Report":/app/output -v "$(pwd)/provider-config.yaml":/root/.config/subfinder/provider-config.yaml -e LeakIX_API_key="leakIX_key" easm-automate -d domain.com`
 
-Parameter *"-e LeakIX_API_key="leakIX_key"* can be deleted if you don't have a leakIX key.
+**Windows file scan:**
+`docker run --rm -it -v %cd%\Report:/app/output -v %cd%\provider-config.yaml:/root/.config/subfinder/provider-config.yaml -v %cd%:/src -e LeakIX_API_key="leakIX_key" easm-automate -f domains.txt`
+
+**Linux file scan:**
+`sudo docker run --rm -it -v "$(pwd)/Report":/app/output -v "$(pwd)/provider-config.yaml":/root/.config/subfinder/provider-config.yaml -v "$(pwd):/src" -e LeakIX_API_key="leakIX_key" easm-automate -f domains.txt`
+
+Parameter `-e LeakIX_API_key="leakIX_key"` can be deleted if you don't have a leakIX key.
 
 ## Usage
 
@@ -81,7 +87,7 @@ To get help menu:
 `python main.py -h`
 
 To scan one domain:
-`python main.py -d temabit.com`
+`python main.py -d vulnweb.com`
 
 To scan the domain list:
 `python main.py -f root_domains.txt`
@@ -98,6 +104,6 @@ For example, `-ll 1` can be used if the hosts can go down from the load, or `-ld
 
 - Please remember that if you do not save or rename an old report - it will be overwritten.
 - You can press Ctrl+C to skip the current stage of scanning (all results obtained so far will be saved). Quickly press Ctrl+C again to finish the program completely. The first stage cannot be skipped.
-- If you think that the report does not contain the results of some utilities, review the outputs of the utilities in the Logs folder. Note that only the results of the last scan are stored there. Also in this folder, you can view the real-time output of the utilities
-- You can use multiple -d arguments to scan multiple domains (-d site1.com -d site2.com -d site3.com)
+- If you think that the report does not contain the results of some utilities, review the outputs of the utilities in the Logs folder. Note that only the results of the last scan are stored there. Also in this folder, you can view the real-time output of the utilities.
+- You can use multiple -d arguments to scan multiple domains (-d site1.com -d site2.com -d site3.com).
 - Do not run the utility several times at the same time from the same directory!
