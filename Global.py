@@ -41,7 +41,7 @@ Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 
                'NucleiRate': 40, 'NucleiParallels': 10, 'FeroxbusterParallels': 10, 'FeroxbusterThreads': 5,
                'FeroxbusterTimeLimit': '30m', 'KatanaAdditionalFlagsT': '-p 7 -rl 70', 'byp4xx_threads': 10,
                'TimeoutModifier': 4},
-           2: {'DNSX': 200, 'NaabuThreads': 100, 'NaabuRate': 220, 'HTTPXthreads': 80, 'HTTPXrate': 200,
+           2: {'DNSX': 170, 'NaabuThreads': 100, 'NaabuRate': 220, 'HTTPXthreads': 80, 'HTTPXrate': 200,
                'NucleiRate': 135, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
                'FeroxbusterTimeLimit': '25m', 'KatanaAdditionalFlagsT': '-p 20', 'byp4xx_threads': 25,
                'TimeoutModifier': 1},
@@ -88,7 +88,11 @@ Uro_command = "uro"
 Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -t $byp4xx_threads Scan/403pages.txt")
 BurpProxy = "127.0.0.1:8080"
 
-# ---Using by other utilities---
+utilities_flags = {"nuclei": "-dn", "subfinder": "-ds", "dnsx": "-ds", "naabu": "No flag",
+                   "httpx": "No flag", "cdncheck": "No flag", "katana": "-dc", "uro": "-dc"}  # "Utility": "Flag_to_disable". Required to check if the utility is installed
+
+
+# ---Variables used by other utilities---
 Flags = []
 Domains = []  # Means root domains
 Services = []  # All network services

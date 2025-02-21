@@ -15,6 +15,9 @@ import glob
 def scanning():
     print("[N] Note: you can stop a current check with Ctrl+C")
     try:
+        if check_installed_tools() != 0:
+            print("[e] Not all required utilities are installed. Terminating.")
+            sys.exit(1)
         if ensure_logs_directory():
             clear_logs()
         if '-ds' in Flags or '-i' in Flags:
@@ -126,6 +129,20 @@ def clear_logs():
             os.remove(file_path)
         except Exception as e:
             print(f'[e] {file_path} Can\'t be deleted. The reason is: {e}')
+
+
+def check_installed_tools():
+    errors_count = 0
+    for utility in utilities_flags:
+        if utilities_flags[utility] not in Flags:
+            result = subprocess.run(f"{utility} -h", shell=True, capture_output=True)
+            if result.returncode != 0:
+                errors_count += 1
+                if utilities_flags[utility] == "No flag":
+                    print(f"[!] {utility} was not found, please install it and add to the path!")
+                else:
+                    print(f"[!] {utility} was not found, please install it and add to the path or use {utilities_flags[utility]} flag!")
+    return errors_count
 
 
 def launch_httpx():
