@@ -50,6 +50,8 @@ def scanning():
             social_networks_thread = threading.Thread(target=check_social_networks, name="CheckSocialNetworksThread", daemon=True)
             social_networks_thread.start()
             time.sleep(1)  # To avoid problems with console output
+        if '-dt' not in Flags and Global.RawSubdomains:
+            check_subdomains_takeover()
         if '-dn' not in Flags:
             launch_nuclei()
         if '-df' not in Flags:
@@ -142,6 +144,11 @@ def check_installed_tools():
                     print(f"[!] {utility} was not found, please install it and add to the path!")
                 else:
                     print(f"[!] {utility} was not found, please install it and add to the path or use {utilities_flags[utility]} flag!")
+    if not ("-dn" in Flags and "-dt" in Flags):
+        nuclei_result = subprocess.run(f"nuclei -h", shell=True, capture_output=True)
+        if nuclei_result.returncode != 0:
+            print(f"[!] Nuclei was not found, please install it and add to the path or use both -dn and -dt flags!")
+            errors_count += 1
     return errors_count
 
 
@@ -176,35 +183,39 @@ def launch_httpx():
 
 
 def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
-    include_roots_command = ""
-    with open("Scan/root_domains.txt", "w", encoding="utf-8") as file:
-        for domain in Domains:
-            file.write(domain + "\n")
+    input_data = '\n'.join(Global.Domains) + '\n'
 
     if '-i' in Flags:
         command = Naabu_command.substitute(NaabuThreads=Threads[Global.LoadLevel]['NaabuThreads'], NaabuRate=Threads[Global.LoadLevel]['NaabuRate'],
                                            NaabuPorts=Details[Global.DetailsLevel]['NaabuPorts'], NaabuFlags=Details[Global.DetailsLevel]['NaabuFlags'])
         if console_output:
             print("[*] Getting open network services on specified IP addresses...")
-    elif scan_subdomains:  # If not skipping subdomains enumeration
-        for domain in Domains:
-            include_roots_command += f'&& echo {domain} '
-
-        command = Subfinder_DNSX_Naabu_command.substitute(dnsxThreads=Threads[Global.LoadLevel]['DNSX'], NaabuThreads=Threads[Global.LoadLevel]['NaabuThreads'],
-                                                          NaabuRate=Threads[Global.LoadLevel]['NaabuRate'], NaabuPorts=Details[Global.DetailsLevel]['NaabuPorts'],
-                                                          NaabuFlags=Details[Global.DetailsLevel]['NaabuFlags'], includeRoots=include_roots_command)
-        if console_output:
-            print("[*] Searching subdomains and getting open network services...")
     else:
+        if scan_subdomains:  # If not skipping subdomains enumeration
+            if console_output:
+                print("[*] Searching subdomains...")
+            if '-v' in Flags:
+                print("[v] Executing command: " + Subfinder_command)
+            result = subprocess.run(Subfinder_command, shell=True, capture_output=True, text=True, input=input_data)
+
+            if result.returncode == 0:
+                Global.RawSubdomains.extend(result.stdout.splitlines())
+                input_data = '\n'.join(Global.RawSubdomains) + '\n' + '\n'.join(Global.Domains) + '\n'
+            else:
+                print("[e] Error when running Subfinder utility:")
+                print("[e] Command: " + Subfinder_command)
+                print("[e] Error: " + result.stderr)
+                sys.exit(1)
+
         command = DNSX_Naabu_command.substitute(dnsxThreads=Threads[Global.LoadLevel]['DNSX'], NaabuThreads=Threads[Global.LoadLevel]['NaabuThreads'],
                                                 NaabuRate=Threads[Global.LoadLevel]['NaabuRate'], NaabuPorts=Details[Global.DetailsLevel]['NaabuPorts'],
                                                 NaabuFlags=Details[Global.DetailsLevel]['NaabuFlags'])
         if console_output:
-            print("[*] Skipping subdomain enumeration, getting open network services on specified domains...")
+            print("[*] Getting open network services...")
 
     if '-v' in Flags:
         print("[v] Executing command: " + command)
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, input=input_data)
 
     if result.returncode == 0:
         Global.Services.extend(result.stdout.splitlines())
@@ -218,9 +229,8 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
         print("[e] Command: " + command)
         print("[e] Error: " + result.stderr)
         sys.exit(1)
-
-    if os.path.exists("Scan/root_domains.txt"):
-        os.remove("Scan/root_domains.txt")
+    if Global.RawSubdomains and "-dt" in Flags:
+        Global.RawSubdomains = []  # So it doesn't take up extra memory
 
 
 def launch_katana():
@@ -247,8 +257,12 @@ def launch_katana():
                     slashes_amount = link.count('/')
                     if slashes_amount == 2 and (link + '/') not in Global.HTTPAssets and link not in Global.HTTPAssets:
                         Global.HTTPAssets.append(link + '/')
+                        if slashes_amount == 2 and (link + '/') not in Global.RawSubdomains and link not in Global.RawSubdomains:
+                            Global.RawSubdomains.append(link + '/')
                     elif slashes_amount == 3 and link[-1] == '/' and link not in Global.HTTPAssets and link[:-1] not in Global.HTTPAssets:
                         Global.HTTPAssets.append(link)
+                        if slashes_amount == 3 and link[-1] == '/' and link not in Global.RawSubdomains and link[:-1] not in Global.RawSubdomains:
+                            Global.RawSubdomains.append(link)
                 print(f"[+] {(len(Global.CrawledURLs))} links were found")
         else:
             print("[e] Error when running Katana utility")
@@ -511,8 +525,6 @@ def launch_nuclei():
             print("[e] Error when running Nuclei utility using default templates")
 
     def tokens_check():
-        #input_data = '\n'.join(CrawledURLs) + '\n'
-        #input_data += '\n'.join(URLsWithWAF) + '\n'
         if JSlinks:
             input_data = '\n'.join(JSlinks) + '\n'
         else:
@@ -576,6 +588,32 @@ def launch_nuclei():
         default_start()
     if '-dd' not in Flags and (CrawledURLs or (URLsWithWAF and not Details[Global.DetailsLevel]['WAFfiltering'])):
         dast_start()
+
+
+def check_subdomains_takeover():
+    input_data = '\n'.join(Global.RawSubdomains) + '\n'
+    command = Nuclei_subdomains_takeover_command.substitute(NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
+                                                            NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels'])
+    print("[*] Checking subdomains takeover possibilities...")
+
+    if '-v' in Flags:
+        print("[v] Executing command: " + command)
+    result = command_exec(command, "NucleiSubdomainsTakeover.txt", input_data)
+
+    if result != '-':
+        print(f"[+] {len(result)} subdomains takeover possibilities were found")
+        for item in result:
+            parts = item.split()
+            if len(parts) > 3:
+                severity = parts[2].strip("[]")
+                try:
+                    NucleiTakeoverFindings[severity].append(item)
+                except KeyError:
+                    NucleiTakeoverFindings["unknown"].append(item)
+            else:
+                print(f"[e] String '{item}' has the wrong format and will be skipped.")
+    else:
+        print("[e] Error when running Nuclei utility on the subdomains takeover stage")
 
 
 def launch_feroxbuster():

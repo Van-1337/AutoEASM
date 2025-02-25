@@ -93,8 +93,9 @@ if __name__ == '__main__':
                 Global.Details[level+1]['NaabuPorts'] = "full"
         elif sys.argv[i] == "-do" or sys.argv[i] == "-v" or sys.argv[i] == "-ds" or sys.argv[i] == "-df"\
                 or sys.argv[i] == "-dn" or sys.argv[i] == "-dp" or sys.argv[i] == "-dd" or sys.argv[i] == "-dl"\
-                or sys.argv[i] == "-dc" or sys.argv[i] == "-db" or sys.argv[i] == "-dm" or sys.argv[i] == "--docker"\
-                or sys.argv[i] == "-i" or sys.argv[i] == "-ba" or sys.argv[i] == "-bw" or sys.argv[i] == "-bf":
+                or sys.argv[i] == "-dc" or sys.argv[i] == "-db" or sys.argv[i] == "-dm" or sys.argv[i] == "-dt"\
+                or sys.argv[i] == "--docker" or sys.argv[i] == "-i" or sys.argv[i] == "-ba" or sys.argv[i] == "-bw"\
+                or sys.argv[i] == "-bf":
             Flags.append(sys.argv[i])
         else:
             print(f"Unknown flag: {sys.argv[i]}. Use -h to get help menu")
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     if not Domains:
         print("No domains to scan! Please specify the -f or -d flag. Use -h to get help menu")
         sys.exit(0)
-    if Global.LeakixAPIKey == "CHANGEME":
+    if Global.LeakixAPIKey == "CHANGEME" and '-dl' not in Flags:
         Flags.append('-dl')
         if "--docker" in Flags:
             print("[!] LeakIX key not specified in the docker parameters, this check will be skipped! Use -e LeakIX_API_key=\"CHANGEME\"")

@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -p <proxy> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dd] [-dc] [-db] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -p <proxy> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -22,7 +22,8 @@ DISABLING FEATURES:
 -do - don't open a report file after its creation
 -ds - disable subdomains enumeration
 -df - disable directory fuzzing
--dn - disable Nuclei scan
+-dn - disable Nuclei scan (except subdomains takeover)
+-dt - disable subdomains takeover checking
 -dd - disable DAST scan
 -dc - disable links crawling (and tokens check in JS)
 -db - disable 403 bypass attempts
@@ -35,6 +36,9 @@ SENDING TO PROXY:
 -bw - send only collected endpoints without WAF to Burp proxy
 -bf - send fuzzed directories to Burp proxy
 -p <proxy> - burp proxy (default: 127.0.0.1:8080)"""
+
+utilities_flags = {"subfinder": "-ds", "dnsx": "-ds", "naabu": "No flag", "httpx": "No flag",
+                   "cdncheck": "No flag", "katana": "-dc", "uro": "-dc"}  # "Utility": "Flag_to_disable". Required to check if the utility is installed
 
 LoadLevel = 2
 Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 15, 'HTTPXrate': 70,
@@ -71,29 +75,27 @@ Details = {1: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'Nucle
                'KatanaAdditionalFlagsD': '-kf all -d 5 -ct 2100', 'Byp4xx_flags': '',
                'TimeoutModifier': 10}}  # Get certain arguments by DetailsLevel and tool
 
-Subfinder_DNSX_Naabu_command = Template("(subfinder -silent -all -dL Scan/root_domains.txt $includeRoots) | dnsx -silent -t $dnsxThreads -retry 5 -a | naabu $NaabuFlags -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent")
-DNSX_Naabu_command = Template("dnsx -l Scan/root_domains.txt -silent -t $dnsxThreads -retry 5 -a | naabu $NaabuFlags -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent")
-Naabu_command = Template("naabu -list Scan/root_domains.txt -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent $NaabuFlags")
+Subfinder_command = "subfinder -silent -all"
+DNSX_Naabu_command = Template("dnsx -silent -t $dnsxThreads -retry 5 -a | naabu $NaabuFlags -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent")
+Naabu_command = Template("naabu -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent $NaabuFlags")
 HTTPX_command = Template("httpx -t $HTTPXthreads -rl $HTTPXrate -silent -retries 3")
 CDNCheck_command = "cdncheck -i Scan/HTTP_assets_list.txt -silent -nc -resp -waf"
-Nuclei_default_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -etags backup,config,exposure,panel,debug,network,js -s $NucleiCritical -rl $NucleiRate -c $NucleiParallels -silent -nc")
+Nuclei_default_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -etags backup,config,exposure,panel,debug,network,js -s $NucleiCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
 Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -itags config,exposure,panel,debug,network,js -s $NucleiConfigCritical -rl $NucleiRate -c $NucleiParallels -silent -nc")
-Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc")
-Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc")
+Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc")
+Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
+Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc")
 Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"<Message>Access Denied</Message>\" --auto-tune --no-recursion --quiet -w $FuzzingDictPath --stdin --redirects "
                                "--parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
 Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags")
 Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlagsD $KatanaAdditionalFlagsT")
 Uro_command = "uro"
 Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -t $byp4xx_threads Scan/403pages.txt")
-BurpProxy = "127.0.0.1:8080"
-
-utilities_flags = {"nuclei": "-dn", "subfinder": "-ds", "dnsx": "-ds", "naabu": "No flag",
-                   "httpx": "No flag", "cdncheck": "No flag", "katana": "-dc", "uro": "-dc"}  # "Utility": "Flag_to_disable". Required to check if the utility is installed
 
 
 # ---Variables used by other utilities---
 Flags = []
+RawSubdomains = []  # Unchecked subdomains
 Domains = []  # Means root domains
 Services = []  # All network services
 HTTPAssets = []  # Subdomains and domains without WAF, also contains root domains services
@@ -101,12 +103,14 @@ AssetsWithWAF = {}  # {"https://site.com": "cloudflare"}
 CrawledURLs = []  # Without WAF
 URLsWithWAF = []
 JSlinks = []
+BurpProxy = "127.0.0.1:8080"  # By default
 
 # ---Final results---
 NucleiFindings = {"critical": [], "high": [], "medium": [], "low": [], "unknown": []}  # {"high": ["finding text", "finding text 2"]}
 NucleiConfigFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}  # {"high": ["finding text", "finding text 2"]}
 NucleiTokensFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 NucleiDASTFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
+NucleiTakeoverFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 FuzzedDirectories = {"200": [], "3xx": [], "401": [], "403": [], "405": []}  # {"200": ["http://example.com/backup", http://example.com/admin]}
 PostleaksResult = ""  # Text in HTML format
 NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]

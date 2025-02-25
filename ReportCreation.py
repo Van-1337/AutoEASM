@@ -1,5 +1,5 @@
 from Global import Domains, HTTPAssets, Flags, AssetsWithWAF, NucleiFindings, NotExistingSocialLinks,\
-    NucleiConfigFindings, FuzzedDirectories, NucleiTokensFindings, NucleiDASTFindings, LeakixFindings
+    NucleiConfigFindings, FuzzedDirectories, NucleiTokensFindings, NucleiDASTFindings, NucleiTakeoverFindings, LeakixFindings
 import Global
 from datetime import datetime
 from Scan.LeakixInfo import Leakix_info
@@ -223,6 +223,18 @@ def get_report_content():
         if count == 0:
             findings_text += "No findings this time :( <br>\n"
 
+        findings_text += "<br><br><h2>Subdomain takeover findings</h2><br>\n"
+        count = 0
+        for severity in NucleiTakeoverFindings:
+            if NucleiTakeoverFindings[severity]:
+                findings_text += f"<h3>Issues with {severity} severity</h3><br>\n<p>\n"
+                for finding in NucleiTakeoverFindings[severity]:
+                    findings_text += f"{finding} <br>\n"
+                    count += 1
+                findings_text += "</p>\n"
+        if count == 0:
+            findings_text += "No findings this time :( <br>\n"
+
         findings_text += "</div>"
         return findings_text
 
@@ -294,4 +306,5 @@ def get_report_content():
         leakix_text += "</div>"
         return leakix_text
 
-    return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results() + social_media_bypass() + postleaks_results() + leakix_results()
+    return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
+        + social_media_bypass() + postleaks_results() + leakix_results()

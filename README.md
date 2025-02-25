@@ -21,7 +21,7 @@
 &nbsp;
 
 
-![Flowchart](https://github.com/user-attachments/assets/9cbe1745-2065-463f-8fb8-43451f63b3f4)
+![Flowchart](https://github.com/user-attachments/assets/8de9bd13-b6bf-4dd1-8272-5b9462182f62)
 &nbsp;
 
 ## Installation
