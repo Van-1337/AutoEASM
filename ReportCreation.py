@@ -98,6 +98,7 @@ def get_report_start():
         <button class="tablink" onclick="openTab(event, 'SecurityFindings')">Security findings</button>
         <button class="tablink" onclick="openTab(event, 'Fuzzed')">Interesting directories</button>
         <button class="tablink" onclick="openTab(event, 'Bypass403')">403 bypass</button>
+        <button class="tablink" onclick="openTab(event, 'WAFbypass')">WAF bypass</button>
         <button class="tablink" onclick="openTab(event, 'SocialMedia')">Social media takeover</button>
         <button class="tablink" onclick="openTab(event, 'Postleaks')">Postman leaks</button>
         <button class="tablink" onclick="openTab(event, 'Leakix')">Leakix results</button>
@@ -263,6 +264,26 @@ def get_report_content():
         bypass_text += "</div>"
         return bypass_text
 
+    def WAF_bypass():
+        waf_bypass_text = """\n\n<div id="WAFbypass" class="tab-content">\n<h2>WAF bypass attempts</h2><br>\n"""
+        if Global.WAF_bypass_hosts:
+            for hosts_pair in Global.WAF_bypass_hosts:
+                scan_commands = f"nuclei -u {hosts_pair[1]} -header Host:{hosts_pair[0]} -s {Global.Details[Global.DetailsLevel]['NucleiConfigCritical']} " \
+                                f"-rl {Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
+                                f"katana -u {hosts_pair[1]} -headers Host:{hosts_pair[0]} -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn" \
+                                f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlagsD']} {Global.Threads[Global.LoadLevel]['KatanaAdditionalFlagsT']}" \
+                                f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
+                                f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
+                                f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
+                                f"--parallel {Global.Threads[Global.LoadLevel]['FeroxbusterParallels']} -t {Global.Threads[Global.LoadLevel]['FeroxbusterThreads']}" \
+                                f" --dont-extract-links -C 404 500 --time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
+                waf_bypass_text += f"<details><summary>Try using host header <b>{hosts_pair[0]}</b> on {hosts_pair[1]}</summary>"
+                waf_bypass_text += f"<br><pre>{scan_commands}</pre></details><br><br>\n"
+        else:
+            waf_bypass_text += "No successful WAF bypass attempts this time."
+        waf_bypass_text += "</div>"
+        return waf_bypass_text
+
     def social_media_bypass():
         social_media_text = """\n\n<div id="SocialMedia" class="tab-content">\n<h2>Inactive social media links</h2><br>\n"""
         if Global.NotExistingSocialLinks:
@@ -307,4 +328,4 @@ def get_report_content():
         return leakix_text
 
     return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
-        + social_media_bypass() + postleaks_results() + leakix_results()
+        + WAF_bypass() + social_media_bypass() + postleaks_results() + leakix_results()

@@ -27,6 +27,7 @@ DISABLING FEATURES:
 -dd - disable DAST scan
 -dc - disable links crawling (and tokens check in JS)
 -db - disable 403 bypass attempts
+-dw - disable WAF bypass attempts
 -dm - disable social media takeover checking
 -dp - disable public Postman collections checking
 -dl - disable Leakix checking
@@ -35,6 +36,7 @@ SENDING TO PROXY:
 -ba - send all collected endpoints to Burp proxy including with WAF
 -bw - send only collected endpoints without WAF to Burp proxy
 -bf - send fuzzed directories to Burp proxy
+-bb - send all successful WAF bypass attempts to proxy
 -p <proxy> - burp proxy (default: 127.0.0.1:8080)"""
 
 utilities_flags = {"subfinder": "-ds", "dnsx": "-ds", "naabu": "No flag", "httpx": "No flag",
@@ -44,15 +46,15 @@ LoadLevel = 2
 Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 15, 'HTTPXrate': 70,
                'NucleiRate': 40, 'NucleiParallels': 10, 'FeroxbusterParallels': 10, 'FeroxbusterThreads': 5,
                'FeroxbusterTimeLimit': '30m', 'KatanaAdditionalFlagsT': '-p 7 -rl 70', 'byp4xx_threads': 10,
-               'TimeoutModifier': 4},
-           2: {'DNSX': 170, 'NaabuThreads': 100, 'NaabuRate': 220, 'HTTPXthreads': 80, 'HTTPXrate': 200,
+               'WAFbypassThreads': 12},
+           2: {'DNSX': 120, 'NaabuThreads': 100, 'NaabuRate': 220, 'HTTPXthreads': 80, 'HTTPXrate': 200,
                'NucleiRate': 135, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
                'FeroxbusterTimeLimit': '25m', 'KatanaAdditionalFlagsT': '-p 20', 'byp4xx_threads': 25,
-               'TimeoutModifier': 1},
-           3: {'DNSX': 500, 'NaabuThreads': 200, 'NaabuRate': 500, 'HTTPXthreads': 200, 'HTTPXrate': 500,
+               'WAFbypassThreads': 70},
+           3: {'DNSX': 250, 'NaabuThreads': 200, 'NaabuRate': 500, 'HTTPXthreads': 200, 'HTTPXrate': 500,
                'NucleiRate': 350, 'NucleiParallels': 40, 'FeroxbusterParallels': 25, 'FeroxbusterThreads': 20,
                'FeroxbusterTimeLimit': '20m', 'KatanaAdditionalFlagsT': '-p 25', 'byp4xx_threads': 40,
-               'TimeoutModifier': 0.4}}  # Get threads amount by LoadLevel and tool
+               'WAFbypassThreads': 140}}  # Get threads amount by LoadLevel and tool
 DetailsLevel = 2
 Details = {1: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'NucleiCritical': "high,critical",  # NucleiCritical is also currently using for DAST
                'NucleiConfigCritical': 'medium,high,critical', 'NucleiTokensCritical': 'low,medium,high,critical',
@@ -112,6 +114,7 @@ NucleiTokensFindings = {"critical": [], "high": [], "medium": [], "low": [], "in
 NucleiDASTFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 NucleiTakeoverFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 FuzzedDirectories = {"200": [], "3xx": [], "401": [], "403": [], "405": []}  # {"200": ["http://example.com/backup", http://example.com/admin]}
+WAF_bypass_hosts = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
 PostleaksResult = ""  # Text in HTML format
 NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]
 LeakixFindings = []

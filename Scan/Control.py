@@ -10,6 +10,7 @@ import requests
 from typing import List
 import json
 import glob
+import concurrent.futures
 
 
 def scanning():
@@ -31,13 +32,15 @@ def scanning():
             postleaks_thread.start()
             time.sleep(1)  # To avoid problems with console output
         launch_httpx()
-        delete_assets_with_waf()  # And add them to "AssetsWithWAF"
         if '-dc' not in Flags:
             launch_katana()
             launch_uro()
         else:
             Global.CrawledURLs = Global.HTTPAssets
+        delete_assets_with_waf()  # And add them to "AssetsWithWAF"
         delete_urls_with_waf()  # And add them to URLsWithWAF
+        if '-dw' not in Flags:
+            launch_waf_bypass()
         if '-dl' not in Flags:
             leakix_thread = threading.Thread(target=check_leakix, name="LeakixThread", daemon=True)
             leakix_thread.start()
@@ -336,11 +339,72 @@ def delete_urls_with_waf():
             del CrawledURLs[index]
 
 
+def launch_waf_bypass():
+    def check_asset_with_WAF(domain_with_waf):
+        try:
+            orig_response = requests.get(domain_with_waf, verify=False, headers=user_agent_header, timeout=10,
+                                         allow_redirects=False)
+            for url_without_waf in HTTPAssets:
+                try:
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                        "Host": get_host_from_url(domain_with_waf)}
+                    last_response = requests.get(url_without_waf, verify=False, headers=headers, timeout=10,
+                                                 allow_redirects=False)
+                    if orig_response.status_code == last_response.status_code and \
+                            orig_response.headers.get("Content-Type") == last_response.headers.get("Content-Type"):
+                        if set(last_response.headers.keys()) != headers_sets[url_without_waf]:
+                            Global.WAF_bypass_hosts.append((get_host_from_url(domain_with_waf), url_without_waf))
+                            if send_to_burp:
+                                try:
+                                    requests.get(url_without_waf, verify=False, headers=headers, timeout=10,
+                                                 proxies=proxies, allow_redirects=False)
+                                except requests.RequestException:
+                                    print(f"[e] Error sending request to {url_without_waf} with"
+                                          f"{get_host_from_url(domain_with_waf)} host header to Burp Suite!")
+                except requests.RequestException:
+                    pass
+        except requests.RequestException:
+            pass
+
+    if HTTPAssets and AssetsWithWAF:
+        try:
+            print("[*] Trying to bypass the WAF by finding the same host without the firewall...")
+            requests.packages.urllib3.disable_warnings()
+            user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
+            wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                                   "Host": "qwertg.su"}
+            send_to_burp = False
+            if '-bb' in Flags:
+                proxy_url = 'http://' + Global.BurpProxy
+                proxies = {'http': proxy_url, 'https': proxy_url}
+                send_to_burp = True
+
+            headers_sets = {}  # {"example.com": set("Date", "Content-Type", "Content-Length")}
+            for host_without_waf in HTTPAssets:
+                try:
+                    response = requests.get(host_without_waf, verify=False, headers=wrong_host_headers, timeout=10, allow_redirects=False)
+                    headers_sets[host_without_waf] = set(response.headers.keys())
+                except requests.RequestException:
+                    headers_sets[host_without_waf] = set()
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=Threads[Global.LoadLevel]['WAFbypassThreads']) as executor:
+                futures = []
+                for url_with_waf in AssetsWithWAF:
+                    futures.append(executor.submit(check_asset_with_WAF, url_with_waf))
+                    time.sleep(0.15)
+                concurrent.futures.wait(futures)
+        except KeyboardInterrupt:
+            print("[!] Check aborted! Press Ctrl+C within the next 5 seconds if you want to exit completely.")
+            time.sleep(5)
+        print(f"[+] {len(Global.WAF_bypass_hosts)} successful WAF bypass attempts were done")
+
+
 def send_urls_to_burp():
     proxy_url = 'http://' + Global.BurpProxy
     proxies = {'http': proxy_url, 'https': proxy_url}
     requests.packages.urllib3.disable_warnings()
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
     print("[*] Sending requests to Burp in parallel...")
 
     if '-ba' in Flags or '-bw' in Flags:
@@ -367,7 +431,7 @@ def send_urls_to_burp():
 
 def check_social_networks():
     def is_social_media_exist(social_media_link):
-        sm_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0",
+        sm_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                    "Sec-Fetch-Site": "none"}
         if social_media_link.startswith("tg://"):
@@ -406,7 +470,7 @@ def check_social_networks():
         return True
 
     requests.packages.urllib3.disable_warnings()
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0"}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
     patterns = [
         r'https?://(?:t(?:elegram)?\.me|telegram\.org)/[A-Za-z0-9_]{5,32}/?',
         r'https?://(?:www\.)tiktok\.com/@[A-Za-z0-9_.-]+/?',
