@@ -353,7 +353,8 @@ def launch_waf_bypass():
                                                  allow_redirects=False)
                     if orig_response.status_code == last_response.status_code and \
                             orig_response.headers.get("Content-Type") == last_response.headers.get("Content-Type"):
-                        if set(last_response.headers.keys()) != headers_sets[url_without_waf]:
+                        if set(last_response.headers.keys()) != headers_sets[url_without_waf] and \
+                                not is_cloudflare_in_response(last_response):
                             Global.WAF_bypass_hosts.append((get_host_from_url(domain_with_waf), url_without_waf))
                             if send_to_burp:
                                 try:
