@@ -45,7 +45,7 @@ def get_report_start():
             position: fixed; /* Фиксированное позиционирование */
             top: 0;
             left: 0;
-            width: 200px;
+            width: 215px;
             height: 100%; /* Полная высота окна */
             background-color: #f4f4f4;
             border-right: 1px solid #ccc;
@@ -72,7 +72,7 @@ def get_report_start():
         }
         /* Стили для содержимого вкладок */
         .content {
-            margin-left: 200px; /* Отступ для боковой панели */
+            margin-left: 215px; /* Отступ для боковой панели */
             padding: 20px;
             flex: 1;
         }
@@ -98,7 +98,7 @@ def get_report_start():
         <button class="tablink" onclick="openTab(event, 'SecurityFindings')">Security findings</button>
         <button class="tablink" onclick="openTab(event, 'Fuzzed')">Interesting directories</button>
         <button class="tablink" onclick="openTab(event, 'Bypass403')">403 bypass</button>
-        <button class="tablink" onclick="openTab(event, 'WAFbypass')">WAF bypass</button>
+        <button class="tablink" onclick="openTab(event, 'HostManipulation')">Host header manipulation</button>
         <button class="tablink" onclick="openTab(event, 'SocialMedia')">Social media takeover</button>
         <button class="tablink" onclick="openTab(event, 'Postleaks')">Postman leaks</button>
         <button class="tablink" onclick="openTab(event, 'Leakix')">Leakix results</button>
@@ -264,25 +264,38 @@ def get_report_content():
         bypass_text += "</div>"
         return bypass_text
 
-    def WAF_bypass():
-        waf_bypass_text = """\n\n<div id="WAFbypass" class="tab-content">\n<h2>WAF bypass attempts</h2><br>\n"""
-        if Global.WAF_bypass_hosts:
-            for hosts_pair in Global.WAF_bypass_hosts:
-                scan_commands = f"nuclei -u {hosts_pair[1]} -header Host:{hosts_pair[0]} -s {Global.Details[Global.DetailsLevel]['NucleiConfigCritical']} " \
-                                f"-rl {Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
-                                f"katana -u {hosts_pair[1]} -headers Host:{hosts_pair[0]} -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn" \
-                                f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlagsD']} {Global.Threads[Global.LoadLevel]['KatanaAdditionalFlagsT']}" \
-                                f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
-                                f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
-                                f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
-                                f"--parallel {Global.Threads[Global.LoadLevel]['FeroxbusterParallels']} -t {Global.Threads[Global.LoadLevel]['FeroxbusterThreads']}" \
-                                f" --dont-extract-links -C 404 500 --time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
-                waf_bypass_text += f"<details><summary>Try using host header <b>{hosts_pair[0]}</b> on {hosts_pair[1]}</summary>"
-                waf_bypass_text += f"<br><pre>{scan_commands}</pre></details><br><br>\n"
+    def host_manipulation():
+        def get_host_result(hosts_pair):
+            scan_commands = f"nuclei -u {hosts_pair[1]} -header Host:{hosts_pair[0]} -s {Global.Details[Global.DetailsLevel]['NucleiConfigCritical']} " \
+                            f"-rl {Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
+                            f"katana -u {hosts_pair[1]} -headers Host:{hosts_pair[0]} -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn" \
+                            f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlagsD']} {Global.Threads[Global.LoadLevel]['KatanaAdditionalFlagsT']}" \
+                            f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
+                            f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
+                            f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
+                            f"-t {Global.Threads[Global.LoadLevel]['FeroxbusterThreads']} --dont-extract-links -C 404 500 " \
+                            f"--time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
+            return f"<details><summary>Try using host header <b>{hosts_pair[0]}</b> on {hosts_pair[1]}</summary>" \
+                   f"<br><pre>{scan_commands}</pre></details><br><br>\n"
+
+        host_manipulation_text = """\n\n<div id="HostManipulation" class="tab-content">\n<h1>Host header manipulation</h1><br>\n"""
+        host_manipulation_text += "<br><h2>WAF bypass</h2><br>\n"
+        if Global.WAFBypassHosts:
+            for hosts_pair in Global.WAFBypassHosts:
+                host_manipulation_text += get_host_result(hosts_pair)
         else:
-            waf_bypass_text += "No successful WAF bypass attempts this time."
-        waf_bypass_text += "</div>"
-        return waf_bypass_text
+            if AssetsWithWAF:
+                host_manipulation_text += "No successful WAF bypass attempts this time."
+            else:
+                host_manipulation_text += "No hosts with WAF found."
+        host_manipulation_text += "<br><br><h2>Access to inactive hosts</h2><br>\n"
+        if Global.InactiveHostsAccess:
+            for hosts_pair in Global.InactiveHostsAccess:
+                host_manipulation_text += get_host_result(hosts_pair)
+        else:
+            host_manipulation_text += "No successful inactive hosts access attempts this time."
+        host_manipulation_text += "</div>"
+        return host_manipulation_text
 
     def social_media_bypass():
         social_media_text = """\n\n<div id="SocialMedia" class="tab-content">\n<h2>Inactive social media links</h2><br>\n"""
@@ -328,4 +341,4 @@ def get_report_content():
         return leakix_text
 
     return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
-        + WAF_bypass() + social_media_bypass() + postleaks_results() + leakix_results()
+        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()

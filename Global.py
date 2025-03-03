@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -p <proxy> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -p <proxy> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -28,6 +28,7 @@ DISABLING FEATURES:
 -dc - disable links crawling (and tokens check in JS)
 -db - disable 403 bypass attempts
 -dw - disable WAF bypass attempts
+-di - disable access search for inactive hosts
 -dm - disable social media takeover checking
 -dp - disable public Postman collections checking
 -dl - disable Leakix checking
@@ -36,7 +37,7 @@ SENDING TO PROXY:
 -ba - send all collected endpoints to Burp proxy including with WAF
 -bw - send only collected endpoints without WAF to Burp proxy
 -bf - send fuzzed directories to Burp proxy
--bb - send all successful WAF bypass attempts to proxy
+-bb - send all successful WAF bypass attempts and old subdomains access to proxy
 -p <proxy> - burp proxy (default: 127.0.0.1:8080)"""
 
 utilities_flags = {"subfinder": "-ds", "dnsx": "-ds", "naabu": "No flag", "httpx": "No flag",
@@ -48,11 +49,11 @@ Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 
                'FeroxbusterTimeLimit': '30m', 'KatanaAdditionalFlagsT': '-p 7 -rl 70', 'byp4xx_threads': 10,
                'WAFbypassThreads': 12},
            2: {'DNSX': 120, 'NaabuThreads': 100, 'NaabuRate': 220, 'HTTPXthreads': 80, 'HTTPXrate': 200,
-               'NucleiRate': 135, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
+               'NucleiRate': 120, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
                'FeroxbusterTimeLimit': '25m', 'KatanaAdditionalFlagsT': '-p 20', 'byp4xx_threads': 25,
                'WAFbypassThreads': 70},
            3: {'DNSX': 250, 'NaabuThreads': 200, 'NaabuRate': 500, 'HTTPXthreads': 200, 'HTTPXrate': 500,
-               'NucleiRate': 350, 'NucleiParallels': 40, 'FeroxbusterParallels': 25, 'FeroxbusterThreads': 20,
+               'NucleiRate': 250, 'NucleiParallels': 40, 'FeroxbusterParallels': 25, 'FeroxbusterThreads': 20,
                'FeroxbusterTimeLimit': '20m', 'KatanaAdditionalFlagsT': '-p 25', 'byp4xx_threads': 40,
                'WAFbypassThreads': 140}}  # Get threads amount by LoadLevel and tool
 DetailsLevel = 2
@@ -114,7 +115,8 @@ NucleiTokensFindings = {"critical": [], "high": [], "medium": [], "low": [], "in
 NucleiDASTFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 NucleiTakeoverFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 FuzzedDirectories = {"200": [], "3xx": [], "401": [], "403": [], "405": []}  # {"200": ["http://example.com/backup", http://example.com/admin]}
-WAF_bypass_hosts = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
+WAFBypassHosts = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
+InactiveHostsAccess = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
 PostleaksResult = ""  # Text in HTML format
 NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]
 LeakixFindings = []

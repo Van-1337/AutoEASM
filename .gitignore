@@ -6,7 +6,6 @@
 *.zip
 *.cfg
 *.docx
-*.jpg
 blind-xss.yaml
 test.py
 

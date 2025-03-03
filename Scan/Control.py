@@ -37,10 +37,12 @@ def scanning():
             launch_uro()
         else:
             Global.CrawledURLs = Global.HTTPAssets
-        delete_assets_with_waf()  # And add them to "AssetsWithWAF"
+        delete_assets_with_waf()  # And add them to AssetsWithWAF
         delete_urls_with_waf()  # And add them to URLsWithWAF
         if '-dw' not in Flags:
             launch_waf_bypass()
+        if '-di' not in Flags:
+            launch_hidden_hosts_scan()
         if '-dl' not in Flags:
             leakix_thread = threading.Thread(target=check_leakix, name="LeakixThread", daemon=True)
             leakix_thread.start()
@@ -232,8 +234,6 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
         print("[e] Command: " + command)
         print("[e] Error: " + result.stderr)
         sys.exit(1)
-    if Global.RawSubdomains and "-dt" in Flags:
-        Global.RawSubdomains = []  # So it doesn't take up extra memory
 
 
 def launch_katana():
@@ -279,7 +279,6 @@ def launch_uro():
 
         if '-v' in Flags:
             print("[v] Executing command: " + command)
-        # result = subprocess.run(command, input=input_data, shell=True, capture_output=True, text=True)
         result = command_exec(command, "URO.txt", input_data)
 
         if result != '-':
@@ -355,14 +354,14 @@ def launch_waf_bypass():
                             orig_response.headers.get("Content-Type") == last_response.headers.get("Content-Type"):
                         if set(last_response.headers.keys()) != headers_sets[url_without_waf] and \
                                 not is_cloudflare_in_response(last_response):
-                            Global.WAF_bypass_hosts.append((get_host_from_url(domain_with_waf), url_without_waf))
+                            Global.WAFBypassHosts.append((get_host_from_url(domain_with_waf), url_without_waf))
                             if send_to_burp:
                                 try:
                                     requests.get(url_without_waf, verify=False, headers=headers, timeout=10,
                                                  proxies=proxies, allow_redirects=False)
                                 except requests.RequestException:
                                     print(f"[e] Error sending request to {url_without_waf} with"
-                                          f"{get_host_from_url(domain_with_waf)} host header to Burp Suite!")
+                                          f" {get_host_from_url(domain_with_waf)} host header to Burp Suite!")
                 except requests.RequestException:
                     pass
         except requests.RequestException:
@@ -398,7 +397,72 @@ def launch_waf_bypass():
         except KeyboardInterrupt:
             print("[!] Check aborted! Press Ctrl+C within the next 5 seconds if you want to exit completely.")
             time.sleep(5)
-        print(f"[+] {len(Global.WAF_bypass_hosts)} successful WAF bypass attempts were done")
+        print(f"[+] {len(Global.WAFBypassHosts)} successful WAF bypass attempts were done")
+
+
+def launch_hidden_hosts_scan():
+    def check_inactive_host(inactive_domain):
+        def check_host_in_list(working_domains_list):
+            found = False
+            for working_url in working_domains_list:
+                try:
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                        "Host": inactive_domain}
+                    last_response = requests.get(working_url, verify=False, headers=headers, timeout=10,
+                                                 allow_redirects=False)
+                    if set(last_response.headers.keys()) != headers_sets[working_url] and last_response.status_code != 421\
+                            and last_response.status_code != 400 and last_response.status_code != 429 and\
+                            last_response.status_code != 402 and last_response.status_code != 301\
+                            and last_response.status_code//100 != 5:
+                        Global.InactiveHostsAccess.append((inactive_domain, working_url))
+                        found = True
+                        if send_to_burp:
+                            try:
+                                requests.get(working_url, verify=False, headers=headers, timeout=10,
+                                             proxies=proxies, allow_redirects=False)
+                            except requests.RequestException:
+                                print(f"[e] Error sending request to {working_url} with"
+                                      f" {inactive_domain} host header to Burp Suite!")
+                except requests.RequestException:
+                    pass
+            return found
+
+        if not check_host_in_list(HTTPAssets):
+            check_host_in_list(AssetsWithWAFlist)
+
+    if HTTPAssets or AssetsWithWAF:
+        AssetsWithWAFlist = list(AssetsWithWAF)
+        try:
+            print("[*] Trying to get access to old subdomains using host header manipulation...")
+            requests.packages.urllib3.disable_warnings()
+            wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                                   "Host": "qwertg.su"}
+            send_to_burp = False
+            if '-bb' in Flags:
+                proxy_url = 'http://' + Global.BurpProxy
+                proxies = {'http': proxy_url, 'https': proxy_url}
+                send_to_burp = True
+
+            headers_sets = {}  # {"example.com": set("Date", "Content-Type", "Content-Length")}
+            for host in HTTPAssets+AssetsWithWAFlist:
+                try:
+                    response = requests.get(host, verify=False, headers=wrong_host_headers, timeout=10, allow_redirects=False)
+                    headers_sets[host] = set(response.headers.keys())
+                except requests.RequestException:
+                    headers_sets[host] = set()
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=Threads[Global.LoadLevel]['WAFbypassThreads']) as executor:
+                futures = []
+                inactive_hosts = [x for x in RawSubdomains if x not in get_host_from_url_list(HTTPAssets + AssetsWithWAFlist, remove_ports=True)]
+                for inactive_host in inactive_hosts:
+                    futures.append(executor.submit(check_inactive_host, inactive_host))
+                    time.sleep(0.1)
+                concurrent.futures.wait(futures)
+        except KeyboardInterrupt:
+            print("[!] Check aborted! Press Ctrl+C within the next 5 seconds if you want to exit completely.")
+            time.sleep(5)
+        print(f"[+] Access to {len(Global.InactiveHostsAccess)} hosts were found")
 
 
 def send_urls_to_burp():
@@ -478,7 +542,7 @@ def check_social_networks():
         r'https?://(?:[A-Za-z]+\.)?youtube\.com/channel/[A-Za-z0-9-_]+/?',
         r'https?://(?:[A-Za-z]+\.)?youtube\.com/user/[A-Za-z0-9]+/?',
         r'https?://(?:[A-Za-z]+\.)?youtube\.com/@[A-Za-z0-9\-_]+/?',
-        r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch)/)[A-Za-z0-9-_]+/?',
+        r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist)/)[A-Za-z0-9-_]+/?',
         r'https?://(?:www\.)?(?:instagram\.com|instagr\.am)/(?!p/)[A-Za-z0-9_.]{1,30}/?',
         r'https?://(?:www\.)?(?:facebook|fb)\.com/(?![A-Za-z]+\.php|marketplace|gaming|watch|me|messages|help|search|groups|tr|people)[A-Za-z0-9_\-\.]+/?',
         r'https?://(?:www\.)?facebook\.com/profile\.php\?id=\d+/?',
@@ -873,7 +937,7 @@ def check_leakix():
         return data
 
     def get_domains_info(domains):
-        for domain in get_host_from_url_list(domains):
+        for domain in get_host_from_url_list(domains, remove_ports=True):
             checked = False
             unsuccessful_attempts = 0
             while not checked:

@@ -59,18 +59,21 @@ def remove_non_links(urls):
     return [url for url in urls if url.startswith(('http://', 'https://'))]
 
 
-def get_host_from_url(url):
+def get_host_from_url(url, remove_port=False):
     if url.startswith('http://'):
         url = url[7:]
     elif url.startswith('https://'):
         url = url[8:]
-    return url.split('/', 1)[0]
+    if remove_port:
+        return url.split('/', 1)[0].split(':', 1)[0]
+    else:
+        return url.split('/', 1)[0]
 
 
-def get_host_from_url_list(urls):
+def get_host_from_url_list(urls, remove_ports=False):
     result = []
     for url in urls:
-        result.append(get_host_from_url(url))
+        result.append(get_host_from_url(url, remove_ports))
     return result
 
 
