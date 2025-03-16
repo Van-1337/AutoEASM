@@ -27,9 +27,8 @@ def get_report_start():
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>EASM Report</title>
+    <title>AutoEASM Report</title>
     <style>
-        /* Обнуляем отступы и устанавливаем box-sizing */
         * {
             margin: 0;
             padding: 0;
@@ -40,16 +39,15 @@ def get_report_start():
             display: flex;
             min-height: 100vh;
         }
-        /* Стили для фиксированной боковой панели */
         .sidebar {
-            position: fixed; /* Фиксированное позиционирование */
+            position: fixed;
             top: 0;
             left: 0;
             width: 215px;
-            height: 100%; /* Полная высота окна */
+            height: 100%;
             background-color: #f4f4f4;
             border-right: 1px solid #ccc;
-            overflow-x: hidden; /* Отключение горизонтальной прокрутки */
+            overflow-x: hidden;
             padding-top: 20px;
         }
         .sidebar button {
@@ -70,9 +68,8 @@ def get_report_start():
         .sidebar button.active {
             background-color: #ccc;
         }
-        /* Стили для содержимого вкладок */
         .content {
-            margin-left: 215px; /* Отступ для боковой панели */
+            margin-left: 215px;
             padding: 20px;
             flex: 1;
         }
@@ -82,7 +79,6 @@ def get_report_start():
         .tab-content.active {
             display: block;
         }
-        /* Для демонстрации прокрутки */
         .tab-content p {
             margin-bottom: 10px;
             line-height: 1.6;

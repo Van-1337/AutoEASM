@@ -1,6 +1,6 @@
 ## Description
 
-**EASM** (External Attack Surface Management) **automated tool** allows a quick scan of all domains and subdomains of any company with the help of different utilities and gets a list of important issues for verification. This automation allows the automatic testing of domains regularly with limited resources of the security team.
+**AutoEASM** (External Attack Surface Management) **tool** allows a quick scan of all domains and subdomains of any company with the help of different utilities and gets a list of important issues for verification. This automation allows the automatic testing of domains regularly with limited resources of the security team.
 Download and open **"Report Example.html"** file to see what you get when you run a scan with this utility.
 
 ## Used utilities
