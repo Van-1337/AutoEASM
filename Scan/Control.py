@@ -512,8 +512,17 @@ def check_social_networks():
         sm_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                    "Sec-Fetch-Site": "none"}
-        if social_media_link.startswith("tg://"):
+
+        if "//youtube.com" in social_media_link:
+            if social_media_link[-1] == '/':
+                social_media_link = social_media_link[:-1] + "?cbrd=1"  # To skip cookies accept for EU users
+            elif '?' in social_media_link:
+                social_media_link += "&cbrd=1"
+            else:
+                social_media_link += "?cbrd=1"
+        elif social_media_link.startswith("tg://"):
             social_media_link = "https://t.me/" + social_media_link.split('=')[1]
+
         try:
             link_response = requests.get(social_media_link, headers=sm_headers, timeout=10)
         except requests.RequestException:
