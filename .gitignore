@@ -2,7 +2,7 @@
 !Report Example.html
 *.txt
 !Scan/templates/*
-!Scan/fuzz.txt
+Scan/fuzz.txt
 *.zip
 *.cfg
 *.docx

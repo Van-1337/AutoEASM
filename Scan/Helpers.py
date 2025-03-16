@@ -4,6 +4,8 @@ import shutil
 import re
 from dataclasses import dataclass
 from datetime import datetime
+import random
+import requests
 
 
 def delete_http_duplicates(urls):
@@ -76,6 +78,19 @@ def get_host_from_url_list(urls, remove_ports=False):
         result.append(get_host_from_url(url, remove_ports))
     return result
 
+
+def get_random_string(length):
+    return ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', k=length))
+
+
+def is_site_available(url):
+    try:
+        user_agent_headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
+        requests.get(url, verify=False, headers=user_agent_headers, timeout=5, allow_redirects=False)
+        return True
+    except requests.RequestException:
+        return False
 
 @dataclass(frozen=True)
 class LeakixVulnerability:

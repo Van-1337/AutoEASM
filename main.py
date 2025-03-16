@@ -94,7 +94,7 @@ if __name__ == '__main__':
         elif sys.argv[i] == "-do" or sys.argv[i] == "-v" or sys.argv[i] == "-ds" or sys.argv[i] == "-df"\
                 or sys.argv[i] == "-dn" or sys.argv[i] == "-dp" or sys.argv[i] == "-dd" or sys.argv[i] == "-dl"\
                 or sys.argv[i] == "-dc" or sys.argv[i] == "-db" or sys.argv[i] == "-dm" or sys.argv[i] == "-dt"\
-                or sys.argv[i] == "-dw" or sys.argv[i] == "-di"\
+                or sys.argv[i] == "-dw" or sys.argv[i] == "-di" or sys.argv[i] == "-aff"\
                 or sys.argv[i] == "--docker" or sys.argv[i] == "-i" or sys.argv[i] == "-ba" or sys.argv[i] == "-bw"\
                 or sys.argv[i] == "-bf" or sys.argv[i] == "-bb":
             Flags.append(sys.argv[i])

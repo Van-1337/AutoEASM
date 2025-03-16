@@ -239,33 +239,34 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
 def launch_katana():
     if Global.HTTPAssets:
         input_data = '\n'.join(Global.HTTPAssets) + '\n'
-        if "-ds" in Flags:
-            disable_subdomains_flag = " -fs fqdn"
-        else:
-            disable_subdomains_flag = ""
         command = Katana_command.substitute(KatanaAdditionalFlagsD=Details[Global.DetailsLevel]['KatanaAdditionalFlagsD'],
-                                            KatanaAdditionalFlagsT=Threads[Global.LoadLevel]['KatanaAdditionalFlagsT'] + disable_subdomains_flag)
+                                            KatanaAdditionalFlagsT=Threads[Global.LoadLevel]['KatanaAdditionalFlagsT'])
+        if "-ds" in Flags:
+            command += " -fs fqdn"
+        if "-aff" in Flags:
+            command += " -aff"
         print("[*] Crawling URLs...")
 
         if '-v' in Flags:
             print("[v] Executing command: " + command)
-        # result = subprocess.run(command, input=input_data, shell=True, capture_output=True, text=True)
         result = command_exec(command, "Katana.txt", input_data)
 
         if result != "-":
-            # Global.CrawledURLs.extend(remove_non_links(result.stdout.splitlines()))
+            requests.packages.urllib3.disable_warnings()
             Global.CrawledURLs.extend(remove_non_links(result))
             if "-ds" not in Flags:
                 for link in Global.CrawledURLs:
                     slashes_amount = link.count('/')
                     if slashes_amount == 2 and (link + '/') not in Global.HTTPAssets and link not in Global.HTTPAssets:
-                        Global.HTTPAssets.append(link + '/')
+                        if is_site_available(link):
+                            Global.HTTPAssets.append(link)
                         if slashes_amount == 2 and (link + '/') not in Global.RawSubdomains and link not in Global.RawSubdomains:
-                            Global.RawSubdomains.append(link + '/')
-                    elif slashes_amount == 3 and link[-1] == '/' and link not in Global.HTTPAssets and link[:-1] not in Global.HTTPAssets:
-                        Global.HTTPAssets.append(link)
-                        if slashes_amount == 3 and link[-1] == '/' and link not in Global.RawSubdomains and link[:-1] not in Global.RawSubdomains:
                             Global.RawSubdomains.append(link)
+                    elif slashes_amount == 3 and link[-1] == '/' and link not in Global.HTTPAssets and link[:-1] not in Global.HTTPAssets:
+                        Global.HTTPAssets.append(link[:-1])
+                        if slashes_amount == 3 and link[-1] == '/' and link not in Global.RawSubdomains and link[:-1] not in Global.RawSubdomains:
+                            if is_site_available(link):
+                                Global.RawSubdomains.append(link[:-1])
                 print(f"[+] {(len(Global.CrawledURLs))} links were found")
         else:
             print("[e] Error when running Katana utility")
@@ -353,7 +354,9 @@ def launch_waf_bypass():
                     if orig_response.status_code == last_response.status_code and \
                             orig_response.headers.get("Content-Type") == last_response.headers.get("Content-Type"):
                         if set(last_response.headers.keys()) != headers_sets[url_without_waf] and \
-                                not is_cloudflare_in_response(last_response):
+                                not is_cloudflare_in_response(last_response) and\
+                                ("Location" not in last_response.headers or url_without_waf in last_response.headers["Location"])\
+                                and ("location" not in last_response.headers or url_without_waf in last_response.headers["location"]):
                             Global.WAFBypassHosts.append((get_host_from_url(domain_with_waf), url_without_waf))
                             if send_to_burp:
                                 try:
@@ -369,7 +372,7 @@ def launch_waf_bypass():
 
     if HTTPAssets and AssetsWithWAF:
         try:
-            print("[*] Trying to bypass the WAF by finding the same host without the firewall...")
+            print("[*] Trying to bypass the WAF by finding the host on the same server without a firewall...")
             requests.packages.urllib3.disable_warnings()
             user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
             wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
@@ -411,10 +414,11 @@ def launch_hidden_hosts_scan():
                         "Host": inactive_domain}
                     last_response = requests.get(working_url, verify=False, headers=headers, timeout=10,
                                                  allow_redirects=False)
-                    if set(last_response.headers.keys()) != headers_sets[working_url] and last_response.status_code != 421\
-                            and last_response.status_code != 400 and last_response.status_code != 429 and\
-                            last_response.status_code != 402 and last_response.status_code != 301\
-                            and last_response.status_code//100 != 5:
+                    if set(last_response.headers.keys()) != headers_sets[working_url] and len(last_response.text) != responses_length[working_url]\
+                            and last_response.status_code != 421 and last_response.status_code != 400 and last_response.status_code != 403 and \
+                            last_response.status_code != 429 and last_response.status_code != 402 and last_response.status_code//100 != 5\
+                            and ("Location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["Location"])\
+                            and ("location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["location"]):
                         Global.InactiveHostsAccess.append((inactive_domain, working_url))
                         found = True
                         if send_to_burp:
@@ -428,16 +432,15 @@ def launch_hidden_hosts_scan():
                     pass
             return found
 
-        if not check_host_in_list(HTTPAssets):
-            check_host_in_list(AssetsWithWAFlist)
+        if not is_site_available("https://" + inactive_domain):  # Check if the host is really inactive. If inactive - then start checking
+            if not check_host_in_list(HTTPAssets):
+                check_host_in_list(AssetsWithWAFlist)
 
     if HTTPAssets or AssetsWithWAF:
         AssetsWithWAFlist = list(AssetsWithWAF)
         try:
             print("[*] Trying to get access to old subdomains using host header manipulation...")
             requests.packages.urllib3.disable_warnings()
-            wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-                                   "Host": "qwertg.su"}
             send_to_burp = False
             if '-bb' in Flags:
                 proxy_url = 'http://' + Global.BurpProxy
@@ -445,12 +448,22 @@ def launch_hidden_hosts_scan():
                 send_to_burp = True
 
             headers_sets = {}  # {"example.com": set("Date", "Content-Type", "Content-Length")}
+            responses_length = {}  # {"example.com": 50505} - means response body length
+            wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
             for host in HTTPAssets+AssetsWithWAFlist:
                 try:
+                    wrong_host_headers["Host"] = f"{get_random_string(10)}.com"
                     response = requests.get(host, verify=False, headers=wrong_host_headers, timeout=10, allow_redirects=False)
                     headers_sets[host] = set(response.headers.keys())
+                    body_length = len(response.text)
+                    if body_length:
+                        responses_length[host] = body_length
+                    else:
+                        responses_length[host] = 13371337  # If the response body length is 0, then the length comparison
+                                                           # should be ignored to avoid a large number of false-negatives
                 except requests.RequestException:
                     headers_sets[host] = set()
+                    responses_length[host] = 13371338
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=Threads[Global.LoadLevel]['WAFbypassThreads']) as executor:
                 futures = []
@@ -560,7 +573,7 @@ def check_social_networks():
         if is_social_media_exist("https://www.youtube.com/@gjenwoepnfwvj"):
             patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/channel/[A-Za-z0-9-_]+/?')
             patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/user/[A-Za-z0-9]+/?')
-            patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch)/)[A-Za-z0-9-_]+/?')
+            patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist)/)[A-Za-z0-9-_]+/?')
             patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/@[A-Za-z0-9\-_]+/?')
             print("[e] Youtube account check is not relevant! Please contact developer for update.")
         if is_social_media_exist("https://www.facebook.com/iufqnoiqfenoiep"):
@@ -746,6 +759,8 @@ def check_subdomains_takeover():
 
 
 def launch_feroxbuster():
+    wrong_directory_keyword = "NotExisting"  # Should not appear in the wordlist initially
+    wrong_directory = wrong_directory_keyword + get_random_string(6)  # If the response code to this directory is 200, the remaining responses become invalid
     def clear_state_files():
         pattern = os.path.join('./', '*.state')
         state_files = glob.glob(pattern)
@@ -756,6 +771,26 @@ def launch_feroxbuster():
             except Exception as e:
                 if file_path != "resume.cfg":
                     print(f'[e] {file_path} Can\'t be deleted. The reason is: {e}')
+
+    def check_wrong_directory_in_file():
+        if not os.path.exists("Scan/fuzz.txt"):
+            print("[!] Scan/fuzz.txt was not found! Skipping directory scanning with Feroxbuster.")
+            return False
+
+        with open("Scan/fuzz.txt", "r", encoding="utf-8") as file:
+            lines = file.readlines()
+
+        if lines:
+            first_line = lines[0].strip()
+        else:
+            print("[!] File Scan/fuzz.txt is empty or unable to read! Skipping directory scanning with Feroxbuster.")
+            return False
+
+        if wrong_directory_keyword not in first_line:
+            new_content = wrong_directory + "\n" + "".join(lines)
+            with open("Scan/fuzz.txt", "w", encoding="utf-8") as file:
+                file.write(new_content)
+        return True
 
     def get_command_prefix():
         command = "feroxbuster -h"
@@ -776,23 +811,45 @@ def launch_feroxbuster():
         result = command_exec(command, "Feroxbuster.txt", input_data)
 
         if result != '-':
-            print(f"[+] {len(result)} directories were found")
+            incorrectly_fuzzed_hosts = []
             for raw_string in result:
-                parts = raw_string.split()  # 200  GET  7l  11w  153c  http://vulnweb.com/dump.sql
-                if len(parts) > 5 and parts[5].startswith("http") and not (parts[5].count('/') == 3 and parts[5][-1] == '/'):
-                    if parts[0] == "200":
-                        FuzzedDirectories["200"].append(parts[5])
-                    elif parts[0][0] == "3":
-                        FuzzedDirectories["3xx"].append(' '.join(parts[5:]))  # "http://site.com/logout => http://site.com/"
-                    elif parts[0] == "403":
-                        FuzzedDirectories["403"].append(parts[5])
-                    elif parts[0] == "405":
-                        FuzzedDirectories["405"].append(parts[5])
-                    elif parts[0] == "401":
-                        FuzzedDirectories["401"].append(parts[5])
+                try:
+                    parts = raw_string.split()  # 200  GET  7l  11w  153c  http://vulnweb.com/dump.sql
+                    if len(parts) > 5 and parts[5].startswith("http") and not (parts[5].count('/') == 3 and parts[5][-1] == '/'):
+                        correct_domain = False
+                        host = get_host_from_url(parts[5])
+                        for root_domain in Domains:
+                            if root_domain in host:
+                                correct_domain = True
+                                break
+
+                        if wrong_directory in parts[5] and (parts[0] == "200" or parts[0] == "403" or parts[0] == "401" or
+                                                            parts[0] == "405" or parts[0][0] == "3"):
+                            incorrectly_fuzzed_hosts.append(host)
+                            if "-v" in Flags:
+                                print(f"[v] {host} returns {parts[0]} status code to all requests and has been excluded from results")
+                        if host not in incorrectly_fuzzed_hosts:
+                            if correct_domain:
+                                if parts[0] == "200":
+                                    FuzzedDirectories["200"].append(parts[5])
+                                elif parts[0] == "403":
+                                    FuzzedDirectories["403"].append(parts[5])
+                                elif parts[0] == "401":
+                                    FuzzedDirectories["401"].append(parts[5])
+                                elif parts[0] == "405":
+                                    FuzzedDirectories["405"].append(parts[5])
+                                elif parts[0][0] == "3":
+                                    FuzzedDirectories["3xx"].append(' '.join(parts[5:]))  # "http://site.com/logout => http://site.com/"
+                except KeyboardInterrupt:
+                    print("[!] Feroxbuster scan already finished, processing the results. Please wait...")
+            results_amount = len(FuzzedDirectories["200"]) + len(FuzzedDirectories["403"]) + len(FuzzedDirectories["401"])\
+                             + len(FuzzedDirectories["405"]) + len(FuzzedDirectories["3xx"])
+            print(f'[+] {results_amount} directories were found')
         else:
             print("[e] Error when running Feroxbuster utility")
 
+    if not check_wrong_directory_in_file():
+        return False
     prefix = get_command_prefix()
     if HTTPAssets:
         print("[*] Fuzzing suspicious directories (may take some time)...")

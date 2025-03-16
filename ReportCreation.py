@@ -246,7 +246,7 @@ def get_report_content():
             if FuzzedDirectories[HTTP_code]:
                 fuzzing_text += f"<br><h3>Endpoints with {HTTP_code} code</h3><br>\n<p>\n"
                 for endpoint in FuzzedDirectories[HTTP_code]:
-                    fuzzing_text += f"{endpoint} <br>\n"
+                    fuzzing_text += f"<a href=\"{endpoint}\">{endpoint}</a><br>\n"
                     count += 1
                 fuzzing_text += "</p>\n"
         if count == 0:
@@ -273,8 +273,8 @@ def get_report_content():
                             f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
                             f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
                             f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
-                            f"-t {Global.Threads[Global.LoadLevel]['FeroxbusterThreads']} --dont-extract-links -C 404 500 " \
-                            f"--time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
+                            f"-t {(Global.Threads[Global.LoadLevel]['FeroxbusterThreads']*Global.Threads[Global.LoadLevel]['FeroxbusterParallels'])//2} " \
+                            f"--dont-extract-links -C 404 500 --time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
             return f"<details><summary>Try using host header <b>{hosts_pair[0]}</b> on {hosts_pair[1]}</summary>" \
                    f"<br><pre>{scan_commands}</pre></details><br><br>\n"
 
