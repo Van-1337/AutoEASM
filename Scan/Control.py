@@ -356,7 +356,8 @@ def launch_waf_bypass():
                         if set(last_response.headers.keys()) != headers_sets[url_without_waf] and \
                                 not is_cloudflare_in_response(last_response) and\
                                 ("Location" not in last_response.headers or url_without_waf in last_response.headers["Location"])\
-                                and ("location" not in last_response.headers or url_without_waf in last_response.headers["location"]):
+                                and ("location" not in last_response.headers or url_without_waf in last_response.headers["location"])\
+                                and is_site_real_by_response(last_response):
                             Global.WAFBypassHosts.append((get_host_from_url(domain_with_waf), url_without_waf))
                             if send_to_burp:
                                 try:
@@ -418,7 +419,8 @@ def launch_hidden_hosts_scan():
                             and last_response.status_code != 421 and last_response.status_code != 400 and last_response.status_code != 403 and \
                             last_response.status_code != 429 and last_response.status_code != 402 and last_response.status_code//100 != 5\
                             and ("Location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["Location"])\
-                            and ("location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["location"]):
+                            and ("location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["location"])\
+                            and is_site_real_by_response(last_response):
                         Global.InactiveHostsAccess.append((inactive_domain, working_url))
                         found = True
                         if send_to_burp:

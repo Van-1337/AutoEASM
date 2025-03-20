@@ -137,3 +137,10 @@ def is_cloudflare_in_response(response):
     headers_contains_keyword = any('cloudflare' in value for value in response.headers.values())
     body_contains_keyword = 'Cloudflare' in response.text
     return headers_contains_keyword or body_contains_keyword
+
+
+def is_site_real_by_response(response):
+    body_contains_keyword = 'href="http://adm.tools/support/">' in response.text or\
+                            '<p>This site is currently under construction.</p' in response.text or\
+                            '">This site is currently suspended<' in response.text
+    return not body_contains_keyword

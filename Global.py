@@ -52,11 +52,11 @@ Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 
            2: {'DNSX': 120, 'NaabuThreads': 75, 'NaabuRate': 170, 'HTTPXthreads': 80, 'HTTPXrate': 200,
                'NucleiRate': 110, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
                'FeroxbusterTimeLimit': '25m', 'KatanaAdditionalFlagsT': '-p 20', 'byp4xx_threads': 25,
-               'WAFbypassThreads': 60},
+               'WAFbypassThreads': 50},
            3: {'DNSX': 250, 'NaabuThreads': 150, 'NaabuRate': 400, 'HTTPXthreads': 200, 'HTTPXrate': 400,
                'NucleiRate': 250, 'NucleiParallels': 40, 'FeroxbusterParallels': 25, 'FeroxbusterThreads': 20,
                'FeroxbusterTimeLimit': '20m', 'KatanaAdditionalFlagsT': '-p 25', 'byp4xx_threads': 40,
-               'WAFbypassThreads': 130}}  # Get threads amount by LoadLevel and tool
+               'WAFbypassThreads': 110}}  # Get threads amount by LoadLevel and tool
 DetailsLevel = 2
 Details = {1: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'NucleiCritical': "high,critical",  # NucleiCritical is also currently using for DAST
                'NucleiConfigCritical': 'medium,high,critical', 'NucleiTokensCritical': 'low,medium,high,critical',
@@ -89,8 +89,8 @@ Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-det
 Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc")
 Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
 Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc")
-Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"sage>Access Denied</Mess\" --auto-tune --no-recursion --quiet -w $FuzzingDictPath --stdin --redirects "
-                               "--parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
+Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\/Mess\" --auto-tune --no-recursion --quiet -w $FuzzingDictPath --stdin "
+                               "--redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
 Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags")
 Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlagsD $KatanaAdditionalFlagsT")
 Uro_command = "uro"
