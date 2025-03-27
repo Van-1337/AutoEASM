@@ -251,9 +251,14 @@ def get_report_content():
         return fuzzing_text
 
     def bypass403_results():
-        bypass_text = """\n\n<div id="Bypass403" class="tab-content">\n<h2>403 and 401 bypass results</h2><br>\n"""
+        bypass_text = """\n\n<div id="Bypass403" class="tab-content">\n<h2>403 and 401 codes bypass results</h2><br>\n"""
         if Global.Byp4xxResult:
-            bypass_text += "<i>Please note that 403 bypass tools often gives false positives</i><br><br>\n"
+            bypass_text += "<i>Please note that 403 bypass tools often gives false positives.</i><br>\n"
+            if not Global.Details[Global.DetailsLevel]['CheckAll403links']:
+                bypass_text += "<b>Only 1 link was analyzed for each host. If a successful traversal was found, manually "\
+                               "check other 403/401 links on this domain.</b><br><br>\n"
+            else:
+                bypass_text += "<br>\n"
             bypass_text += Global.Byp4xxResult
         else:
             bypass_text += "No bypasses this time."
