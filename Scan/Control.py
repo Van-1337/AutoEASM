@@ -14,11 +14,11 @@ import concurrent.futures
 
 
 def scanning():
-    print("[N] Note: you can stop a current check with Ctrl+C")
     try:
         if check_installed_tools() != 0:
             print("[e] Not all required utilities are installed. Terminating.")
             sys.exit(1)
+        print("[N] Note: you can stop a current check with Ctrl+C")
         if ensure_logs_directory():
             clear_logs()
         if '-ds' in Flags or '-i' in Flags:
@@ -342,14 +342,14 @@ def delete_urls_with_waf():
 def launch_waf_bypass():
     def check_asset_with_WAF(domain_with_waf):
         try:
-            orig_response = requests.get(domain_with_waf, verify=False, headers=user_agent_header, timeout=10,
+            orig_response = requests.get(domain_with_waf, verify=False, headers=user_agent_header, timeout=15,
                                          allow_redirects=False)
             for url_without_waf in HTTPAssets:
                 try:
                     headers = {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                         "Host": get_host_from_url(domain_with_waf)}
-                    last_response = requests.get(url_without_waf, verify=False, headers=headers, timeout=10,
+                    last_response = requests.get(url_without_waf, verify=False, headers=headers, timeout=15,
                                                  allow_redirects=False)
                     if orig_response.status_code == last_response.status_code and \
                             orig_response.headers.get("Content-Type") == last_response.headers.get("Content-Type"):
@@ -361,7 +361,7 @@ def launch_waf_bypass():
                             Global.WAFBypassHosts.append((get_host_from_url(domain_with_waf), url_without_waf))
                             if send_to_burp:
                                 try:
-                                    requests.get(url_without_waf, verify=False, headers=headers, timeout=10,
+                                    requests.get(url_without_waf, verify=False, headers=headers, timeout=15,
                                                  proxies=proxies, allow_redirects=False)
                                 except requests.RequestException:
                                     print(f"[e] Error sending request to {url_without_waf} with"
@@ -413,7 +413,7 @@ def launch_hidden_hosts_scan():
                     headers = {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                         "Host": inactive_domain}
-                    last_response = requests.get(working_url, verify=False, headers=headers, timeout=10,
+                    last_response = requests.get(working_url, verify=False, headers=headers, timeout=15,
                                                  allow_redirects=False)
                     if set(last_response.headers.keys()) != headers_sets[working_url] and len(last_response.text) != responses_length[working_url]\
                             and last_response.status_code != 421 and last_response.status_code != 400 and last_response.status_code != 403 and \
@@ -425,7 +425,7 @@ def launch_hidden_hosts_scan():
                         found = True
                         if send_to_burp:
                             try:
-                                requests.get(working_url, verify=False, headers=headers, timeout=10,
+                                requests.get(working_url, verify=False, headers=headers, timeout=15,
                                              proxies=proxies, allow_redirects=False)
                             except requests.RequestException:
                                 print(f"[e] Error sending request to {working_url} with"
@@ -455,7 +455,7 @@ def launch_hidden_hosts_scan():
             for host in HTTPAssets+AssetsWithWAFlist:
                 try:
                     wrong_host_headers["Host"] = f"{get_random_string(10)}.com"
-                    response = requests.get(host, verify=False, headers=wrong_host_headers, timeout=10, allow_redirects=False)
+                    response = requests.get(host, verify=False, headers=wrong_host_headers, timeout=15, allow_redirects=False)
                     headers_sets[host] = set(response.headers.keys())
                     body_length = len(response.text)
                     if body_length:
@@ -618,7 +618,7 @@ def check_social_networks():
             except requests.RequestException:
                 pass
                 #print(f"[e] Error during social networks checking when sending request to {url}")
-    print(f"[+] {len(Global.NotExistingSocialLinks)} not-registered links were found")
+    print(f"[+] {len(Global.NotExistingSocialLinks)} unregistered social media links were found")
 
 
 def launch_nuclei():
@@ -874,11 +874,24 @@ def launch_feroxbuster():
 
 def launch_byp4xx():
     if FuzzedDirectories["403"] or FuzzedDirectories["401"]:
-        with open("Scan/403pages.txt", "w", encoding="utf-8") as file:
-            for url in FuzzedDirectories["403"]:
-                file.write(url + "\n")
-            for url in FuzzedDirectories["401"]:
-                file.write(url + "\n")
+        if Details[Global.DetailsLevel]['CheckAll403links']:
+            with open("Scan/403pages.txt", "w", encoding="utf-8") as file:
+                for url in FuzzedDirectories["403"]:
+                    file.write(url + "\n")
+                for url in FuzzedDirectories["401"]:
+                    file.write(url + "\n")
+        else:
+            with open("Scan/403pages.txt", "w", encoding="utf-8") as file:
+                written_hosts = []
+                for url in FuzzedDirectories["403"]:
+                    if get_host_from_url(url) not in written_hosts:
+                        written_hosts.append(get_host_from_url(url))
+                        file.write(url + "\n")
+                written_hosts = []
+                for url in FuzzedDirectories["401"]:
+                    if get_host_from_url(url) not in written_hosts:
+                        written_hosts.append(get_host_from_url(url))
+                        file.write(url + "\n")
 
         command = Byp4xx_command.substitute(byp4xx_threads=Threads[LoadLevel]['byp4xx_threads'],
                                             Byp4xx_flags=Details[DetailsLevel]['Byp4xx_flags'])
