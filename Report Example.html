@@ -2,9 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>EASM Report</title>
+    <title>AutoEASM Report</title>
     <style>
-        /* Обнуляем отступы и устанавливаем box-sizing */
         * {
             margin: 0;
             padding: 0;
@@ -15,16 +14,15 @@
             display: flex;
             min-height: 100vh;
         }
-        /* Стили для фиксированной боковой панели */
         .sidebar {
-            position: fixed; /* Фиксированное позиционирование */
+            position: fixed;
             top: 0;
             left: 0;
-            width: 200px;
-            height: 100%; /* Полная высота окна */
+            width: 215px;
+            height: 100%;
             background-color: #f4f4f4;
             border-right: 1px solid #ccc;
-            overflow-x: hidden; /* Отключение горизонтальной прокрутки */
+            overflow-x: hidden;
             padding-top: 20px;
         }
         .sidebar button {
@@ -45,9 +43,8 @@
         .sidebar button.active {
             background-color: #ccc;
         }
-        /* Стили для содержимого вкладок */
         .content {
-            margin-left: 200px; /* Отступ для боковой панели */
+            margin-left: 215px;
             padding: 20px;
             flex: 1;
         }
@@ -57,7 +54,6 @@
         .tab-content.active {
             display: block;
         }
-        /* Для демонстрации прокрутки */
         .tab-content p {
             margin-bottom: 10px;
             line-height: 1.6;
@@ -73,6 +69,7 @@
         <button class="tablink" onclick="openTab(event, 'SecurityFindings')">Security findings</button>
         <button class="tablink" onclick="openTab(event, 'Fuzzed')">Interesting directories</button>
         <button class="tablink" onclick="openTab(event, 'Bypass403')">403 bypass</button>
+        <button class="tablink" onclick="openTab(event, 'HostManipulation')">Host header manipulation</button>
         <button class="tablink" onclick="openTab(event, 'SocialMedia')">Social media takeover</button>
         <button class="tablink" onclick="openTab(event, 'Postleaks')">Postman leaks</button>
         <button class="tablink" onclick="openTab(event, 'Leakix')">Leakix results</button>
@@ -693,7 +690,10 @@ No findings this time :( <br><br><br><h2>Config findings</h2><br>
 [windows-lfi-fuzz] [http] [high] http://testasp.vulnweb.com/Templatize.asp?item=../../windows/win.ini [GET] <br>
 </p>
 <br><br><h2>Leaked tokens findings</h2><br>
-No findings this time :( <br></div>
+No findings this time :( <br>
+<br><br><h2>Subdomain takeover findings</h2><br>
+No findings this time :( <br>
+</div>
 
 <div id="Fuzzed" class="tab-content">
 <h2>Fuzzed files and directories</h2><br>
@@ -795,6 +795,20 @@ admin: 308<br>
 ==BUG BOUNTY TIPS==<br>
 /admin//: 308<br>
 <br><br>
+</div>
+
+<div id="HostManipulation" class="tab-content">
+<h1>Host header manipulation</h1><br>
+<br><h2>WAF bypass</h2><br>
+No hosts with WAF found.<br><br><h2>Access to inactive hosts</h2><br>
+<details><summary>Try using host header <b>testphp.vulnweb.com</b> on http://testhtml5.vulnweb.com</summary><br><pre>nuclei -u http://testhtml5.vulnweb.com -header Host:testphp.vulnweb.com -s low,medium,high,critical -rl 40 -c 10
+katana -u http://testhtml5.vulnweb.com -headers Host:testphp.vulnweb.com -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn -iqp -kf all -d 3 -ct 180 -p 7 -rl 70 | nuclei -header Host:testphp.vulnweb.com -dast -etags backup -s medium,high,critical -rl 40 -c 10
+feroxbuster -H Host:testphp.vulnweb.com -u http://testhtml5.vulnweb.com -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects -t 25 --dont-extract-links -C 404 500 --time-limit 30m
+</pre></details><br><br>
+<details><summary>Try using host header <b>testphp.vulnweb.com</b> on http://vulnweb.com</summary><br><pre>nuclei -u http://vulnweb.com -header Host:testphp.vulnweb.com -s low,medium,high,critical -rl 40 -c 10
+katana -u http://vulnweb.com -headers Host:testphp.vulnweb.com -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn -iqp -kf all -d 3 -ct 180 -p 7 -rl 70 | nuclei -header Host:testphp.vulnweb.com -dast -etags backup -s medium,high,critical -rl 40 -c 10
+feroxbuster -H Host:testphp.vulnweb.com -u http://vulnweb.com -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects -t 25 --dont-extract-links -C 404 500 --time-limit 30m
+</pre></details><br><br>
 </div>
 
 <div id="SocialMedia" class="tab-content">
@@ -1192,18 +1206,15 @@ https://medium.com/@ghostlulzhacks/apache-server-status-a70abed83f5a
 
     <script>
         function openTab(evt, tabName) {
-            // Скрыть все содержимое вкладок
             var i, tabcontent, tablinks;
             tabcontent = document.getElementsByClassName("tab-content");
             for (i = 0; i < tabcontent.length; i++) {
                 tabcontent[i].classList.remove("active");
             }
-            // Убрать активный класс со всех кнопок
             tablinks = document.getElementsByClassName("tablink");
             for (i = 0; i < tablinks.length; i++) {
                 tablinks[i].classList.remove("active");
             }
-            // Показать текущую вкладку и добавить активный класс к кнопке
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
         }

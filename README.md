@@ -27,9 +27,18 @@ Download and open **"Report Example.html"** file to see what you get when you ru
 
 ## Installation
 
-1. Install Python and Go on your PC (it can be both Windows or Linux).
+1. Install Python and Go on your PC (it can be both Windows or Linux). Clone the repository:
+`git clone https://github.com/Van-1337/AutoEASM`
 
-2. Install dependencies using the following commands:
+2. For **Linux** the following commands are required:
+```
+sudo apt install -y feroxbuster
+cd AutoEASM/ ; chmod +x Scan/byp4xx.go
+apt-get install libpcap-dev -y
+```
+For **Windows** no additional commands are required.
+
+3. Install dependencies using the following commands:
 ```
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
@@ -38,17 +47,11 @@ go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 go install -v github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest
 go install -v github.com/projectdiscovery/katana/cmd/katana@latest
+python -m pip install --user pipx    or     python3 -m pip install --user pipx
 pip install requests
 pip install postleaks
-pip install uro
+pipx install uro
 ```
-
-3. For **Linux** also the following commands are required:
-```
-sudo apt install -y feroxbuster
-cd EASM-automate/ ; chmod +x Scan/byp4xx.go
-```
-For **Windows** no additional commands are required.
 
 4. \[*Optional, but preferable*\] Change the Leakix API key at the end of the Global.py file **OR** specify it in the `LeakIX_API_key` environment variable. A free key for 3000 requests per month can be obtained [here](https://leakix.net/settings/api).
 
