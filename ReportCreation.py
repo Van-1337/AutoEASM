@@ -255,7 +255,7 @@ def get_report_content():
         if Global.Byp4xxResult:
             bypass_text += "<i>Please note that 403 bypass tools often gives false positives.</i><br>\n"
             if not Global.Details[Global.DetailsLevel]['CheckAll403links']:
-                bypass_text += "<b>Only 1 link was analyzed for each host. If a successful traversal was found, manually "\
+                bypass_text += "<b>Only 1 link was analyzed for each host. If a successful bypass was found, manually "\
                                "check other 403/401 links on this domain.</b><br><br>\n"
             else:
                 bypass_text += "<br>\n"
