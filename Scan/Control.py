@@ -211,6 +211,8 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
                 print("[e] Command: " + Subfinder_command)
                 print("[e] Error: " + result.stderr)
                 sys.exit(1)
+        else:
+            Global.RawSubdomains.extend(Global.Domains)
 
         command = DNSX_Naabu_command.substitute(dnsxThreads=Threads[Global.LoadLevel]['DNSX'], NaabuThreads=Threads[Global.LoadLevel]['NaabuThreads'],
                                                 NaabuRate=Threads[Global.LoadLevel]['NaabuRate'], NaabuPorts=Details[Global.DetailsLevel]['NaabuPorts'],
