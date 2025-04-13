@@ -951,44 +951,45 @@ def launch_postleaks():
 
     print("[*] Start searching suspicious Postman collections in parallel...")
     for domain in Domains:  # not using one command for all files because utility is unstable and sometimes gives errors
-        keyword = get_keyword(domain)
-        command = Postleaks_command.substitute(domain=keyword, PostleaksAditionalFlags=Details[Global.DetailsLevel]["PostleaksAditionalFlags"])
+        if '-' not in domain:  # Excluded all domains with hyphen due to the peculiarities of the Postman search
+            keyword = get_keyword(domain)
+            command = Postleaks_command.substitute(domain=keyword, PostleaksAditionalFlags=Details[Global.DetailsLevel]["PostleaksAditionalFlags"])
 
-        if '-v' in Flags:
-            print("[v] Executing command: " + command)
+            if '-v' in Flags:
+                print("[v] Executing command: " + command)
 
-        executed = False
+            executed = False
 
-        while not executed:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            if result.returncode == 3221225786 or result.returncode == 130:
-                if is_postleaks_waiting:
-                    print("[*] Finishing postleaks execution...")
-                    delete_postleaks_junk()
-                    return
+            while not executed:
+                result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                if result.returncode == 3221225786 or result.returncode == 130:
+                    if is_postleaks_waiting:
+                        print("[*] Finishing postleaks execution...")
+                        delete_postleaks_junk()
+                        return
+                else:
+                    executed = True
+
+            if result.returncode == 0:
+                count = 0
+                for raw_string in remove_ansi_escape_codes(result.stdout).splitlines():
+                    if raw_string.startswith("[+") or raw_string.startswith(" -") or raw_string.startswith(" >"):
+                        if count == 0:
+                            Global.PostleaksResult += f'<h3>{keyword} results</h3>\n' \
+                                                      f'<a href=\"https://www.postman.com/search?q={keyword}&scope=all&type=all\">Postman collection search link</a><br>\n'
+                        count += 1
+                        if raw_string.startswith(" >"):
+                            Global.PostleaksResult += f"<b>{raw_string}</b> <br>\n"
+                        else:
+                            if raw_string.startswith("[+"):
+                                Global.PostleaksResult += "<br>\n"
+                            Global.PostleaksResult += raw_string + " <br>\n"
+                    elif raw_string.startswith("[-"):
+                        print("[e]", raw_string)
+                if count != 0:
+                    Global.PostleaksResult += "\n<br><br><br>\n"
             else:
-                executed = True
-
-        if result.returncode == 0:
-            count = 0
-            for raw_string in remove_ansi_escape_codes(result.stdout).splitlines():
-                if raw_string.startswith("[+") or raw_string.startswith(" -") or raw_string.startswith(" >"):
-                    if count == 0:
-                        Global.PostleaksResult += f'<h3>{keyword} results</h3>\n' \
-                                                  f'<a href=\"https://www.postman.com/search?q={keyword}&scope=all&type=all\">Postman collection search link</a><br>\n'
-                    count += 1
-                    if raw_string.startswith(" >"):
-                        Global.PostleaksResult += f"<b>{raw_string}</b> <br>\n"
-                    else:
-                        if raw_string.startswith("[+"):
-                            Global.PostleaksResult += "<br>\n"
-                        Global.PostleaksResult += raw_string + " <br>\n"
-                elif raw_string.startswith("[-"):
-                    print("[e]", raw_string)
-            if count != 0:
-                Global.PostleaksResult += "\n<br><br><br>\n"
-        else:
-            print("[e] Error when running postleaks utility")
+                print("[e] Error when running postleaks utility")
     delete_postleaks_junk()
 
 
