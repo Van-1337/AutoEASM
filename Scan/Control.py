@@ -629,7 +629,7 @@ def launch_nuclei():
         input_data += '\n'.join(AssetsWithWAF) + '\n'
         command = Nuclei_config_command.substitute(NucleiConfigCritical=Details[Global.DetailsLevel]['NucleiConfigCritical'],
                                                    NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
-                                                   NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels'])
+                                                   NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels']) + TemplatesFlag
         print("[*] Scanning with config Nuclei templates...")
 
         if '-v' in Flags:
@@ -657,7 +657,7 @@ def launch_nuclei():
             input_data += '\n'.join(AssetsWithWAF) + '\n'
         command = Nuclei_default_command.substitute(NucleiCritical=Details[Global.DetailsLevel]['NucleiCritical'],
                                                     NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
-                                                    NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels'])
+                                                    NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels']) + TemplatesFlag
         print("[*] Scanning with main Nuclei templates...")
 
         if '-v' in Flags:
@@ -685,7 +685,7 @@ def launch_nuclei():
         else:
             input_data = '\n'.join(CrawledURLs) + '\n'
             input_data += '\n'.join(URLsWithWAF) + '\n'
-        command = Nuclei_tokens_command.substitute(NucleiTokensCritical=Details[Global.DetailsLevel]['NucleiTokensCritical'])
+        command = Nuclei_tokens_command.substitute(NucleiTokensCritical=Details[Global.DetailsLevel]['NucleiTokensCritical']) + TemplatesFlag
         print("[*] Scanning with leaked tokens Nuclei templates...")
 
         if '-v' in Flags:
@@ -713,7 +713,7 @@ def launch_nuclei():
             input_data += '\n'.join(URLsWithWAF) + '\n'
         command = Nuclei_DAST_command.substitute(NucleiDASTCritical=Details[Global.DetailsLevel]['NucleiCritical'],
                                                  NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
-                                                 NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels'])
+                                                 NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels']) + TemplatesFlag
         print("[*] Scanning with Nuclei DAST templates...")
 
         if '-v' in Flags:
@@ -735,6 +735,10 @@ def launch_nuclei():
         else:
             print("[e] Error when running Nuclei utility using DAST checks")
 
+    if Global.TemplatesPath:
+        TemplatesFlag = " -t " + Global.TemplatesPath
+    else:
+        TemplatesFlag = ""
     if CrawledURLs or URLsWithWAF:
         tokens_check()
     if HTTPAssets or AssetsWithWAF:
@@ -749,6 +753,8 @@ def check_subdomains_takeover():
     input_data = '\n'.join(Global.RawSubdomains) + '\n'
     command = Nuclei_subdomains_takeover_command.substitute(NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
                                                             NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels'])
+    # if Global.TemplatesPath:
+    #    command += ' -t ' + Global.TemplatesPath
     print("[*] Checking subdomains takeover possibilities...")
 
     if '-v' in Flags:

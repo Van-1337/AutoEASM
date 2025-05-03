@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -p <proxy> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -p <proxy> -tem <path> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -17,6 +17,7 @@ OPTIONAL FLAGS:
 -ld <number> - level of detail, slightly increases the number of findings and greatly increases execution time and junk info. Number: 1-4, 1 - max speed, 4 - max findings, Default: 2
 -sa - scan ALL ports instead of 100 or 1000
 -aff - add Automatic form filling in katana
+-tem - specify directory with Nuclei templates
 -i - IP scan (skipping DNSX check, subdomain enumeration and Postman checking)
 
 DISABLING FEATURES:
@@ -107,6 +108,7 @@ AssetsWithWAF = {}  # {"https://site.com": "cloudflare"}
 CrawledURLs = []  # Without WAF
 URLsWithWAF = []
 JSlinks = []
+TemplatesPath = ""
 BurpProxy = "127.0.0.1:8080"  # By default
 
 # ---Final results---

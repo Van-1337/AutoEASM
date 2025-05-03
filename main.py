@@ -87,6 +87,13 @@ if __name__ == '__main__':
             else:
                 print("Please specify proxy after -p argument. Example: -p 127.0.0.1:8080")
                 sys.exit(1)
+        elif sys.argv[i] == '-tem':
+            if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
+                Global.TemplatesPath = sys.argv[i + 1]
+                argument_was_used = True
+            else:
+                print("Please specify Nuclei templates path after -tem argument. Example: -tem /src/Nuclei-templates")
+                sys.exit(1)
         elif sys.argv[i] == '-sa':
             Flags.append('-sa')
             for level in range(0, len(Global.Details)):
