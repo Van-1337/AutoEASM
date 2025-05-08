@@ -85,10 +85,10 @@ DNSX_Naabu_command = Template("dnsx -silent -t $dnsxThreads -retry 5 -a | naabu 
 Naabu_command = Template("naabu -s s -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent $NaabuFlags")
 HTTPX_command = Template("httpx -t $HTTPXthreads -rl $HTTPXrate -silent -retries 5")
 CDNCheck_command = "cdncheck -i Scan/HTTP_assets_list.txt -silent -nc -resp -waf"
-Nuclei_default_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -etags backup,config,exposure,panel,debug,network,js -s $NucleiCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
+Nuclei_default_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -etags backup,cache,logs,listing,config,exposure,panel,debug,network,js -s $NucleiCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
 Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -tags config,exposure,panel,debug,network,js -s $NucleiConfigCritical -rl $NucleiRate -c $NucleiParallels -silent -nc")
 Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc")
-Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
+Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup,cache,logs,listing -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
 Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc")
 Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\/Mess\" --auto-tune --no-recursion --quiet -w $FuzzingDictPath --stdin "
                                "--redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
