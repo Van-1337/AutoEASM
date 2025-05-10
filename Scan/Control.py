@@ -11,6 +11,7 @@ from typing import List
 import json
 import glob
 import concurrent.futures
+from html import escape
 
 
 def scanning():
@@ -115,12 +116,12 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
             output_file.write(clean_command_output)
             output_file.truncate()
             output_file.close()
-            return clean_command_output.splitlines()
+            return escape(clean_command_output).splitlines()
         else:
             output_file = open('Logs/' + filename, "r")
             command_output = output_file.read()
             output_file.close()
-            return command_output.splitlines()
+            return escape(command_output).splitlines()
     else:
         print(f"[e] Error when running this command: {command}")
         print("[e] Error: " + result.stderr)
