@@ -5,6 +5,7 @@ from datetime import datetime
 from Scan.LeakixInfo import Leakix_info
 import webbrowser
 import os
+from html import escape
 
 def CreateReport(report_name="Report"):
     print("[*] Report creation...")
@@ -178,7 +179,7 @@ def get_report_content():
             if NucleiFindings[severity]:
                 findings_text += f"<h3>Issues with {severity} severity</h3><br>\n<p>\n"
                 for finding in NucleiFindings[severity]:
-                    findings_text += f"{finding} <br>\n"
+                    findings_text += f"{escape(finding)} <br>\n"
                     count += 1
                 findings_text += "</p>\n"
         if count == 0:
@@ -190,7 +191,7 @@ def get_report_content():
             if NucleiConfigFindings[severity]:
                 findings_text += f"<h3>Issues with {severity} severity</h3><br>\n<p>\n"
                 for finding in NucleiConfigFindings[severity]:
-                    findings_text += f"{finding} <br>\n"
+                    findings_text += f"{escape(finding)} <br>\n"
                     count += 1
                 findings_text += "</p>\n"
         if count == 0:
@@ -202,7 +203,7 @@ def get_report_content():
             if NucleiDASTFindings[severity]:
                 findings_text += f"<h3>Issues with {severity} severity</h3><br>\n<p>\n"
                 for finding in NucleiDASTFindings[severity]:
-                    findings_text += f"{finding} <br>\n"
+                    findings_text += f"{escape(finding)} <br>\n"
                     count += 1
                 findings_text += "</p>\n"
         if count == 0:
@@ -214,7 +215,7 @@ def get_report_content():
             if NucleiTokensFindings[severity]:
                 findings_text += f"<h3>Issues with {severity} severity</h3><br>\n<p>\n"
                 for finding in NucleiTokensFindings[severity]:
-                    findings_text += f"{finding} <br>\n"
+                    findings_text += f"{escape(finding)} <br>\n"
                     count += 1
                 findings_text += "</p>\n"
         if count == 0:
@@ -226,7 +227,7 @@ def get_report_content():
             if NucleiTakeoverFindings[severity]:
                 findings_text += f"<h3>Issues with {severity} severity</h3><br>\n<p>\n"
                 for finding in NucleiTakeoverFindings[severity]:
-                    findings_text += f"{finding} <br>\n"
+                    findings_text += f"{escape(finding)} <br>\n"
                     count += 1
                 findings_text += "</p>\n"
         if count == 0:
@@ -265,7 +266,7 @@ def get_report_content():
         bypass_text += "</div>"
         return bypass_text
 
-    def host_manipulation():
+    def host_manipulation():  # Get WAF bypass and inactive hosts access
         def get_host_result(hosts_pair):
             scan_commands = f"nuclei -u {hosts_pair[1]} -header Host:{hosts_pair[0]} -s {Global.Details[Global.DetailsLevel]['NucleiConfigCritical']} " \
                             f"-rl {Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
@@ -328,7 +329,7 @@ def get_report_content():
                     elif Leakix_info[finding.event_source][0]:
                         leakix_text += f" (<b>{Leakix_info[finding.event_source][0]}</b> severity)"
                     leakix_text += f".  <a href=\"https://leakix.net/domain/{finding.host}\">More info here</a></summary>"
-                    leakix_text += f"<br><pre>{Leakix_info[finding.event_source][2]}</pre>"
+                    leakix_text += f"<br><pre>{escape(Leakix_info[finding.event_source][2])}</pre>"
                     leakix_text += "</details><br><br>\n"
                 else:
                     leakix_text += f"<b>{finding.event_source}:</b> on <a href=\"{finding.url}\">{finding.url}</a>"

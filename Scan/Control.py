@@ -986,11 +986,11 @@ def launch_postleaks():
                                                       f'<a href=\"https://www.postman.com/search?q={keyword}&scope=all&type=all\">Postman collection search link</a><br>\n'
                         count += 1
                         if raw_string.startswith(" >"):
-                            Global.PostleaksResult += f"<b>{raw_string}</b> <br>\n"
+                            Global.PostleaksResult += f"<b>{escape(raw_string)}</b> <br>\n"
                         else:
                             if raw_string.startswith("[+"):
                                 Global.PostleaksResult += "<br>\n"
-                            Global.PostleaksResult += raw_string + " <br>\n"
+                            Global.PostleaksResult += escape(raw_string) + " <br>\n"
                     elif raw_string.startswith("[-"):
                         print("[e]", raw_string)
                 if count != 0:
