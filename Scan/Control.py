@@ -116,12 +116,12 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
             output_file.write(clean_command_output)
             output_file.truncate()
             output_file.close()
-            return escape(clean_command_output).splitlines()
+            return clean_command_output.splitlines()
         else:
             output_file = open('Logs/' + filename, "r")
             command_output = output_file.read()
             output_file.close()
-            return escape(command_output).splitlines()
+            return command_output.splitlines()
     else:
         print(f"[e] Error when running this command: {command}")
         print("[e] Error: " + result.stderr)
