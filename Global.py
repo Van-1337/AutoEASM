@@ -90,8 +90,8 @@ Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-det
 Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc")
 Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup,cache,logs,listing -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc -fuzz-param-frequency 1000")
 Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc")
-Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\/Mess\" --auto-tune --no-recursion --quiet -w $FuzzingDictPath --stdin "
-                               "--redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
+Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\/Mess\" -X \"firewall on this server is blocking your\" --auto-tune --no-recursion --quiet "
+                               "-w $FuzzingDictPath --stdin --redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
 Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags")
 Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlagsD $KatanaAdditionalFlagsT")
 Uro_command = "uro"
