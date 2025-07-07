@@ -709,7 +709,10 @@ def launch_nuclei():
             print("[e] Error when running Nuclei utility using tokens templates")
 
     def dast_start():
-        input_data = '\n'.join(CrawledURLs) + '\n'
+        input_data = ""
+        for URL in CrawledURLs:
+            if '.js' not in URL:
+                input_data += URL + '\n'
         if not Details[Global.DetailsLevel]['WAFfiltering']:
             input_data += '\n'.join(URLsWithWAF) + '\n'
         command = Nuclei_DAST_command.substitute(NucleiDASTCritical=Details[Global.DetailsLevel]['NucleiCritical'],
