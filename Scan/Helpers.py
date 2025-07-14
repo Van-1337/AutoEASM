@@ -144,3 +144,10 @@ def is_site_real_by_response(response):
                             '<p>This site is currently under construction.</p' in response.text or\
                             '">This site is currently suspended<' in response.text
     return not body_contains_keyword
+
+
+def replace_last_colon(s: str) -> str:  # For 403 bypass results reporing
+    idx = s.rfind(':')
+    if idx == -1:
+        return s
+    return s[:idx] + ' -' + s[idx+1:]

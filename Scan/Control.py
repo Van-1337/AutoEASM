@@ -10,6 +10,7 @@ import requests
 from typing import List
 import json
 import glob
+import re
 import concurrent.futures
 from html import escape
 
@@ -161,7 +162,7 @@ def check_installed_tools():
 def launch_httpx():
     def delete_443_80_ports_from_assets():  # without this, hosts like "https://comfy.ua:80" sometimes appears
         for i in range(len(Global.HTTPAssets)):
-            Global.HTTPAssets[i] = Global.HTTPAssets[i].replace(":80", "").replace(":443", "")
+            Global.HTTPAssets[i] = re.sub(r':(?:80|443)$', '', Global.HTTPAssets[i])
         Global.HTTPAssets = list(dict.fromkeys(Global.HTTPAssets))
 
     input_data = '\n'.join(Global.Services) + '\n'

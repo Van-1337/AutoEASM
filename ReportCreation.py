@@ -6,6 +6,8 @@ from Scan.LeakixInfo import Leakix_info
 import webbrowser
 import os
 from html import escape
+from Scan.Helpers import replace_last_colon
+
 
 def CreateReport(report_name="Report"):
     print("[*] Report creation...")
@@ -260,7 +262,7 @@ def get_report_content():
                                "check other 403/401 links on this domain.</b><br><br>\n"
             else:
                 bypass_text += "<br>\n"
-            bypass_text += Global.Byp4xxResult
+            bypass_text += replace_last_colon(Global.Byp4xxResult)
         else:
             bypass_text += "No bypasses this time."
         bypass_text += "</div>"
