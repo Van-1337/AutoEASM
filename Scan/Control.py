@@ -207,6 +207,7 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
 
             if result.returncode == 0:
                 Global.RawSubdomains.extend(result.stdout.splitlines())
+                Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
                 input_data = '\n'.join(Global.RawSubdomains) + '\n' + '\n'.join(Global.Domains) + '\n'
             else:
                 print("[e] Error when running Subfinder utility:")
@@ -215,6 +216,7 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
                 sys.exit(1)
         else:
             Global.RawSubdomains.extend(Global.Domains)
+            Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
 
         command = DNSX_Naabu_command.substitute(dnsxThreads=Threads[Global.LoadLevel]['DNSX'], NaabuThreads=Threads[Global.LoadLevel]['NaabuThreads'],
                                                 NaabuRate=Threads[Global.LoadLevel]['NaabuRate'], NaabuPorts=Details[Global.DetailsLevel]['NaabuPorts'],
@@ -243,8 +245,9 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
 def launch_katana():
     if Global.HTTPAssets:
         input_data = '\n'.join(Global.HTTPAssets) + '\n'
-        command = Katana_command.substitute(KatanaAdditionalFlagsD=Details[Global.DetailsLevel]['KatanaAdditionalFlagsD'],
-                                            KatanaAdditionalFlagsT=Threads[Global.LoadLevel]['KatanaAdditionalFlagsT'])
+        command = Katana_command.substitute(KatanaAdditionalFlags=Details[Global.DetailsLevel]['KatanaAdditionalFlags'],
+                                            KatanaParallels=str(Threads[Global.LoadLevel]['KatanaParallels']),
+                                            KatanaRate=Threads[Global.LoadLevel]['KatanaRate'])
         if "-ds" in Flags:
             command += " -fs fqdn"
         if "-aff" in Flags:
@@ -271,6 +274,8 @@ def launch_katana():
                         if slashes_amount == 3 and link[-1] == '/' and link not in Global.RawSubdomains and link[:-1] not in Global.RawSubdomains:
                             if is_site_available(link):
                                 Global.RawSubdomains.append(link[:-1])
+                Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
+                Global.HTTPAssets = [x for x in Global.HTTPAssets if x not in Global.ExcludedHosts]
                 print(f"[+] {(len(Global.CrawledURLs))} links were found")
         else:
             print("[e] Error when running Katana utility")
@@ -824,10 +829,11 @@ def launch_feroxbuster():
         else:
             return "Scan\\"
 
-    def launch_fuzz(dictionary, urls, command_prefix, parallels, threads, timelimit):
+    def launch_fuzz(dictionary, urls, command_prefix, parallels, threads, timelimit, rate):
         input_data = '\n'.join(urls) + '\n'
         command = command_prefix + Feroxbuster_command.substitute(FuzzingDictPath=dictionary, FeroxbusterParallels=parallels,
                                                                   FeroxbusterThreads=threads, FeroxbusterTimeLimit=timelimit,
+                                                                  FeroxbusterRate=rate,
                                                                   FeroxbusterAdditionalFlags=Details[Global.DetailsLevel]["FeroxbusterAdditionalFlags"])
 
         if '-v' in Flags:
@@ -878,10 +884,12 @@ def launch_feroxbuster():
     if HTTPAssets:
         print("[*] Fuzzing suspicious directories (may take some time)...")
         launch_fuzz("Scan/fuzz.txt", HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels'],
-                    Threads[Global.LoadLevel]['FeroxbusterThreads'], Threads[Global.LoadLevel]['FeroxbusterTimeLimit'])
+                    Threads[Global.LoadLevel]['FeroxbusterThreads'], Threads[Global.LoadLevel]['FeroxbusterTimeLimit'],
+                    Threads[Global.LoadLevel]['FeroxbusterRate'])
     if not Details[Global.DetailsLevel]['WAFfiltering'] and AssetsWithWAF:
         print("[*] Fuzzing suspicious directories on sites with WAF (may take a long time)...")
-        launch_fuzz("Scan/fuzz.txt", HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m')
+        launch_fuzz("Scan/fuzz.txt", HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m',
+                    Threads[Global.LoadLevel]['FeroxbusterRate'])
     clear_state_files()
 
 

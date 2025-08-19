@@ -77,6 +77,27 @@ if __name__ == '__main__':
             else:
                 print("Please specify number after -ld argument. Example: -ld 3")
                 sys.exit(1)
+        elif sys.argv[i] == '-rl':
+            if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
+                try:
+                    rate_limit = int(sys.argv[i + 1])
+                    if rate_limit < 1:
+                        raise Exception("Wrong number")
+                    for level in range(0, len(Global.Threads)):
+                        Global.Threads[level + 1]['NaabuRate'] = Global.Threads[level + 1]['NaabuThreads'] * rate_limit
+                        Global.Threads[level + 1]['HTTPXrate'] = Global.Threads[level + 1]['HTTPXthreads'] * rate_limit
+                        Global.Threads[level + 1]['NucleiRate'] = Global.Threads[level + 1]['NucleiParallels'] * rate_limit
+                        Global.Threads[level + 1]['KatanaRate'] = f"-rl {Global.Threads[level + 1]['KatanaParallels'] * rate_limit}"
+                        Global.Threads[level + 1]['FeroxbusterRate'] = f"--rate-limit {rate_limit}"
+                        Global.Threads[level + 1]['byp4xx_threads'] = max(round(rate_limit/3), 1)
+                        Global.Threads[level + 1]['WAFbypassThreads'] = min(Global.Threads[level + 1]['WAFbypassThreads'], rate_limit)
+                except:
+                    print("Rate limit (-rl flag) should be a positive number. Exiting!")
+                    sys.exit(1)
+                argument_was_used = True
+            else:
+                print("Please specify number after -rl argument. Example: -rl 50")
+                sys.exit(1)
         elif sys.argv[i] == '-p':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 Global.BurpProxy = sys.argv[i + 1].replace("http://", "").replace("https://", "")
@@ -93,6 +114,15 @@ if __name__ == '__main__':
                 argument_was_used = True
             else:
                 print("Please specify Nuclei templates path after -tem argument. Example: -tem /src/Nuclei-templates")
+                sys.exit(1)
+        elif sys.argv[i] == '-ex':
+            if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
+                Global.ExcludedHosts.append(get_host_from_url(sys.argv[i + 1]))
+                Global.ExcludedHosts.append('https://' + get_host_from_url(sys.argv[i + 1]))
+                Global.ExcludedHosts.append('http://' + get_host_from_url(sys.argv[i + 1]))
+                argument_was_used = True
+            else:
+                print("Please specify host to exclude after -ex argument. Example: -ex test.example.com")
                 sys.exit(1)
         elif sys.argv[i] == '-sa':
             Flags.append('-sa')

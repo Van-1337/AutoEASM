@@ -139,6 +139,8 @@ def get_report_content():
         html_overview += f"<b>Generated on:</b> {datetime.now().strftime('%a, %d %b %Y, %H:%M:%S')}<br>\n"
         html_overview += f"<b>Level of detail:</b> {Global.DetailsLevel}<br>\n"
         html_overview += f"<b>Load level:</b> {Global.LoadLevel}<br>\n"
+        if Global.ExcludedHosts:
+            html_overview += f"<b>Excluded subdomains:</b> {'; '.join(Global.ExcludedHosts[::3])}<br>\n"
         if Flags:
             html_overview += f"<b>Flags:</b> {' '.join(Flags)}"
         html_overview += "</p>\n</div>\n"
@@ -273,7 +275,7 @@ def get_report_content():
             scan_commands = f"nuclei -u {hosts_pair[1]} -header Host:{hosts_pair[0]} -s {Global.Details[Global.DetailsLevel]['NucleiConfigCritical']} " \
                             f"-rl {Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
                             f"katana -u {hosts_pair[1]} -headers Host:{hosts_pair[0]} -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn" \
-                            f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlagsD']} {Global.Threads[Global.LoadLevel]['KatanaAdditionalFlagsT']}" \
+                            f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlags']} -p {Global.Threads[Global.LoadLevel]['KatanaParallels']}" \
                             f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
                             f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
                             f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
