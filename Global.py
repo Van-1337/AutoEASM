@@ -7,7 +7,7 @@ HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> 
 REQUIRED FLAGS:
 -f - file with domains to scan
 ---OR---
--d - domain to scan. This parameter can be duplicated
+-d - domain to scan. This parameter can be repeated
 
 OPTIONAL FLAGS:
 -h - show this help menu
@@ -15,7 +15,7 @@ OPTIONAL FLAGS:
 -v - verbose output
 -ll <number> - internet load level, affects the number of threads in utilities. Number: 1-3, 1 - minimum load, 3 - maximum, Default: 2
 -ld <number> - level of detail, slightly increases the number of findings and greatly increases execution time and junk info. Number: 1-4, 1 - max speed, 4 - max findings, Default: 2
--ex <subdomain> - subdomain to exclude from scanning. This parameter can be duplicated
+-ex <subdomain> - subdomain to exclude from scanning. This parameter can be repeated
 -sa - scan ALL ports instead of 100 or 1000
 -rl <integer number> - rate limit for tools (max requests per second on one host)
 -aff - add Automatic form filling in katana
