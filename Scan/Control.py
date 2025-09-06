@@ -652,7 +652,8 @@ def launch_nuclei():
                     try:
                         NucleiConfigFindings[severity].append(item)
                     except KeyError:
-                        NucleiConfigFindings["unknown"].append(item)
+                        pass
+                        # NucleiConfigFindings["unknown"].append(item)
                 else:
                     print(f"[e] String '{item}' has the wrong format and will be skipped.")
         else:
@@ -680,7 +681,8 @@ def launch_nuclei():
                     try:
                         NucleiFindings[severity].append(item)
                     except KeyError:
-                        NucleiFindings["unknown"].append(item)
+                        pass
+                        # NucleiFindings["unknown"].append(item)
                 else:
                     print(f"[e] String '{item}' has the wrong format and will be skipped.")
         else:
@@ -708,7 +710,8 @@ def launch_nuclei():
                     try:
                         NucleiTokensFindings[severity].append(item)
                     except KeyError:
-                        NucleiTokensFindings["unknown"].append(item)
+                        pass
+                        # NucleiTokensFindings["unknown"].append(item)
                 else:
                     print(f"[e] String '{item}' has the wrong format and will be skipped.")
         else:
@@ -739,7 +742,8 @@ def launch_nuclei():
                     try:
                         NucleiDASTFindings[severity].append(item)
                     except KeyError:
-                        NucleiDASTFindings["unknown"].append(item)
+                        pass
+                        # NucleiDASTFindings["unknown"].append(item)
                 else:
                     print(f"[e] String '{item}' has the wrong format and will be skipped.")
         else:
@@ -780,7 +784,8 @@ def check_subdomains_takeover():
                 try:
                     NucleiTakeoverFindings[severity].append(item)
                 except KeyError:
-                    NucleiTakeoverFindings["unknown"].append(item)
+                    pass
+                    # NucleiTakeoverFindings["unknown"].append(item)
             else:
                 print(f"[e] String '{item}' has the wrong format and will be skipped.")
     else:
