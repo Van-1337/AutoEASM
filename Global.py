@@ -54,7 +54,7 @@ Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 
                'byp4xx_threads': 10, 'WAFbypassThreads': 12},
            2: {'DNSX': 120, 'NaabuThreads': 75, 'NaabuRate': 170, 'HTTPXthreads': 80, 'HTTPXrate': 180,
                'NucleiRate': 110, 'NucleiParallels': 25, 'FeroxbusterParallels': 20, 'FeroxbusterThreads': 10,
-               'FeroxbusterTimeLimit': '25m', 'FeroxbusterRate': "--auto-tune", 'KatanaParallels': 20, 'KatanaRate': '',
+               'FeroxbusterTimeLimit': '25m', 'FeroxbusterRate': "--auto-tune", 'KatanaParallels': 20, 'KatanaRate': '-rl 90',
                 'byp4xx_threads': 25, 'WAFbypassThreads': 50},
            3: {'DNSX': 250, 'NaabuThreads': 150, 'NaabuRate': 400, 'HTTPXthreads': 200, 'HTTPXrate': 400,
                'NucleiRate': 250, 'NucleiParallels': 40, 'FeroxbusterParallels': 25, 'FeroxbusterThreads': 20,
