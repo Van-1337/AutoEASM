@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> [-h] [-v] [-sa] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> [-h] [-v] [-sa] [-aff] [-dh] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -19,6 +19,7 @@ OPTIONAL FLAGS:
 -sa - scan ALL ports instead of 100 or 1000
 -rl <integer number> - rate limit for tools (max requests per second on one host)
 -aff - add Automatic form filling in katana
+-dh - disable headless scan in katana
 -tem - specify directory with Nuclei templates
 -i - IP scan (skipping DNSX check, subdomain enumeration and Postman checking)
 
@@ -101,7 +102,7 @@ Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -t $byp4
 
 
 # ---Variables used by other utilities---
-Flags = []
+Flags = []  # Flags without additional arguments, like ['-do', '-v', '-dl']
 RawSubdomains = []  # Unchecked subdomains
 Domains = []  # Means root domains
 Services = []  # All network services

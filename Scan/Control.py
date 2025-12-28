@@ -34,12 +34,14 @@ def scanning():
             postleaks_thread.start()
             time.sleep(1)  # To avoid problems with console output
         launch_httpx()
+        delete_assets_with_waf()  # And add them to AssetsWithWAF
         if '-dc' not in Flags:
+            amount_of_processed_domains = len(Global.HTTPAssets)
             launch_katana()
             launch_uro()
+            delete_assets_with_waf(amount_of_processed_domains)  # Again because Katana can add some new domains
         else:
             Global.CrawledURLs = Global.HTTPAssets
-        delete_assets_with_waf()  # And add them to AssetsWithWAF
         delete_urls_with_waf()  # And add them to URLsWithWAF
         if '-dw' not in Flags:
             launch_waf_bypass()
@@ -141,6 +143,7 @@ def clear_logs():
 
 
 def check_installed_tools():
+    print("[*] Checking if all required tools are installed...")
     errors_count = 0
     for utility in utilities_flags:
         if utilities_flags[utility] not in Flags:
@@ -151,6 +154,13 @@ def check_installed_tools():
                     print(f"[!] {utility} was not found, please install it and add to the path!")
                 else:
                     print(f"[!] {utility} was not found, please install it and add to the path or use {utilities_flags[utility]} flag!")
+    if "-dc" not in Flags and "-dh" not in Flags:
+        result = subprocess.run(f"katana -headless -u example.com -ct 3s", shell=True, capture_output=True)
+        if result.returncode != 0:
+            errors_count += 1
+            print("[!] To crawl hosts protected by a WAF in headless mode, Katana needs to download the “leakless” script.\n"
+                  "If this script is blocked by Windows Defender, you can either disable headless mode using the -dh flag "
+                  "or add an exclusion in Windows Defender (Windows Security → Protection History → Threat quarantined → Actions → Restore).")
     if not ("-dn" in Flags and "-dt" in Flags):
         nuclei_result = subprocess.run(f"nuclei -h", shell=True, capture_output=True)
         if nuclei_result.returncode != 0:
@@ -177,13 +187,13 @@ def launch_httpx():
 
     if result != "-":
         # HTTPAssets.extend(delete_http_duplicates(result.stdout.splitlines()))
-        HTTPAssets.extend(delete_http_duplicates(result))
+        Global.HTTPAssets.extend(delete_http_duplicates(result))
         delete_443_80_ports_from_assets()
         #if '-ba' in Flags or '-bw' in Flags or '-bf' in Flags:
         #    for index, host in enumerate(Global.HTTPAssets):
         #        if host.startswith('http://localhost.'):  # Deleting hosts like localhost.vulnweb.com
         #            del Global.HTTPAssets[index]
-        print(f"[+] {len(HTTPAssets)} active web services will be scanned")
+        print(f"[+] {len(Global.HTTPAssets)} active web services will be scanned")
     else:
         print("[e] Error when running HTTPX utility.")
         sys.exit(1)
@@ -243,42 +253,55 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
 
 
 def launch_katana():
-    if Global.HTTPAssets:
-        input_data = '\n'.join(Global.HTTPAssets) + '\n'
-        command = Katana_command.substitute(KatanaAdditionalFlags=Details[Global.DetailsLevel]['KatanaAdditionalFlags'],
-                                            KatanaParallels=str(Threads[Global.LoadLevel]['KatanaParallels']),
-                                            KatanaRate=Threads[Global.LoadLevel]['KatanaRate'])
-        if "-ds" in Flags:
-            command += " -fs fqdn"
-        if "-aff" in Flags:
-            command += " -aff"
-        print("[*] Crawling URLs...")
-
-        if '-v' in Flags:
-            print("[v] Executing command: " + command)
-        result = command_exec(command, "Katana.txt", input_data)
-
-        if result != "-":
-            requests.packages.urllib3.disable_warnings()
-            Global.CrawledURLs.extend(remove_non_links(result))
-            if "-ds" not in Flags:
-                for link in Global.CrawledURLs:
-                    slashes_amount = link.count('/')
-                    if slashes_amount == 2 and (link + '/') not in Global.HTTPAssets and link not in Global.HTTPAssets:
-                        if is_site_available(link):
-                            Global.HTTPAssets.append(link)
-                        if slashes_amount == 2 and (link + '/') not in Global.RawSubdomains and link not in Global.RawSubdomains:
-                            Global.RawSubdomains.append(link)
-                    elif slashes_amount == 3 and link[-1] == '/' and link not in Global.HTTPAssets and link[:-1] not in Global.HTTPAssets:
-                        Global.HTTPAssets.append(link[:-1])
-                        if slashes_amount == 3 and link[-1] == '/' and link not in Global.RawSubdomains and link[:-1] not in Global.RawSubdomains:
-                            if is_site_available(link):
-                                Global.RawSubdomains.append(link[:-1])
-                Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
-                Global.HTTPAssets = [x for x in Global.HTTPAssets if x not in Global.ExcludedHosts]
-                print(f"[+] {(len(Global.CrawledURLs))} links were found")
+    def launch(are_hosts_with_WAF = False):
+        if are_hosts_with_WAF:
+            working_domains = list(Global.AssetsWithWAF)
         else:
-            print("[e] Error when running Katana utility")
+            working_domains = Global.HTTPAssets
+        if working_domains:
+            input_data = '\n'.join(working_domains) + '\n'
+            command = Katana_command.substitute(KatanaAdditionalFlags=Details[Global.DetailsLevel]['KatanaAdditionalFlags'],
+                                                KatanaParallels=str(Threads[Global.LoadLevel]['KatanaParallels']),
+                                                KatanaRate=Threads[Global.LoadLevel]['KatanaRate'])
+            if "-ds" in Flags:
+                command += " -fs fqdn"
+            if "-aff" in Flags:
+                command += " -aff"
+            if are_hosts_with_WAF:
+                print("[*] Crawling URLs on hosts with WAF...")
+                if "-dh" not in Flags:
+                    command += " -headless"
+            else:
+                print("[*] Crawling URLs on hosts without WAF...")
+
+            if '-v' in Flags:
+                print("[v] Executing command: " + command)
+            result = command_exec(command, "Katana.txt", input_data)
+
+            if result != "-":
+                requests.packages.urllib3.disable_warnings()
+                Global.CrawledURLs.extend(remove_non_links(result))
+                if "-ds" not in Flags:
+                    for link in Global.CrawledURLs:
+                        slashes_amount = link.count('/')
+                        if slashes_amount == 2 and (link + '/') not in Global.HTTPAssets and link not in Global.HTTPAssets:
+                            if is_site_available(link):
+                                Global.HTTPAssets.append(link)
+                            if slashes_amount == 2 and (link + '/') not in Global.RawSubdomains and link not in Global.RawSubdomains:
+                                Global.RawSubdomains.append(link)
+                        elif slashes_amount == 3 and link[-1] == '/' and link not in Global.HTTPAssets and link[:-1] not in Global.HTTPAssets:
+                            Global.HTTPAssets.append(link[:-1])
+                            if slashes_amount == 3 and link[-1] == '/' and link not in Global.RawSubdomains and link[:-1] not in Global.RawSubdomains:
+                                if is_site_available(link):
+                                    Global.RawSubdomains.append(link[:-1])
+                    Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
+                    Global.HTTPAssets = [x for x in Global.HTTPAssets if x not in Global.ExcludedHosts]
+                    print(f"[+] {(len(Global.CrawledURLs))} links were found")
+            else:
+                print("[e] Error when running Katana utility")
+
+    launch(are_hosts_with_WAF=False)
+    launch(are_hosts_with_WAF=True)
 
 
 def launch_uro():
@@ -300,13 +323,18 @@ def launch_uro():
             print("[e] Error when running Uro utility")
 
 
-def delete_assets_with_waf():
+def delete_assets_with_waf(start_from=0):
+    if start_from == len(Global.HTTPAssets):
+        return
     with open("Scan/HTTP_assets_list.txt", "w", encoding="utf-8") as file:
-        for site in HTTPAssets:
+        for site in Global.HTTPAssets[start_from:]:
             file.write(site.replace("https://", "").replace("http://", "") + "\n")
 
     command = CDNCheck_command
-    print("[*] Checking WAFs on found services...")
+    if start_from == 0:
+        print("[*] Checking WAFs on found services...")
+    else:
+        print("[*] Checking WAFs on newly found services...")
 
     if '-v' in Flags:
         print("[v] Executing command: " + command)
@@ -317,14 +345,14 @@ def delete_assets_with_waf():
         for item in result:
             parts = item.split()
             if len(parts) >= 3:
-                host = parts[0]
+                host_with_waf = parts[0]
                 waf = ' '.join(parts[2:]).strip("[]")
 
-                for index, url in enumerate(HTTPAssets):  # Deleting host with WAF from the list
+                for index, url in enumerate(Global.HTTPAssets):  # Deleting host with WAF from the list
                     current_host = url.replace("https://", "").replace("http://", "")
-                    if current_host == host:
-                        AssetsWithWAF[url] = waf
-                        del HTTPAssets[index]
+                    if current_host == host_with_waf:
+                        Global.AssetsWithWAF[url] = waf
+                        del Global.HTTPAssets[index]
                         break
             else:
                 print(f"[e] String '{item}' has the wrong format and will be skipped.")
@@ -340,7 +368,7 @@ def delete_urls_with_waf():
     if '-v' in Flags:
         print("[v] Divide the links into those with and without WAF...")
 
-    hosts_with_waf = get_host_from_url_list(AssetsWithWAF)
+    hosts_with_waf = get_host_from_url_list(Global.AssetsWithWAF)
     for index, url in enumerate(CrawledURLs):  # Deleting links with WAF from the list
         current_host = get_host_from_url(url)
         if current_host in hosts_with_waf:
@@ -353,7 +381,7 @@ def launch_waf_bypass():
         try:
             orig_response = requests.get(domain_with_waf, verify=False, headers=user_agent_header, timeout=15,
                                          allow_redirects=False)
-            for url_without_waf in HTTPAssets:
+            for url_without_waf in Global.HTTPAssets:
                 try:
                     headers = {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
@@ -380,7 +408,7 @@ def launch_waf_bypass():
         except requests.RequestException:
             pass
 
-    if HTTPAssets and AssetsWithWAF:
+    if Global.HTTPAssets and Global.AssetsWithWAF:
         try:
             print("[*] Trying to bypass the WAF by finding the host on the same server without a firewall...")
             requests.packages.urllib3.disable_warnings()
@@ -394,7 +422,7 @@ def launch_waf_bypass():
                 send_to_burp = True
 
             headers_sets = {}  # {"example.com": set("Date", "Content-Type", "Content-Length")}
-            for host_without_waf in HTTPAssets:
+            for host_without_waf in Global.HTTPAssets:
                 try:
                     response = requests.get(host_without_waf, verify=False, headers=wrong_host_headers, timeout=10, allow_redirects=False)
                     headers_sets[host_without_waf] = set(response.headers.keys())
@@ -403,7 +431,7 @@ def launch_waf_bypass():
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=Threads[Global.LoadLevel]['WAFbypassThreads']) as executor:
                 futures = []
-                for url_with_waf in AssetsWithWAF:
+                for url_with_waf in Global.AssetsWithWAF:
                     futures.append(executor.submit(check_asset_with_WAF, url_with_waf))
                     time.sleep(0.15)
                 concurrent.futures.wait(futures)
@@ -444,11 +472,11 @@ def launch_hidden_hosts_scan():
             return found
 
         if not is_site_available("https://" + inactive_domain):  # Check if the host is really inactive. If inactive - then start checking
-            if not check_host_in_list(HTTPAssets):
+            if not check_host_in_list(Global.HTTPAssets):
                 check_host_in_list(AssetsWithWAFlist)
 
-    if HTTPAssets or AssetsWithWAF:
-        AssetsWithWAFlist = list(AssetsWithWAF)
+    if Global.HTTPAssets or Global.AssetsWithWAF:
+        AssetsWithWAFlist = list(Global.AssetsWithWAF)
         try:
             print("[*] Trying to get access to old subdomains using host header manipulation...")
             requests.packages.urllib3.disable_warnings()
@@ -461,7 +489,7 @@ def launch_hidden_hosts_scan():
             headers_sets = {}  # {"example.com": set("Date", "Content-Type", "Content-Length")}
             responses_length = {}  # {"example.com": 50505} - means response body length
             wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
-            for host in HTTPAssets+AssetsWithWAFlist:
+            for host in Global.HTTPAssets+AssetsWithWAFlist:
                 try:
                     wrong_host_headers["Host"] = f"{get_random_string(10)}.com"
                     response = requests.get(host, verify=False, headers=wrong_host_headers, timeout=15, allow_redirects=False)
@@ -478,7 +506,7 @@ def launch_hidden_hosts_scan():
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=Threads[Global.LoadLevel]['WAFbypassThreads']) as executor:
                 futures = []
-                inactive_hosts = [x for x in RawSubdomains if x not in get_host_from_url_list(HTTPAssets + AssetsWithWAFlist, remove_ports=True)]
+                inactive_hosts = [x for x in RawSubdomains if x not in get_host_from_url_list(Global.HTTPAssets + AssetsWithWAFlist, remove_ports=True)]
                 for inactive_host in inactive_hosts:
                     futures.append(executor.submit(check_inactive_host, inactive_host))
                     time.sleep(0.1)
@@ -632,8 +660,8 @@ def check_social_networks():
 
 def launch_nuclei():
     def config_check():
-        input_data = '\n'.join(HTTPAssets) + '\n'
-        input_data += '\n'.join(AssetsWithWAF) + '\n'
+        input_data = '\n'.join(Global.HTTPAssets) + '\n'
+        input_data += '\n'.join(Global.AssetsWithWAF) + '\n'
         command = Nuclei_config_command.substitute(NucleiConfigCritical=Details[Global.DetailsLevel]['NucleiConfigCritical'],
                                                    NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
                                                    NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels']) + TemplatesFlag
@@ -660,9 +688,9 @@ def launch_nuclei():
             print("[e] Error when running Nuclei utility on the config stage")
 
     def default_start():
-        input_data = '\n'.join(HTTPAssets) + '\n'
+        input_data = '\n'.join(Global.HTTPAssets) + '\n'
         if not Details[Global.DetailsLevel]['WAFfiltering']:
-            input_data += '\n'.join(AssetsWithWAF) + '\n'
+            input_data += '\n'.join(Global.AssetsWithWAF) + '\n'
         command = Nuclei_default_command.substitute(NucleiCritical=Details[Global.DetailsLevel]['NucleiCritical'],
                                                     NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
                                                     NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels']) + TemplatesFlag
@@ -755,9 +783,9 @@ def launch_nuclei():
         TemplatesFlag = ""
     if CrawledURLs or URLsWithWAF:
         tokens_check()
-    if HTTPAssets or AssetsWithWAF:
+    if Global.HTTPAssets or Global.AssetsWithWAF:
         config_check()
-    if HTTPAssets or (AssetsWithWAF and not Details[Global.DetailsLevel]['WAFfiltering']):
+    if Global.HTTPAssets or (Global.AssetsWithWAF and not Details[Global.DetailsLevel]['WAFfiltering']):
         default_start()
     if '-dd' not in Flags and (CrawledURLs or (URLsWithWAF and not Details[Global.DetailsLevel]['WAFfiltering'])):
         dast_start()
@@ -886,14 +914,14 @@ def launch_feroxbuster():
     if not check_wrong_directory_in_file():
         return False
     prefix = get_command_prefix()
-    if HTTPAssets:
+    if Global.HTTPAssets:
         print("[*] Fuzzing suspicious directories (may take some time)...")
-        launch_fuzz("Scan/fuzz.txt", HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels'],
+        launch_fuzz("Scan/fuzz.txt", Global.HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels'],
                     Threads[Global.LoadLevel]['FeroxbusterThreads'], Threads[Global.LoadLevel]['FeroxbusterTimeLimit'],
                     Threads[Global.LoadLevel]['FeroxbusterRate'])
-    if not Details[Global.DetailsLevel]['WAFfiltering'] and AssetsWithWAF:
+    if not Details[Global.DetailsLevel]['WAFfiltering'] and Global.AssetsWithWAF:
         print("[*] Fuzzing suspicious directories on sites with WAF (may take a long time)...")
-        launch_fuzz("Scan/fuzz.txt", HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m',
+        launch_fuzz("Scan/fuzz.txt", Global.HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m',
                     Threads[Global.LoadLevel]['FeroxbusterRate'])
     clear_state_files()
 
@@ -1067,11 +1095,11 @@ def check_leakix():
                         checked = True
                 time.sleep(1)  # request no more than once per second is leakix requirement
 
-    if HTTPAssets or AssetsWithWAF:
+    if Global.HTTPAssets or Global.AssetsWithWAF:
         print("[*] Checking domains on Leakix in parallel...")
-        if HTTPAssets:
-            get_domains_info(HTTPAssets)
-        if AssetsWithWAF:
-            get_domains_info(list(AssetsWithWAF.keys()))
+        if Global.HTTPAssets:
+            get_domains_info(Global.HTTPAssets)
+        if Global.AssetsWithWAF:
+            get_domains_info(list(Global.AssetsWithWAF.keys()))
         Global.LeakixFindings = list(dict.fromkeys(Global.LeakixFindings))  # Filter duplicates
         print(f"[+] {len(Global.LeakixFindings)} issues were found on Leakix")

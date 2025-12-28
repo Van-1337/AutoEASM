@@ -157,18 +157,18 @@ def get_report_content():
     def found_assets():
         html_assets = """\n\n<div id="FoundHTTPAssets" class="tab-content">\n<h2>Found websites</h2>\n<br>\n"""
 
-        if AssetsWithWAF and HTTPAssets:
+        if Global.AssetsWithWAF and Global.HTTPAssets:
             html_assets += "<h3>Without firewall</h3>"
         html_assets += "<p>\n"
-        for link in HTTPAssets:
+        for link in Global.HTTPAssets:
             html_assets += f"<a href=\"{link}\">{link}</a> <br>\n"  # <a href="http://site.com">http://site.com</a>
         html_assets += "</p>"
 
-        if AssetsWithWAF:
+        if Global.AssetsWithWAF:
             html_assets += "<h3>With firewall</h3>"
             html_assets += "<p>\n"
-            for link in AssetsWithWAF:
-                html_assets += f"<a href=\"{link}\">{link}</a> - {AssetsWithWAF[link]} <br>\n"  # <a href="http://site.com">http://site.com</a>
+            for link in Global.AssetsWithWAF:
+                html_assets += f"<a href=\"{link}\">{link}</a> - {Global.AssetsWithWAF[link]} <br>\n"  # <a href="http://site.com">http://site.com</a>
             html_assets += "</p>"
 
         html_assets += "\n</div>"
@@ -290,7 +290,7 @@ def get_report_content():
             for hosts_pair in Global.WAFBypassHosts:
                 host_manipulation_text += get_host_result(hosts_pair)
         else:
-            if AssetsWithWAF:
+            if Global.AssetsWithWAF:
                 host_manipulation_text += "No successful WAF bypass attempts this time."
             else:
                 host_manipulation_text += "No hosts with WAF found."
