@@ -18,8 +18,6 @@ OPTIONAL FLAGS:
 -ex <subdomain> - subdomain to exclude from scanning. This parameter can be repeated
 -sa - scan ALL ports instead of 100 or 1000
 -rl <integer number> - rate limit for tools (max requests per second on one host)
--aff - add Automatic form filling in katana
--dh - disable headless scan in katana
 -tem - specify directory with Nuclei templates
 -i - IP scan (skipping DNSX check, subdomain enumeration and Postman checking)
 
@@ -37,6 +35,8 @@ DISABLING FEATURES:
 -dm - disable social media takeover checking
 -dp - disable public Postman collections checking
 -dl - disable Leakix checking
+-daff - disable automatic form filling in Katana
+-dh - disable headless scan in Katana
 
 SENDING TO PROXY:
 -ba - send all collected endpoints to Burp proxy including with WAF

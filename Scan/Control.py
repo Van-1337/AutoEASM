@@ -113,7 +113,7 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
             print(f"[v] Got additional info in console when executing {command}\n{result.stdout}")
 
         if filter_ansi:
-            output_file = open('Logs/' + filename, "r+")
+            output_file = open('Logs/' + filename, "r+", encoding='utf-8', errors='replace')
             clean_command_output = remove_ansi_escape_codes(output_file.read())
             output_file.seek(0)
             output_file.write(clean_command_output)
@@ -121,7 +121,7 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
             output_file.close()
             return clean_command_output.splitlines()
         else:
-            output_file = open('Logs/' + filename, "r")
+            output_file = open('Logs/' + filename, "r", encoding='utf-8', errors='replace')
             command_output = output_file.read()
             output_file.close()
             return command_output.splitlines()
@@ -265,8 +265,13 @@ def launch_katana():
                                                 KatanaRate=Threads[Global.LoadLevel]['KatanaRate'])
             if "-ds" in Flags:
                 command += " -fs fqdn"
-            if "-aff" in Flags:
-                command += " -aff"
+            jsonl_file = None
+            if "-daff" not in Flags:
+                if are_hosts_with_WAF:
+                    jsonl_file = "Logs/Katana_WAF.jsonl"
+                else:
+                    jsonl_file = "Logs/Katana.jsonl"
+                command += f" -aff -j -o {jsonl_file}"
             if are_hosts_with_WAF:
                 print("[*] Crawling URLs on hosts with WAF...")
                 if "-dh" not in Flags:
@@ -280,7 +285,36 @@ def launch_katana():
 
             if result != "-":
                 requests.packages.urllib3.disable_warnings()
-                Global.CrawledURLs.extend(remove_non_links(result))
+                
+                # If -aff flag is present, parse JSONL file for URLs (only GET requests)
+                if jsonl_file and os.path.exists(jsonl_file):
+                    try:
+                        with open(jsonl_file, 'r', encoding='utf-8') as f:
+                            jsonl_urls = []
+                            for line in f:
+                                line = line.strip()
+                                if line:
+                                    try:
+                                        entry = json.loads(line)
+                                        if 'request' in entry and 'endpoint' in entry['request']:
+                                            request = entry['request']
+                                            method = request.get('method', '').upper()
+                                            endpoint = request['endpoint']
+                                            # Only add GET requests to CrawledURLs
+                                            if method == 'GET' and endpoint.startswith(('http://', 'https://')):
+                                                jsonl_urls.append(endpoint)
+                                    except json.JSONDecodeError:
+                                        continue
+                        Global.CrawledURLs.extend(jsonl_urls)
+                    except Exception as e:
+                        if '-v' in Flags:
+                            print(f"[v] Error parsing JSONL file: {e}")
+                        # Fallback to text output if JSONL parsing fails
+                        Global.CrawledURLs.extend(remove_non_links(result))
+                else:
+                    # Normal text output processing when -aff is not present
+                    Global.CrawledURLs.extend(remove_non_links(result))
+                
                 if "-ds" not in Flags:
                     for link in Global.CrawledURLs:
                         slashes_amount = link.count('/')
@@ -755,6 +789,58 @@ def launch_nuclei():
         command = Nuclei_DAST_command.substitute(NucleiDASTCritical=Details[Global.DetailsLevel]['NucleiCritical'],
                                                  NucleiRate=Threads[Global.LoadLevel]['NucleiRate'],
                                                  NucleiParallels=Threads[Global.LoadLevel]['NucleiParallels']) + TemplatesFlag
+        
+        # Handle JSONL files from katana with -aff flag
+        jsonl_files = []
+        if "-daff" not in Flags:
+            if os.path.exists("Logs/Katana.jsonl"):
+                jsonl_files.append("Logs/Katana.jsonl")
+            if os.path.exists("Logs/Katana_WAF.jsonl"):
+                jsonl_files.append("Logs/Katana_WAF.jsonl")
+        
+        if jsonl_files:
+            # Get hosts with WAF for filtering
+            hosts_with_waf = set(get_host_from_url_list(list(Global.AssetsWithWAF.keys()), remove_ports=True))
+            filtered_jsonl_file = "Logs/Katana_DAST.jsonl"
+            
+            # Filter JSONL entries based on WAF filtering
+            filtered_entries = []
+            for jsonl_file in jsonl_files:
+                try:
+                    with open(jsonl_file, 'r', encoding='utf-8') as f:
+                        for line in f:
+                            line = line.strip()
+                            if line:
+                                try:
+                                    entry = json.loads(line)
+                                    if 'request' in entry and 'endpoint' in entry['request']:
+                                        endpoint = entry['request']['endpoint']
+                                        if endpoint.startswith(('http://', 'https://')):
+                                            endpoint_host = get_host_from_url(endpoint, remove_port=True)
+                                            # If WAF filtering is enabled, exclude hosts with WAF
+                                            if Details[Global.DetailsLevel]['WAFfiltering']:
+                                                if endpoint_host not in hosts_with_waf:
+                                                    filtered_entries.append(line)
+                                            else:
+                                                # Include all entries if WAF filtering is disabled
+                                                filtered_entries.append(line)
+                                except json.JSONDecodeError:
+                                    continue
+                except Exception as e:
+                    if '-v' in Flags:
+                        print(f"[v] Error reading JSONL file {jsonl_file}: {e}")
+            
+            # Write filtered entries to a new file
+            if filtered_entries:
+                try:
+                    with open(filtered_jsonl_file, 'w', encoding='utf-8') as f:
+                        for entry in filtered_entries:
+                            f.write(entry + '\n')
+                    command += f" -l {filtered_jsonl_file} -im jsonl -etags fuzzing-req-header,fuzzing-req-cookie"
+                except Exception as e:
+                    if '-v' in Flags:
+                        print(f"[v] Error writing filtered JSONL file: {e}")
+        
         print("[*] Scanning with Nuclei DAST templates...")
 
         if '-v' in Flags:

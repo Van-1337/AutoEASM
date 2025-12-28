@@ -10,6 +10,7 @@ blind-xss.yaml
 test.py
 
 .idea/
+.cursor/
 __pycache__/
 Logs/
 test/
