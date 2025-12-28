@@ -363,7 +363,7 @@ def launch_waf_bypass():
                     if orig_response.status_code == last_response.status_code and \
                             orig_response.headers.get("Content-Type") == last_response.headers.get("Content-Type"):
                         if set(last_response.headers.keys()) != headers_sets[url_without_waf] and \
-                                not is_cloudflare_in_response(last_response) and\
+                                not is_WAF_signatures_in_response(last_response) and\
                                 ("Location" not in last_response.headers or url_without_waf in last_response.headers["Location"])\
                                 and ("location" not in last_response.headers or url_without_waf in last_response.headers["location"])\
                                 and is_site_real_by_response(last_response):

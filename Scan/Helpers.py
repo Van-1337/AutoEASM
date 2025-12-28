@@ -133,8 +133,10 @@ def is_date_actual(date_string):  # "2024-12-03T01:49:40.4933153Z"
         return False
 
 
-def is_cloudflare_in_response(response):
-    headers_contains_keyword = any('cloudflare' in value for value in response.headers.values())
+def is_WAF_signatures_in_response(response):
+    keywords = ('cloudflare', 'akamai', 'incap_ses')
+    headers_contains_keyword = any(any(keyword in value.lower() for keyword in keywords)
+                                   for value in response.headers.values())
     body_contains_keyword = 'Cloudflare' in response.text
     return headers_contains_keyword or body_contains_keyword
 
