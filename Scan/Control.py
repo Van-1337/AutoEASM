@@ -155,7 +155,7 @@ def check_installed_tools():
                 else:
                     print(f"[!] {utility} was not found, please install it and add to the path or use {utilities_flags[utility]} flag!")
     if "-dc" not in Flags and "-dh" not in Flags:
-        result = subprocess.run(f"katana -headless -u example.com -ct 3s", shell=True, capture_output=True)
+        result = subprocess.run(f"katana -headless --no-sandbox -u example.com -ct 3s", shell=True, capture_output=True)
         if result.returncode != 0:
             errors_count += 1
             print("[!] To crawl hosts protected by a WAF in headless mode, Katana needs to download the “leakless” script.\n"
@@ -275,7 +275,7 @@ def launch_katana():
             if are_hosts_with_WAF:
                 print("[*] Crawling URLs on hosts with WAF...")
                 if "-dh" not in Flags:
-                    command += " -headless"
+                    command += " -headless --no-sandbox"
             else:
                 print("[*] Crawling URLs on hosts without WAF...")
 
