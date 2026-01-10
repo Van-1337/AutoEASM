@@ -921,6 +921,7 @@ def launch_feroxbuster():
                     print(f'[e] {file_path} Can\'t be deleted. The reason is: {e}')
 
     def check_wrong_directory_in_file():
+        nonlocal wrong_directory
         if not os.path.exists("Scan/fuzz.txt"):
             print("[!] Scan/fuzz.txt was not found! Skipping directory scanning with Feroxbuster.")
             return False
@@ -938,6 +939,8 @@ def launch_feroxbuster():
             new_content = wrong_directory + "\n" + "".join(lines)
             with open("Scan/fuzz.txt", "w", encoding="utf-8") as file:
                 file.write(new_content)
+        else:
+            wrong_directory = first_line
         return True
 
     def get_command_prefix():
@@ -977,7 +980,7 @@ def launch_feroxbuster():
                             incorrectly_fuzzed_hosts.append(host)
                             if "-v" in Flags:
                                 print(f"[v] {host} returns {parts[0]} status code to all requests and has been excluded from results")
-                        if host not in incorrectly_fuzzed_hosts:
+                        elif host not in incorrectly_fuzzed_hosts:
                             if correct_domain:
                                 if parts[0] == "200":
                                     FuzzedDirectories["200"].append(parts[5])
