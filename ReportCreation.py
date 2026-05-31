@@ -23,11 +23,10 @@ def CreateReport(report_name="Report", auto_increment=False):
     prepath = "/app/output/" if "--docker" in Flags else ""
     if auto_increment:
         report_name = get_unique_report_name(prepath, report_name)
-    ReportFile = open(prepath+report_name+".html", "w", encoding="utf-8")
-    ReportFile.write(get_report_start())
-    ReportFile.write(get_report_content())
-    ReportFile.write(get_report_end())
-    ReportFile.close()
+    with open(prepath + report_name + ".html", "w", encoding="utf-8") as report_file:
+        report_file.write(get_report_start())
+        report_file.write(get_report_content())
+        report_file.write(get_report_end())
     print(f"[+] Report has been generated! File name is {report_name+'.html'}")
     if "--docker" not in Flags:
         print(f"[N] Note: if you think that some findings may be missing in the report, check the {Global.RunDir} directory")

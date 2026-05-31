@@ -7,8 +7,16 @@ alwaysApply: true
 - main.py - is a file that contains initial instructions for starting the program.
 - Global.py file contains information about flags, used commands to run utilities and global variables which contain assets that are scanned, as well as the results of checks in processed form. Before scanning something or creating a report, you need to take the values of the variables from there, and after scanning, you need to write the results to these variables.
 - ReportCreation.py is a file that is responsible for creating the report, it runs in the end.
-- Scan/Control.py file contains all main scanning logic, the utilities are launched and the results are processed there.
-- Scan/Helpers.py is just an auxiliary functions that performs simple tasks. Simple actions are moved to this file so as not to clutter up the Control.py file and keep it as readable as possible, without distracting attention with minor simple operations. Feel free to add to the Helpers.py file everything that does not relate to the high-level logic of scanner checks.
+- Scan/Control.py - scan orchestration (order of checks, threads, Ctrl+C handling).
+- Scan/CommandRun.py - running external utilities and writing their output to the per-run log directory.
+- Scan/Discovery.py - subdomain enumeration, port scan, HTTP probing (subfinder, dnsx, naabu, httpx).
+- Scan/Crawl.py - URL crawling, deduplication, WAF detection on assets (katana, uro, cdncheck), social media takeover checks.
+- Scan/NucleiScan.py - Nuclei scans and parsing of findings.
+- Scan/Fuzzing.py - directory fuzzing and 403/401 bypass (feroxbuster, byp4xx).
+- Scan/HostChecks.py - WAF bypass, inactive host access, sending URLs to Burp.
+- Scan/Postleaks.py - public Postman collections checking (postleaks).
+- Scan/Leakix.py - Leakix API checks.
+- Scan/Helpers.py - auxiliary functions for simple tasks (URL/host helpers, log directory, etc.). Prefer adding small helpers here rather than in Control.py or the scan modules above.
 
 3. We keep it all simple and always keep in mind that the more complex the code - the more difficult it will be to maintain. It's just a combine of utilities and our own checks. We don't need to build architecture with the expectation that the project will someday grow tenfold, and we don't need to process every single potentially possible error scenario if we're not sure that such a thing could happen. We consider it an advantage that the tool can perform a large number of checks with such a relatively small amount of code (but nevertheless, we still try to anticipate potential issues and handle them). Don't overcomplicate the code!
 

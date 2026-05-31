@@ -58,8 +58,8 @@ if __name__ == '__main__':
                 try:
                     Global.LoadLevel = int(sys.argv[i + 1])
                     if Global.LoadLevel not in Global.Threads:
-                        raise Exception("Wrong number")
-                except:
+                        raise ValueError("Wrong number")
+                except (ValueError, KeyError):
                     print("Internet load level (-ll flag) should be a number between 1 and 3 (1 - minimum load, 3 - maximum, default: 2). Exiting!")
                     sys.exit(1)
                 argument_was_used = True
@@ -71,8 +71,8 @@ if __name__ == '__main__':
                 try:
                     Global.DetailsLevel = int(sys.argv[i + 1])
                     if Global.DetailsLevel not in Global.Details:
-                        raise Exception("Wrong number")
-                except:
+                        raise ValueError("Wrong number")
+                except (ValueError, KeyError):
                     print("Level of detail (-ld flag) should be a number between 1 and 4 (1 - max speed, 4 - max findings, default: 2). Exiting!")
                     sys.exit(1)
                 argument_was_used = True
@@ -84,7 +84,7 @@ if __name__ == '__main__':
                 try:
                     rate_limit = int(sys.argv[i + 1])
                     if rate_limit < 1:
-                        raise Exception("Wrong number")
+                        raise ValueError("Wrong number")
                     for level in range(0, len(Global.Threads)):
                         Global.Threads[level + 1]['NaabuRate'] = Global.Threads[level + 1]['NaabuThreads'] * rate_limit
                         Global.Threads[level + 1]['HTTPXrate'] = Global.Threads[level + 1]['HTTPXthreads'] * rate_limit
@@ -93,7 +93,7 @@ if __name__ == '__main__':
                         Global.Threads[level + 1]['FeroxbusterRate'] = f"--rate-limit {rate_limit}"
                         Global.Threads[level + 1]['byp4xx_threads'] = max(round(rate_limit/3), 1)
                         Global.Threads[level + 1]['WAFbypassThreads'] = min(Global.Threads[level + 1]['WAFbypassThreads'], rate_limit)
-                except:
+                except (ValueError, KeyError):
                     print("Rate limit (-rl flag) should be a positive number. Exiting!")
                     sys.exit(1)
                 argument_was_used = True
