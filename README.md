@@ -107,10 +107,8 @@ For example, `-ll 1` can be used if the hosts can go down from the load, or `-ld
 
 ## Useful notes
 
-- Please remember that if you do not save or rename an old report - it will be overwritten.
 - You can press Ctrl+C to skip the current stage of scanning (all results obtained so far will be saved). Quickly press Ctrl+C again to finish the program completely. The first stage cannot be skipped.
 - Based on the logic of checking host header manipulation vulnerabilities, it would be better to send all domains of the same business to one scan (one business - one scan).
-- If you think that the report does not contain the results of some utilities, review the outputs of the utilities in the Logs folder. Note that only the results of the last scan are stored there. Also in this folder, you can view the real-time output of the utilities.
+- If you think that the report does not contain the results of some utilities, review the outputs of the utilities in the Logs folder. In this folder, you can also view the real-time output of the utilities. These subdirectories are never deleted automatically, so remove old ones manually if they take up too much space.
 - You can use multiple -d arguments to scan multiple domains (-d site1.com -d site2.com -d site3.com).
-- `-bb` flag with enabled Burp Suite is very useful for investigating host header manipulation findings.
-- Do not run the utility several times at the same time from the same directory!
+- `-bb` flag with enabled Burp Suite is very useful for quick investigating host header manipulation findings.

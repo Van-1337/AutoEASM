@@ -21,8 +21,8 @@ def scanning():
             print("[e] Not all required utilities are installed. Terminating.")
             sys.exit(1)
         print("[N] Note: you can stop a current check with Ctrl+C")
-        if ensure_logs_directory():
-            clear_logs()
+        Global.RunDir = create_run_directory(Domains[0])
+        print(f"[*] Logs and temporary files for this run will be stored in: {Global.RunDir}")
         if '-ds' in Flags or '-i' in Flags:
             launch_subfinder_dnsx_naabu(scan_subdomains=False)
         else:
@@ -100,7 +100,7 @@ def scanning():
 
 
 def command_exec(command, filename, input_data=None, filter_ansi=False):
-    command = f'({command}) > Logs/{filename}'
+    command = f'({command}) > {Global.RunDir}/{filename}'
     interrupted = False
     try:
         result = subprocess.run(command, shell=True, capture_output=True, text=True, input=input_data)
@@ -113,7 +113,7 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
             print(f"[v] Got additional info in console when executing {command}\n{result.stdout}")
 
         if filter_ansi:
-            output_file = open('Logs/' + filename, "r+", encoding='utf-8', errors='replace')
+            output_file = open(Global.RunDir + '/' + filename, "r+", encoding='utf-8', errors='replace')
             clean_command_output = remove_ansi_escape_codes(output_file.read())
             output_file.seek(0)
             output_file.write(clean_command_output)
@@ -121,7 +121,7 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
             output_file.close()
             return clean_command_output.splitlines()
         else:
-            output_file = open('Logs/' + filename, "r", encoding='utf-8', errors='replace')
+            output_file = open(Global.RunDir + '/' + filename, "r", encoding='utf-8', errors='replace')
             command_output = output_file.read()
             output_file.close()
             return command_output.splitlines()
@@ -129,17 +129,6 @@ def command_exec(command, filename, input_data=None, filter_ansi=False):
         print(f"[e] Error when running this command: {command}")
         print("[e] Error: " + result.stderr)
         return "-"
-
-
-def clear_logs():
-    directory = 'Logs'
-    pattern = os.path.join(directory, '*.txt')
-    txt_files = glob.glob(pattern)
-    for file_path in txt_files:
-        try:
-            os.remove(file_path)
-        except Exception as e:
-            print(f'[e] {file_path} Can\'t be deleted. The reason is: {e}')
 
 
 def check_installed_tools():
@@ -268,9 +257,9 @@ def launch_katana():
             jsonl_file = None
             if "-daff" not in Flags:
                 if are_hosts_with_WAF:
-                    jsonl_file = "Logs/Katana_WAF.jsonl"
+                    jsonl_file = Global.RunDir + "/Katana_WAF.jsonl"
                 else:
-                    jsonl_file = "Logs/Katana.jsonl"
+                    jsonl_file = Global.RunDir + "/Katana.jsonl"
                 command += f" -aff -j -o {jsonl_file}"
             if are_hosts_with_WAF:
                 print("[*] Crawling URLs on hosts with WAF...")
@@ -359,11 +348,12 @@ def launch_uro():
 def delete_assets_with_waf(start_from=0):
     if start_from == len(Global.HTTPAssets):
         return
-    with open("Scan/HTTP_assets_list.txt", "w", encoding="utf-8") as file:
+    assets_list_file = Global.RunDir + "/HTTP_assets_list.txt"
+    with open(assets_list_file, "w", encoding="utf-8") as file:
         for site in Global.HTTPAssets[start_from:]:
             file.write(site.replace("https://", "").replace("http://", "") + "\n")
 
-    command = CDNCheck_command
+    command = CDNCheck_command.substitute(AssetsListFile=assets_list_file)
     if start_from == 0:
         print("[*] Checking WAFs on found services...")
     else:
@@ -392,9 +382,6 @@ def delete_assets_with_waf(start_from=0):
     else:
         print("[e] Error when running CDNCheck utility")
         print("[e] Warning: all web application will be considered as without firewall!!")
-
-    if os.path.exists("Scan/HTTP_assets_list.txt"):
-        os.remove("Scan/HTTP_assets_list.txt")
 
 
 def delete_urls_with_waf():
@@ -792,15 +779,15 @@ def launch_nuclei():
         # Handle JSONL files from katana with -aff flag
         jsonl_files = []
         if "-daff" not in Flags:
-            if os.path.exists("Logs/Katana.jsonl"):
-                jsonl_files.append("Logs/Katana.jsonl")
-            if os.path.exists("Logs/Katana_WAF.jsonl"):
-                jsonl_files.append("Logs/Katana_WAF.jsonl")
+            if os.path.exists(Global.RunDir + "/Katana.jsonl"):
+                jsonl_files.append(Global.RunDir + "/Katana.jsonl")
+            if os.path.exists(Global.RunDir + "/Katana_WAF.jsonl"):
+                jsonl_files.append(Global.RunDir + "/Katana_WAF.jsonl")
         
         if jsonl_files:
             # Get hosts with WAF for filtering
             hosts_with_waf = set(get_host_from_url_list(list(Global.AssetsWithWAF.keys()), remove_ports=True))
-            filtered_jsonl_file = "Logs/Katana_DAST.jsonl"
+            filtered_jsonl_file = Global.RunDir + "/Katana_DAST.jsonl"
             
             # Filter JSONL entries based on WAF filtering
             filtered_entries = []
@@ -1016,14 +1003,15 @@ def launch_feroxbuster():
 
 def launch_byp4xx():
     if FuzzedDirectories["403"] or FuzzedDirectories["401"]:
+        pages_403_file = Global.RunDir + "/403pages.txt"
         if Details[Global.DetailsLevel]['CheckAll403links']:
-            with open("Scan/403pages.txt", "w", encoding="utf-8") as file:
+            with open(pages_403_file, "w", encoding="utf-8") as file:
                 for url in FuzzedDirectories["403"]:
                     file.write(url + "\n")
                 for url in FuzzedDirectories["401"]:
                     file.write(url + "\n")
         else:
-            with open("Scan/403pages.txt", "w", encoding="utf-8") as file:
+            with open(pages_403_file, "w", encoding="utf-8") as file:
                 written_hosts = []
                 for url in FuzzedDirectories["403"]:
                     if get_host_from_url(url) not in written_hosts:
@@ -1036,7 +1024,8 @@ def launch_byp4xx():
                         file.write(url + "\n")
 
         command = Byp4xx_command.substitute(byp4xx_threads=Threads[LoadLevel]['byp4xx_threads'],
-                                            Byp4xx_flags=Details[DetailsLevel]['Byp4xx_flags'])
+                                            Byp4xx_flags=Details[DetailsLevel]['Byp4xx_flags'],
+                                            Pages403File=pages_403_file)
         print("[*] Trying to bypass 403 and 401 errors...")
 
         if '-v' in Flags:
@@ -1071,10 +1060,6 @@ def launch_byp4xx():
             print("[e] Error when running byp4xx utility")
         if '-v' in Flags:
             print("[v] 403 bypass attempts finishes!")
-        if os.path.exists("Scan/403pages.txt"):
-            os.remove("Scan/403pages.txt")
-        if '-v' in Flags:
-            print("[v] unnecessary files were removed")
 
 
 is_postleaks_waiting = False
@@ -1090,10 +1075,12 @@ def launch_postleaks():
 
 
     print("[*] Start searching suspicious Postman collections in parallel...")
-    for domain in Domains:  # not using one command for all files because utility is unstable and sometimes gives errors
+    for index, domain in enumerate(Domains):  # not using one command for all files because utility is unstable and sometimes gives errors
         if '-' not in domain:  # Excluded all domains with hyphen due to the peculiarities of the Postman search
             keyword = get_keyword(domain)
-            command = Postleaks_command.substitute(domain=keyword, PostleaksAditionalFlags=Details[Global.DetailsLevel]["PostleaksAditionalFlags"])
+            command = Postleaks_command.substitute(domain=keyword,
+                                                   PostleaksAditionalFlags=Details[Global.DetailsLevel]["PostleaksAditionalFlags"],
+                                                   PostleaksOutput=f"{Global.RunDir}/postleaks_{index}")
 
             if '-v' in Flags:
                 print("[v] Executing command: " + command)
@@ -1105,7 +1092,7 @@ def launch_postleaks():
                 if result.returncode == 3221225786 or result.returncode == 130:
                     if is_postleaks_waiting:
                         print("[*] Finishing postleaks execution...")
-                        delete_postleaks_junk()
+                        delete_postleaks_junk(Global.RunDir)
                         return
                 else:
                     executed = True
@@ -1130,7 +1117,7 @@ def launch_postleaks():
                     Global.PostleaksResult += "\n<br><br><br>\n"
             else:
                 print("[e] Error when running postleaks utility")
-    delete_postleaks_junk()
+    delete_postleaks_junk(Global.RunDir)
 
 
 def check_leakix():

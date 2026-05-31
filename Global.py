@@ -87,7 +87,7 @@ Subfinder_command = "subfinder -silent -all"
 DNSX_Naabu_command = Template("dnsx -silent -t $dnsxThreads -retry 5 -a | naabu -s s $NaabuFlags -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent")
 Naabu_command = Template("naabu -s s -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent $NaabuFlags")
 HTTPX_command = Template("httpx -t $HTTPXthreads -rl $HTTPXrate -silent -retries 5")
-CDNCheck_command = "cdncheck -i Scan/HTTP_assets_list.txt -silent -nc -resp -waf"
+CDNCheck_command = Template("cdncheck -i $AssetsListFile -silent -nc -resp -waf")
 Nuclei_default_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -etags backup,cache,logs,listing,config,exposure,panel,debug,network,js -s $NucleiCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
 Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -tags config,exposure,panel,debug,network,js -s $NucleiConfigCritical -rl $NucleiRate -c $NucleiParallels -silent -nc")
 Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc")
@@ -95,10 +95,10 @@ Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup,cache,
 Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc")
 Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\/Mess\" -X \"firewall on this server is blocking your\" $FeroxbusterRate --no-recursion --quiet "
                                "-w $FuzzingDictPath --stdin --redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
-Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags")
+Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags --output $PostleaksOutput")
 Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlags -p $KatanaParallels $KatanaRate")
 Uro_command = "uro"
-Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -t $byp4xx_threads Scan/403pages.txt")
+Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -t $byp4xx_threads $Pages403File")
 
 
 # ---Variables used by other utilities---
@@ -114,6 +114,7 @@ JSlinks = []
 TemplatesPath = ""
 ExcludedHosts = []
 BurpProxy = "127.0.0.1:8080"  # By default
+RunDir = "Logs"  # Set at the start of each scan to Logs/<first_domain>_<timestamp>. All logs and temporary files of the run are stored here
 
 # ---Final results---
 NucleiFindings = {"critical": [], "high": [], "medium": [], "low": [], "unknown": []}  # {"high": ["finding text", "finding text 2"]}

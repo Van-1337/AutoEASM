@@ -9,9 +9,20 @@ from html import escape
 from Scan.Helpers import replace_last_colon
 
 
-def CreateReport(report_name="Report"):
+def get_unique_report_name(prepath, base_name):
+    if not os.path.exists(prepath + base_name + ".html"):
+        return base_name
+    counter = 2
+    while os.path.exists(f"{prepath}{base_name}-{counter}.html"):
+        counter += 1
+    return f"{base_name}-{counter}"
+
+
+def CreateReport(report_name="Report", auto_increment=False):
     print("[*] Report creation...")
     prepath = "/app/output/" if "--docker" in Flags else ""
+    if auto_increment:
+        report_name = get_unique_report_name(prepath, report_name)
     ReportFile = open(prepath+report_name+".html", "w", encoding="utf-8")
     ReportFile.write(get_report_start())
     ReportFile.write(get_report_content())
@@ -19,7 +30,7 @@ def CreateReport(report_name="Report"):
     ReportFile.close()
     print(f"[+] Report has been generated! File name is {report_name+'.html'}")
     if "--docker" not in Flags:
-        print("[N] Note: if you think that some findings may be missing in the report, check Logs directory")
+        print(f"[N] Note: if you think that some findings may be missing in the report, check the {Global.RunDir} directory")
     if "-do" not in Flags and "--docker" not in Flags:
         file_path = os.path.abspath(report_name+".html")
         webbrowser.open(f"file://{file_path}")

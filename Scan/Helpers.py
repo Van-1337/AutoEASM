@@ -37,19 +37,19 @@ def delete_http_duplicates(urls):
     return deduplicate_urls(urls)
 
 
-def delete_postleaks_junk():
-    for entry in os.listdir():
-        if os.path.isdir(entry) and entry.startswith("results_") and len(entry) == 18:
-            shutil.rmtree(entry)
+def delete_postleaks_junk(run_dir):
+    for entry in os.listdir(run_dir):
+        full_path = os.path.join(run_dir, entry)
+        if os.path.isdir(full_path) and entry.startswith("postleaks_"):
+            shutil.rmtree(full_path)
 
 
-def ensure_logs_directory():
-    current_dir = os.getcwd()
-    logs_path = os.path.join(current_dir, "Logs")
-    if not os.path.exists(logs_path):
-        os.makedirs(logs_path)
-        return False
-    return True
+def create_run_directory(first_domain):
+    safe_domain = re.sub(r'[^A-Za-z0-9._-]', '_', first_domain)[:50] or "scan"
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_dir = "Logs/" + f"{timestamp}_{safe_domain}"
+    os.makedirs(run_dir, exist_ok=True)
+    return run_dir
 
 
 def remove_ansi_escape_codes(text):

@@ -9,6 +9,7 @@ from Scan.Helpers import get_host_from_url
 
 if __name__ == '__main__':
     report_file = "Report"
+    report_name_specified = False
     argument_was_used = False
     for i in range(1, len(sys.argv)):
         if argument_was_used:
@@ -47,6 +48,7 @@ if __name__ == '__main__':
         elif sys.argv[i] == '-o':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 report_file = sys.argv[i + 1]
+                report_name_specified = True
                 argument_was_used = True
             else:
                 print("Please specify HTML report name right after -o argument. Example: -o Report3")
@@ -149,4 +151,4 @@ if __name__ == '__main__':
             print("[!] LeakIX key not specified in the Global.py file! LeakIX check will be skipped.")
 
     Scan.Control.scanning()
-    CreateReport(report_file)
+    CreateReport(report_file, auto_increment=not report_name_specified)
