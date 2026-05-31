@@ -316,18 +316,17 @@ def launch_katana():
                     Global.CrawledURLs.extend(remove_non_links(result))
                 
                 if "-ds" not in Flags:
+                    # Reduce every crawled link to its bare host (protocol kept, query/fragment/path dropped) and deduplicate.
+                    host_urls = []
                     for link in Global.CrawledURLs:
-                        slashes_amount = link.count('/')
-                        if slashes_amount == 2 and (link + '/') not in Global.HTTPAssets and link not in Global.HTTPAssets:
-                            if is_site_available(link):
-                                Global.HTTPAssets.append(link)
-                            if slashes_amount == 2 and (link + '/') not in Global.RawSubdomains and link not in Global.RawSubdomains:
-                                Global.RawSubdomains.append(link)
-                        elif slashes_amount == 3 and link[-1] == '/' and link not in Global.HTTPAssets and link[:-1] not in Global.HTTPAssets:
-                            Global.HTTPAssets.append(link[:-1])
-                            if slashes_amount == 3 and link[-1] == '/' and link not in Global.RawSubdomains and link[:-1] not in Global.RawSubdomains:
-                                if is_site_available(link):
-                                    Global.RawSubdomains.append(link[:-1])
+                        host_url = get_host_from_url(link, False, True)
+                        if host_url and host_url not in host_urls:
+                            host_urls.append(host_url)
+                    for host_url in host_urls:
+                        if host_url not in Global.RawSubdomains:
+                            Global.RawSubdomains.append(host_url)
+                        if host_url not in Global.HTTPAssets and is_site_available(host_url):
+                            Global.HTTPAssets.append(host_url)
                     Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
                     Global.HTTPAssets = [x for x in Global.HTTPAssets if x not in Global.ExcludedHosts]
                     print(f"[+] {(len(Global.CrawledURLs))} links were found")

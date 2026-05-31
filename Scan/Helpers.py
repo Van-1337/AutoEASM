@@ -61,15 +61,15 @@ def remove_non_links(urls):
     return [url for url in urls if url.startswith(('http://', 'https://'))]
 
 
-def get_host_from_url(url, remove_port=False):
-    if url.startswith('http://'):
-        url = url[7:]
-    elif url.startswith('https://'):
-        url = url[8:]
+def get_host_from_url(url, remove_port=False, keep_protocol=False):
+    # urlparse needs a scheme to populate netloc, so prepend '//' when it is missing.
+    parsed = urlparse(url if '://' in url else '//' + url)
+    host = parsed.netloc
     if remove_port:
-        return url.split('/', 1)[0].split(':', 1)[0]
-    else:
-        return url.split('/', 1)[0]
+        host = host.split(':', 1)[0]
+    if keep_protocol and parsed.scheme:
+        return f"{parsed.scheme}://{host}"
+    return host
 
 
 def get_host_from_url_list(urls, remove_ports=False):
