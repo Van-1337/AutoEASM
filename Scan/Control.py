@@ -27,21 +27,25 @@ def scanning():
             launch_subfinder_dnsx_naabu(scan_subdomains=False)
         else:
             launch_subfinder_dnsx_naabu(scan_subdomains=True)
-            launch_subfinder_dnsx_naabu(scan_subdomains=False, console_output=False)
+            try:
+                launch_subfinder_dnsx_naabu(scan_subdomains=False, console_output=False)  # Fixing strange Naabu bug where a root domain
+                # is not in the results when there are a lot of subdomains with it. When the bug is fixed, just remove this line
+            except SystemExit:
+                pass  # This supplementary run can fail (e.g. naabu "no valid ipv4 or ipv6 targets") without aborting the scan
         if '-dp' not in Flags and '-i' not in Flags:
             postleaks_thread = threading.Thread(target=launch_postleaks, name="PostleaksThread", daemon=True)
             postleaks_thread.start()
-            time.sleep(1)
+            time.sleep(1)  # To avoid problems with console output
         launch_httpx()
-        delete_assets_with_waf()
+        delete_assets_with_waf()  # And add them to AssetsWithWAF
         if '-dc' not in Flags:
             amount_of_processed_domains = len(Global.HTTPAssets)
             launch_katana()
             launch_uro()
-            delete_assets_with_waf(amount_of_processed_domains)
+            delete_assets_with_waf(amount_of_processed_domains)  # Again because Katana can add some new domains
         else:
             Global.CrawledURLs = Global.HTTPAssets
-        delete_urls_with_waf()
+        delete_urls_with_waf()  # And add them to URLsWithWAF
         if '-dw' not in Flags:
             launch_waf_bypass()
         if '-di' not in Flags:
@@ -49,15 +53,15 @@ def scanning():
         if '-dl' not in Flags:
             leakix_thread = threading.Thread(target=check_leakix, name="LeakixThread", daemon=True)
             leakix_thread.start()
-            time.sleep(1)
+            time.sleep(1)  # To avoid problems with console output
         if '-ba' in Flags or '-bw' in Flags or '-bf' in Flags:
             burp_sending_thread = threading.Thread(target=send_urls_to_burp, name="BurpSendingThread", daemon=True)
             burp_sending_thread.start()
-            time.sleep(1)
+            time.sleep(1)  # To avoid problems with console output
         if '-dm' not in Flags:
             social_networks_thread = threading.Thread(target=check_social_networks, name="CheckSocialNetworksThread", daemon=True)
             social_networks_thread.start()
-            time.sleep(1)
+            time.sleep(1)  # To avoid problems with console output
         if '-dt' not in Flags and Global.RawSubdomains:
             check_subdomains_takeover()
         if '-dn' not in Flags:
