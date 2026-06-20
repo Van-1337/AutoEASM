@@ -21,9 +21,13 @@ def launch_postleaks():
         return url
 
     print("[*] Start searching suspicious Postman collections in parallel...")
+    searched_keywords = set()
     for index, domain in enumerate(Domains):
         if '-' not in domain:
             keyword = get_keyword(domain)
+            if keyword in searched_keywords:
+                continue
+            searched_keywords.add(keyword)
             command = Postleaks_command.substitute(
                 domain=keyword,
                 PostleaksAditionalFlags=Details[Global.DetailsLevel]["PostleaksAditionalFlags"],

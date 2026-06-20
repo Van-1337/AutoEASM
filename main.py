@@ -20,7 +20,7 @@ if __name__ == '__main__':
             sys.exit(0)
         elif sys.argv[i] == '-d':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
-                Domains.append(get_host_from_url(sys.argv[i + 1]))
+                Domains.append(get_host_from_url(sys.argv[i + 1]), remove_port=True)
                 argument_was_used = True
             else:
                 print("Please specify domain to scan after -d argument. Example: -d example.com")
@@ -37,7 +37,7 @@ if __name__ == '__main__':
                         print("Domains file is empty!")
                         sys.exit(1)
                     for j in range(0, len(Domains)):
-                        Domains[j] = get_host_from_url(Domains[j].strip())
+                        Domains[j] = get_host_from_url(Domains[j].strip(), remove_port=True)
                 else:
                     print(f"{filename} file is not exist. Please recheck the file name")
                     sys.exit(1)
@@ -119,9 +119,9 @@ if __name__ == '__main__':
                 sys.exit(1)
         elif sys.argv[i] == '-ex':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
-                Global.ExcludedHosts.append(get_host_from_url(sys.argv[i + 1]))
-                Global.ExcludedHosts.append('https://' + get_host_from_url(sys.argv[i + 1]))
-                Global.ExcludedHosts.append('http://' + get_host_from_url(sys.argv[i + 1]))
+                Global.ExcludedHosts.append(get_host_from_url(sys.argv[i + 1]), remove_port=True)
+                Global.ExcludedHosts.append('https://' + get_host_from_url(sys.argv[i + 1], remove_port=True))
+                Global.ExcludedHosts.append('http://' + get_host_from_url(sys.argv[i + 1]), remove_port=True)
                 argument_was_used = True
             else:
                 print("Please specify host to exclude after -ex argument. Example: -ex test.example.com")

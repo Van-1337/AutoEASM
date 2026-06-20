@@ -218,7 +218,7 @@ def check_social_networks():
         r'https?://(?:[A-Za-z]+\.)?youtube\.com/@[A-Za-z0-9\-_]+/?',
         r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist)/)[A-Za-z0-9-_]+/?',
         r'https?://(?:www\.)?(?:instagram\.com|instagr\.am)/(?!p/)[A-Za-z0-9_.]{1,30}/?',
-        r'https?://(?:www\.)?(?:facebook|fb)\.com/(?![A-Za-z]+\.php|marketplace|gaming|watch|me|messages|help|search|groups|tr|people)[A-Za-z0-9_\-\.]+/?',
+        r'https?://(?:www\.)?(?:facebook|fb)\.com/(?![A-Za-z]+\.php|marketplace|gaming|watch|me|messages|help|search|groups|tr|people|share)[A-Za-z0-9_\-\.]+/?',
         r'https?://(?:www\.)?facebook\.com/profile\.php\?id=\d+/?',
         r'tg?://resolve\?domain=[A-Za-z0-9_]+/?'
     ]
