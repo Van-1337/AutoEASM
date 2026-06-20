@@ -1,11 +1,12 @@
 from Global import (
     Flags, Domains, Threads, Details,
-    Subfinder_command, Naabu_command, DNSX_Naabu_command, HTTPX_command,
+    Subfinder_command, Naabu_command, DNSX_Naabu_command, DNSX_bruteforce_command, HTTPX_command,
 )
 import Global
 import subprocess
 import sys
 import re
+import os
 from Scan.CommandRun import command_exec
 from Scan.Helpers import delete_http_duplicates
 
@@ -33,6 +34,34 @@ def launch_httpx():
         sys.exit(1)
 
 
+def bruteforce_subdomains(console_output=True):
+    dict_path = Global.CustomSubdomainsDict if Global.CustomSubdomainsDict else Details[Global.DetailsLevel]['SubdomainsDict']
+    if not os.path.exists(dict_path):
+        print(f"[!] Subdomains wordlist {dict_path} was not found! Skipping subdomains bruteforce.")
+        return
+
+    domains_file = Global.RunDir + "/bruteforce_domains.txt"
+    with open(domains_file, "w", encoding="utf-8") as file:
+        file.write('\n'.join(Global.Domains) + '\n')
+
+    command = DNSX_bruteforce_command.substitute(dnsxThreads=Threads[Global.LoadLevel]['DNSX'], SubdomainsDict=dict_path, DomainsFile=domains_file)
+    if console_output:
+        print("[*] Bruteforcing subdomains...")
+    if '-v' in Flags:
+        print("[v] Executing command: " + command)
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+    if result.returncode == 0:
+        Global.RawSubdomains.extend([x for x in result.stdout.splitlines() if x])
+        Global.RawSubdomains = list(dict.fromkeys(Global.RawSubdomains))
+        Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
+    else:
+        print("[e] Error when running DNSX utility for subdomains bruteforce:")
+        print("[e] Command: " + command)
+        print("[e] Error: " + result.stderr)
+        sys.exit(1)
+
+
 def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
     input_data = '\n'.join(Global.Domains) + '\n'
 
@@ -55,6 +84,7 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
             if result.returncode == 0:
                 Global.RawSubdomains.extend(result.stdout.splitlines())
                 Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
+                bruteforce_subdomains(console_output)
                 input_data = '\n'.join(Global.RawSubdomains) + '\n' + '\n'.join(Global.Domains) + '\n'
             else:
                 print("[e] Error when running Subfinder utility:")

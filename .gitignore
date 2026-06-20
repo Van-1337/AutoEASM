@@ -2,6 +2,8 @@
 !Report Example.html
 *.txt
 !Scan/templates/*
+!Scan/subdomains-top1million-5000.txt
+!Scan/subdomains-top1million-20000.txt
 Scan/fuzz.txt
 *.zip
 *.cfg

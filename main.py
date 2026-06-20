@@ -20,7 +20,7 @@ if __name__ == '__main__':
             sys.exit(0)
         elif sys.argv[i] == '-d':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
-                Domains.append(get_host_from_url(sys.argv[i + 1]), remove_port=True)
+                Domains.append(get_host_from_url(sys.argv[i + 1], remove_port=True))
                 argument_was_used = True
             else:
                 print("Please specify domain to scan after -d argument. Example: -d example.com")
@@ -117,11 +117,23 @@ if __name__ == '__main__':
             else:
                 print("Please specify Nuclei templates path after -tem argument. Example: -tem /src/Nuclei-templates")
                 sys.exit(1)
+        elif sys.argv[i] == '-sw':
+            if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
+                Global.CustomSubdomainsDict = sys.argv[i + 1]
+                if "--docker" in Flags:
+                    Global.CustomSubdomainsDict = "/src/" + Global.CustomSubdomainsDict
+                if not os.path.exists(Global.CustomSubdomainsDict):
+                    print(f"{Global.CustomSubdomainsDict} file is not exist. Please recheck the file name")
+                    sys.exit(1)
+                argument_was_used = True
+            else:
+                print("Please specify subdomains wordlist path after -sw argument. Example: -sw Scan/subdomains-top1million-5000.txt")
+                sys.exit(1)
         elif sys.argv[i] == '-ex':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
-                Global.ExcludedHosts.append(get_host_from_url(sys.argv[i + 1]), remove_port=True)
+                Global.ExcludedHosts.append(get_host_from_url(sys.argv[i + 1], remove_port=True))
                 Global.ExcludedHosts.append('https://' + get_host_from_url(sys.argv[i + 1], remove_port=True))
-                Global.ExcludedHosts.append('http://' + get_host_from_url(sys.argv[i + 1]), remove_port=True)
+                Global.ExcludedHosts.append('http://' + get_host_from_url(sys.argv[i + 1], remove_port=True))
                 argument_was_used = True
             else:
                 print("Please specify host to exclude after -ex argument. Example: -ex test.example.com")

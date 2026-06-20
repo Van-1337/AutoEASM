@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> [-h] [-v] [-sa] [-aff] [-dh] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-sa] [-aff] [-dh] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -19,6 +19,7 @@ OPTIONAL FLAGS:
 -sa - scan ALL ports instead of 100 or 1000
 -rl <integer number> - rate limit for tools (max requests per second on one host)
 -tem - specify directory with Nuclei templates
+-sw <file> - wordlist for subdomains bruteforce (done during subdomains enumeration)
 -i - IP scan (skipping DNSX check, subdomain enumeration and Postman checking)
 
 DISABLING FEATURES:
@@ -66,24 +67,25 @@ Details = {1: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'Nucle
                'NucleiConfigCritical': 'medium,high,critical', 'NucleiTokensCritical': 'low,medium,high,critical',
                'FeroxbusterAdditionalFlags': '-X "<html"', 'PostleaksAditionalFlags': '--strict',
                'KatanaAdditionalFlags': '-iqp -kf all -d 2 -ct 120', 'Byp4xx_flags': '-xV -xX -xS -xD', 'CheckAll403links': False,
-               'TimeoutModifier': 0.7},
+               'TimeoutModifier': 0.7, 'SubdomainsDict': 'Scan/subdomains-top1million-5000.txt'},
            2: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'NucleiCritical': "medium,high,critical",
                'NucleiConfigCritical': 'low,medium,high,critical', 'NucleiTokensCritical': 'info,low,medium,high,critical',
                'FeroxbusterAdditionalFlags': "", 'PostleaksAditionalFlags': '--strict',
                'KatanaAdditionalFlags': '-iqp -kf all -d 3 -ct 180', 'Byp4xx_flags': '-xV -xX -xS -xD', 'CheckAll403links': False,
-               'TimeoutModifier': 1},
+               'TimeoutModifier': 1, 'SubdomainsDict': 'Scan/subdomains-top1million-5000.txt'},
            3: {'NaabuPorts': 1000, 'NaabuFlags': '-sa', 'WAFfiltering': True, 'NucleiCritical': "low,medium,high,critical",
                'NucleiConfigCritical': 'info,low,medium,high,critical,unknown', 'NucleiTokensCritical': 'info,low,medium,high,critical,unknown',
                'FeroxbusterAdditionalFlags': "", 'PostleaksAditionalFlags': '',
                'KatanaAdditionalFlags': '-iqp -kf all -d 4 -ct 600', 'Byp4xx_flags': '', 'CheckAll403links': True,
-               'TimeoutModifier': 2.5},
+               'TimeoutModifier': 2.5, 'SubdomainsDict': 'Scan/subdomains-top1million-20000.txt'},
            4: {'NaabuPorts': 1000, 'NaabuFlags': '-sa', 'WAFfiltering': False, 'NucleiCritical': "info,low,medium,high,critical,unknown",
                'NucleiConfigCritical': 'info,low,medium,high,critical,unknown', 'NucleiTokensCritical': 'info,low,medium,high,critical,unknown',
                'FeroxbusterAdditionalFlags': "", 'PostleaksAditionalFlags': '',
                'KatanaAdditionalFlags': '-kf all -d 5 -ct 2100', 'Byp4xx_flags': '', 'CheckAll403links': True,
-               'TimeoutModifier': 10}}  # Get certain arguments by DetailsLevel and tool
+               'TimeoutModifier': 10, 'SubdomainsDict': 'Scan/subdomains-top1million-20000.txt'}}  # Get certain arguments by DetailsLevel and tool
 
 Subfinder_command = "subfinder -silent -all"
+DNSX_bruteforce_command = Template("dnsx -silent -t $dnsxThreads -retry 3 -a -w $SubdomainsDict -d $DomainsFile")
 DNSX_Naabu_command = Template("dnsx -silent -t $dnsxThreads -retry 5 -a | naabu -s s $NaabuFlags -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent")
 Naabu_command = Template("naabu -s s -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent $NaabuFlags")
 HTTPX_command = Template("httpx -t $HTTPXthreads -rl $HTTPXrate -silent -retries 5")
@@ -112,6 +114,7 @@ CrawledURLs = []  # Without WAF
 URLsWithWAF = []
 JSlinks = []
 TemplatesPath = ""
+CustomSubdomainsDict = ""  # Custom wordlist for subdomains bruteforce (set by -sw flag). Empty means use the DetailsLevel default
 ExcludedHosts = []
 BurpProxy = "127.0.0.1:8080"  # By default
 RunDir = "Logs"  # Set at the start of each scan to Logs/<first_domain>_<timestamp>. All logs and temporary files of the run are stored here
