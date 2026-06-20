@@ -129,7 +129,7 @@ FuzzedDirectories = {"200": [], "3xx": [], "401": [], "403": [], "405": []}  # {
 WAFBypassHosts = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
 InactiveHostsAccess = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
 PostleaksResult = ""  # Text in HTML format
-NotExistingSocialLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]
+NotExistingSocialMediaLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]
 LeakixFindings = []
 Byp4xxResult = ""  # Text in HTML format
 

@@ -20,7 +20,7 @@ def scanning():
         if check_installed_tools() != 0:
             print("[e] Not all required utilities are installed. Terminating.")
             sys.exit(1)
-        print("[N] Note: you can stop a current check with Ctrl+C")
+        print("[N] Note: you can stop any current check with Ctrl+C")
         Global.RunDir = create_run_directory(Domains[0])
         print(f"[*] Logs and temporary files for this run will be stored in: {Global.RunDir}")
         if '-ds' in Flags or '-i' in Flags:

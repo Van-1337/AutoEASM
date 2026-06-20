@@ -165,89 +165,104 @@ def delete_urls_with_waf():
 
 
 def check_social_networks():
-    def is_social_media_exist(social_media_link):
+    def social_media_account_exists(account_link):
         sm_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                    "Sec-Fetch-Site": "none"}
 
-        if "//youtube.com" in social_media_link:
-            if social_media_link[-1] == '/':
-                social_media_link = social_media_link[:-1] + "?cbrd=1"
-            elif '?' in social_media_link:
-                social_media_link += "&cbrd=1"
-            else:
-                social_media_link += "?cbrd=1"
-        elif social_media_link.startswith("tg://"):
-            social_media_link = "https://t.me/" + social_media_link.split('=')[1]
+        if "youtube.com" in account_link:
+            # From EU IPs YouTube 302-redirects every channel URL to its cookie-consent
+            # page (HTTP 200), hiding the real 404 for non-existent channels. SOCS=CAI
+            # skips that page so the status code stays meaningful.
+            sm_headers["Cookie"] = "SOCS=CAI"
+        elif account_link.startswith("tg://"):
+            account_link = "https://t.me/" + account_link.split('=')[1]
 
         try:
-            link_response = requests.get(social_media_link, headers=sm_headers, timeout=10)
+            link_response = requests.get(account_link, headers=sm_headers, timeout=10)
         except requests.RequestException:
-            print(f"[e] Error during social network checking when sending request to {social_media_link}")
+            print(f"[e] Error during social media checking when sending request to {account_link}")
             return True
-        if "tiktok.com" in social_media_link:
+        if "tiktok.com" in account_link:
             if '"userInfo":{' in link_response.text:
                 return True
             return False
-        if "youtube.com/" in social_media_link:
+        if "youtube.com/" in account_link:
             if link_response.status_code == 404:
                 return False
             return True
-        if "//t.me" in social_media_link or "//telegram" in social_media_link:
+        if "//t.me" in account_link or "//telegram" in account_link:
             if '<meta name="twitter:description" content="\n">' in link_response.text:
                 return False
             return True
-        if "facebook.com" in social_media_link or "fb.com/" in social_media_link:
+        if "facebook.com" in account_link or "fb.com/" in account_link:
             if '<title>Facebook</title>' in link_response.text:
                 return False
             return True
-        if "instagram.com" in social_media_link or "instagr.am" in social_media_link:
+        if "instagram.com" in account_link or "instagr.am" in account_link:
             if '<title>Instagram</title>' in link_response.text:
                 return False
             return True
-        print(f"[e] Error when checking social network existing (link: {social_media_link})")
+        print(f"[e] Error when checking social media account existence (link: {account_link})")
         return True
 
     requests.packages.urllib3.disable_warnings()
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
-    patterns = [
-        r'https?://(?:t(?:elegram)?\.me|telegram\.org)/[A-Za-z0-9_]{5,32}/?',
-        r'https?://(?:www\.)tiktok\.com/@[A-Za-z0-9_.-]+/?',
-        r'https?://(?:[A-Za-z]+\.)?youtube\.com/channel/[A-Za-z0-9-_]+/?',
-        r'https?://(?:[A-Za-z]+\.)?youtube\.com/user/[A-Za-z0-9]+/?',
-        r'https?://(?:[A-Za-z]+\.)?youtube\.com/@[A-Za-z0-9\-_]+/?',
-        r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist)/)[A-Za-z0-9-_]+/?',
-        r'https?://(?:www\.)?(?:instagram\.com|instagr\.am)/(?!p/)[A-Za-z0-9_.]{1,30}/?',
-        r'https?://(?:www\.)?(?:facebook|fb)\.com/(?![A-Za-z]+\.php|marketplace|gaming|watch|me|messages|help|search|groups|tr|people|share)[A-Za-z0-9_\-\.]+/?',
-        r'https?://(?:www\.)?facebook\.com/profile\.php\?id=\d+/?',
-        r'tg?://resolve\?domain=[A-Za-z0-9_]+/?'
+    # Each network keeps its patterns next to the relevance probe. should_exist_on_test
+    # is the expected result of social_media_account_exists for test_url: a fake account
+    # should report False, a real account True. If reality differs the detection is
+    # unreliable, so that network's patterns are skipped for this run.
+    networks = [
+        {
+            "name": "Telegram",
+            "patterns": [
+                r'https?://(?:t(?:elegram)?\.me|telegram\.org)/[A-Za-z0-9_]{5,32}/?',
+                r'tg?://resolve\?domain=[A-Za-z0-9_]+/?',
+            ],
+            "test_url": "https://t.me/gjenwoepnfwvj",
+            "should_exist_on_test": False,
+        },
+        {
+            "name": "Tiktok",
+            "patterns": [r'https?://(?:www\.)tiktok\.com/@[A-Za-z0-9_.-]+/?'],
+            "test_url": "https://www.tiktok.com/@tiktok",
+            "should_exist_on_test": True,
+        },
+        {
+            "name": "Youtube",
+            "patterns": [
+                r'https?://(?:[A-Za-z]+\.)?youtube\.com/channel/[A-Za-z0-9-_]+/?',
+                r'https?://(?:[A-Za-z]+\.)?youtube\.com/user/[A-Za-z0-9]+/?',
+                r'https?://(?:[A-Za-z]+\.)?youtube\.com/@[A-Za-z0-9\-_]+/?',
+                r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist)/)[A-Za-z0-9-_]+/?',
+            ],
+            "test_url": "https://www.youtube.com/@gjenwoepnfwvj",
+            "should_exist_on_test": False,
+        },
+        {
+            "name": "Facebook",
+            "patterns": [
+                r'https?://(?:www\.)?(?:facebook|fb)\.com/(?![A-Za-z]+\.php|marketplace|gaming|watch|me|messages|help|search|groups|tr|people|share)[A-Za-z0-9_\-\.]+/?',
+                r'https?://(?:www\.)?facebook\.com/profile\.php\?id=\d+/?',
+            ],
+            "test_url": "https://www.facebook.com/iufqnoiqfenoiep",
+            "should_exist_on_test": False,
+        },
+        {
+            "name": "Instagram",
+            "patterns": [r'https?://(?:www\.)?(?:instagram\.com|instagr\.am)/(?!p/)[A-Za-z0-9_.]{1,30}/?'],
+            "test_url": "https://www.instagram.com/gwprhgwirpgmwr",
+            "should_exist_on_test": False,
+        },
     ]
 
-    def checking_relevance():
-        if is_social_media_exist("https://t.me/gjenwoepnfwvj"):
-            patterns.remove(r'https?://(?:t(?:elegram)?\.me|telegram\.org)/[A-Za-z0-9_]{5,32}/?')
-            patterns.remove(r'tg?://resolve\?domain=[A-Za-z0-9_]+/?')
-            print("[e] Telegram account check is not relevant! Please contact developer for update.")
-        if not is_social_media_exist("https://www.tiktok.com/@tiktok"):
-            patterns.remove(r'https?://(?:www\.)tiktok\.com/@[A-Za-z0-9_.-]+/?')
-            print("[e] Tiktok account check is not relevant! Please contact developer for update.")
-        if is_social_media_exist("https://www.youtube.com/@gjenwoepnfwvj"):
-            patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/channel/[A-Za-z0-9-_]+/?')
-            patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/user/[A-Za-z0-9]+/?')
-            patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist)/)[A-Za-z0-9-_]+/?')
-            patterns.remove(r'https?://(?:[A-Za-z]+\.)?youtube\.com/@[A-Za-z0-9\-_]+/?')
-            print("[e] Youtube account check is not relevant! Please contact developer for update.")
-        if is_social_media_exist("https://www.facebook.com/iufqnoiqfenoiep"):
-            patterns.remove(
-                r'https?://(?:www\.)?(?:facebook|fb)\.com/(?![A-Za-z]+\.php|marketplace|gaming|watch|me|messages|help|search|groups|tr|people)[A-Za-z0-9_\-\.]+/?')
-            patterns.remove(r'https?://(?:www\.)?facebook\.com/profile\.php\?id=\d+/?')
-            print("[e] Facebook account check is not relevant! Please contact developer for update.")
-        if is_social_media_exist("https://www.instagram.com/gwprhgwirpgmwr"):
-            patterns.remove(r'https?://(?:www\.)?(?:instagram\.com|instagr\.am)/(?!p/)[A-Za-z0-9_.]{1,30}/?')
-            print("[e] Instagram account check is not relevant! Please contact developer for update.")
-
     print("[*] Checking social networks takeover in parallel...")
-    checking_relevance()
+    patterns = []
+    for network in networks:
+        if social_media_account_exists(network["test_url"]) == network["should_exist_on_test"]:
+            patterns.extend(network["patterns"])
+        else:
+            print(f"[e] {network['name']} account check is not relevant! Please contact developer for update.")
 
     existing_media = set()
     for url in Global.CrawledURLs + Global.URLsWithWAF:
@@ -261,10 +276,10 @@ def check_social_networks():
                     found_links.update(matches)
                 for media_link in found_links:
                     if media_link not in existing_media:
-                        if is_social_media_exist(media_link):
+                        if social_media_account_exists(media_link):
                             existing_media.add(media_link)
                         else:
-                            Global.NotExistingSocialLinks.append((url, media_link))
+                            Global.NotExistingSocialMediaLinks.append((url, media_link))
             except requests.RequestException:
                 pass
-    print(f"[+] {len(Global.NotExistingSocialLinks)} unregistered social media links were found")
+    print(f"[+] {len(Global.NotExistingSocialMediaLinks)} unregistered social media links were found")

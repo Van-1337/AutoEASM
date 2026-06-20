@@ -1,4 +1,4 @@
-from Global import Domains, HTTPAssets, Flags, AssetsWithWAF, NucleiFindings, NotExistingSocialLinks,\
+from Global import Domains, HTTPAssets, Flags, AssetsWithWAF, NucleiFindings, NotExistingSocialMediaLinks,\
     NucleiConfigFindings, FuzzedDirectories, NucleiTokensFindings, NucleiDASTFindings, NucleiTakeoverFindings, LeakixFindings
 import Global
 from datetime import datetime
@@ -315,8 +315,8 @@ def get_report_content():
 
     def social_media_bypass():
         social_media_text = """\n\n<div id="SocialMedia" class="tab-content">\n<h2>Inactive social media links</h2><br>\n"""
-        if Global.NotExistingSocialLinks:
-            for finding in NotExistingSocialLinks:
+        if Global.NotExistingSocialMediaLinks:
+            for finding in NotExistingSocialMediaLinks:
                 social_media_text += f'Inactive <a href=\"{finding[1]}\">{finding[1]}</a> link on the <a href=\"{finding[0]}\">{finding[0]}</a> page.<br><br>\n'
         else:
             social_media_text += "No social media links takeover possibilities this time."
