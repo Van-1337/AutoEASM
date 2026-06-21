@@ -1,4 +1,6 @@
 *.html
+*.md
+!README.md
 !Report Example.html
 *.txt
 !Scan/templates/*
