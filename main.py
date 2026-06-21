@@ -142,7 +142,7 @@ if __name__ == '__main__':
             Flags.append('-sa')
             for level in range(0, len(Global.Details)):
                 Global.Details[level+1]['NaabuPorts'] = "full"
-        elif sys.argv[i] == "-do" or sys.argv[i] == "-v" or sys.argv[i] == "-ds" or sys.argv[i] == "-df"\
+        elif sys.argv[i] == "-do" or sys.argv[i] == "-v" or sys.argv[i] == "-md" or sys.argv[i] == "-ds" or sys.argv[i] == "-df"\
                 or sys.argv[i] == "-dn" or sys.argv[i] == "-dp" or sys.argv[i] == "-dd" or sys.argv[i] == "-dl"\
                 or sys.argv[i] == "-dc" or sys.argv[i] == "-db" or sys.argv[i] == "-dm" or sys.argv[i] == "-dt"\
                 or sys.argv[i] == "-dw" or sys.argv[i] == "-di" or sys.argv[i] == "-daff" or sys.argv[i] == "-dh"\

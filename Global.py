@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-sa] [-aff] [-dh] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -11,7 +11,8 @@ REQUIRED FLAGS:
 
 OPTIONAL FLAGS:
 -h - show this help menu
--o <file> - name of the final output HTML file with the report. Caution, the file will always be overwritten if it already exists! Default name: Report
+-o <file> - name of the final report file (used for the HTML report and the MD report if -md is set). Caution, the file will be overwritten if it already exists!
+-md - additionally generate the report in Markdown (.md) format (the HTML report is always generated)
 -v - verbose output
 -ll <number> - internet load level, affects the number of threads in utilities. Number: 1-3, 1 - minimum load, 3 - maximum, Default: 2
 -ld <number> - level of detail, slightly increases the number of findings and greatly increases execution time and junk info. Number: 1-4, 1 - max speed, 4 - max findings, Default: 2
@@ -85,7 +86,7 @@ Details = {1: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'Nucle
                'TimeoutModifier': 10, 'SubdomainsDict': 'Scan/subdomains-top1million-20000.txt'}}  # Get certain arguments by DetailsLevel and tool
 
 Subfinder_command = "subfinder -silent -all"
-DNSX_bruteforce_command = Template("dnsx -silent -t $dnsxThreads -retry 3 -a -w $SubdomainsDict -d $DomainsFile")
+DNSX_bruteforce_command = Template("dnsx -silent -t $dnsxThreads -a -w $SubdomainsDict -d $DomainsFile")
 DNSX_Naabu_command = Template("dnsx -silent -t $dnsxThreads -retry 5 -a | naabu -s s $NaabuFlags -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent")
 Naabu_command = Template("naabu -s s -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent $NaabuFlags")
 HTTPX_command = Template("httpx -t $HTTPXthreads -rl $HTTPXrate -silent -retries 5")
@@ -128,9 +129,9 @@ NucleiTakeoverFindings = {"critical": [], "high": [], "medium": [], "low": [], "
 FuzzedDirectories = {"200": [], "3xx": [], "401": [], "403": [], "405": []}  # {"200": ["http://example.com/backup", http://example.com/admin]}
 WAFBypassHosts = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
 InactiveHostsAccess = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
-PostleaksResult = ""  # Text in HTML format
+PostleaksResult = {}  # {"keyword": ["[+] (ID...) GET: ...", " - Headers: ...", " > Potential secret found: ..."]} - raw postleaks output lines per keyword
 NotExistingSocialMediaLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]
 LeakixFindings = []
-Byp4xxResult = ""  # Text in HTML format
+Byp4xxResult = []  # [[host_title_line, result_line, result_line], ...] - raw byp4xx output grouped per host
 
 LeakixAPIKey = os.environ.get("LeakIX_API_key", "CHANGEME")  # Change CHANGEME to your API key

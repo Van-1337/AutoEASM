@@ -1,7 +1,6 @@
 from Global import Flags, Domains, Details, Postleaks_command
 import Global
 import subprocess
-from html import escape
 from Scan.Helpers import remove_ansi_escape_codes, delete_postleaks_junk
 
 is_postleaks_waiting = False
@@ -48,23 +47,14 @@ def launch_postleaks():
                     executed = True
 
             if result.returncode == 0:
-                count = 0
+                keyword_findings = []
                 for raw_string in remove_ansi_escape_codes(result.stdout).splitlines():
                     if raw_string.startswith("[+") or raw_string.startswith(" -") or raw_string.startswith(" >"):
-                        if count == 0:
-                            Global.PostleaksResult += f'<h3>{keyword} results</h3>\n' \
-                                                      f'<a href=\"https://www.postman.com/search?q={keyword}&scope=all&type=all\">Postman collection search link</a><br>\n'
-                        count += 1
-                        if raw_string.startswith(" >"):
-                            Global.PostleaksResult += f"<b>{escape(raw_string)}</b> <br>\n"
-                        else:
-                            if raw_string.startswith("[+"):
-                                Global.PostleaksResult += "<br>\n"
-                            Global.PostleaksResult += escape(raw_string) + " <br>\n"
+                        keyword_findings.append(raw_string)
                     elif raw_string.startswith("[-"):
                         print("[e]", raw_string)
-                if count != 0:
-                    Global.PostleaksResult += "\n<br><br><br>\n"
+                if keyword_findings:
+                    Global.PostleaksResult[keyword] = keyword_findings
             else:
                 print("[e] Error when running postleaks utility")
     delete_postleaks_junk(Global.RunDir)

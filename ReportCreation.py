@@ -18,6 +18,18 @@ def get_unique_report_name(prepath, base_name):
     return f"{base_name}-{counter}"
 
 
+def get_host_scan_commands(hosts_pair):  # Suggested manual scan commands for a (host_header, target) pair
+    return f"nuclei -u {hosts_pair[1]} -header Host:{hosts_pair[0]} -s {Global.Details[Global.DetailsLevel]['NucleiConfigCritical']} " \
+           f"-rl {Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
+           f"katana -u {hosts_pair[1]} -headers Host:{hosts_pair[0]} -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn" \
+           f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlags']} -p {Global.Threads[Global.LoadLevel]['KatanaParallels']}" \
+           f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
+           f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
+           f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
+           f"-t {(Global.Threads[Global.LoadLevel]['FeroxbusterThreads']*Global.Threads[Global.LoadLevel]['FeroxbusterParallels'])//2} " \
+           f"--dont-extract-links -C 404 500 --time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
+
+
 def CreateReport(report_name="Report", auto_increment=False):
     print("[*] Report creation...")
     prepath = "/app/output/" if "--docker" in Flags else ""
@@ -28,6 +40,10 @@ def CreateReport(report_name="Report", auto_increment=False):
         report_file.write(get_report_content())
         report_file.write(get_report_end())
     print(f"[+] Report has been generated! File name is {report_name+'.html'}")
+    if "-md" in Flags:
+        with open(prepath + report_name + ".md", "w", encoding="utf-8") as md_file:
+            md_file.write(get_md_report_content())
+        print(f"[+] Markdown report has been generated! File name is {report_name+'.md'}")
     if "--docker" not in Flags:
         print(f"[N] Note: if you think that some findings may be missing in the report, check the {Global.RunDir} directory")
     if "-do" not in Flags and "--docker" not in Flags:
@@ -274,7 +290,13 @@ def get_report_content():
                                "check other 403/401 links on this domain.</b><br><br>\n"
             else:
                 bypass_text += "<br>\n"
-            bypass_text += replace_last_colon(Global.Byp4xxResult)
+            byp4xx_html = ""
+            for host_strings in Global.Byp4xxResult:
+                byp4xx_html += f"<b>{host_strings[0]}</b><br>\n"
+                for host_string in host_strings[1:]:
+                    byp4xx_html += host_string + "<br>\n"
+                byp4xx_html += "<br><br>\n"
+            bypass_text += replace_last_colon(byp4xx_html)
         else:
             bypass_text += "No bypasses this time."
         bypass_text += "</div>"
@@ -282,17 +304,8 @@ def get_report_content():
 
     def host_manipulation():  # Get WAF bypass and inactive hosts access
         def get_host_result(hosts_pair):
-            scan_commands = f"nuclei -u {hosts_pair[1]} -header Host:{hosts_pair[0]} -s {Global.Details[Global.DetailsLevel]['NucleiConfigCritical']} " \
-                            f"-rl {Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
-                            f"katana -u {hosts_pair[1]} -headers Host:{hosts_pair[0]} -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn" \
-                            f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlags']} -p {Global.Threads[Global.LoadLevel]['KatanaParallels']}" \
-                            f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
-                            f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
-                            f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
-                            f"-t {(Global.Threads[Global.LoadLevel]['FeroxbusterThreads']*Global.Threads[Global.LoadLevel]['FeroxbusterParallels'])//2} " \
-                            f"--dont-extract-links -C 404 500 --time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
             return f"<details><summary>Try using host header <b>{hosts_pair[0]}</b> on {hosts_pair[1]}</summary>" \
-                   f"<br><pre>{scan_commands}</pre></details><br><br>\n"
+                   f"<br><pre>{get_host_scan_commands(hosts_pair)}</pre></details><br><br>\n"
 
         host_manipulation_text = """\n\n<div id="HostManipulation" class="tab-content">\n<h1>Host header manipulation</h1><br>\n"""
         host_manipulation_text += "<br><h2>WAF bypass</h2><br>\n"
@@ -326,7 +339,17 @@ def get_report_content():
     def postleaks_results():
         postleaks_text = """\n\n<div id="Postleaks" class="tab-content">\n<h2>Postman leaks</h2><br>\n"""
         if Global.PostleaksResult:
-            postleaks_text += Global.PostleaksResult
+            for keyword, lines in Global.PostleaksResult.items():
+                postleaks_text += f'<h3>{keyword} results</h3>\n' \
+                                  f'<a href=\"https://www.postman.com/search?q={keyword}&scope=all&type=all\">Postman collection search link</a><br>\n'
+                for line in lines:
+                    if line.startswith(" >"):
+                        postleaks_text += f"<b>{escape(line)}</b> <br>\n"
+                    else:
+                        if line.startswith("[+"):
+                            postleaks_text += "<br>\n"
+                        postleaks_text += escape(line) + " <br>\n"
+                postleaks_text += "\n<br><br><br>\n"
         else:
             postleaks_text += "No Postman leaks this time."
         postleaks_text += "</div>"
@@ -355,6 +378,166 @@ def get_report_content():
             leakix_text += "No Leakix results this time."
         leakix_text += "</div>"
         return leakix_text
+
+    return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
+        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()
+
+
+def get_md_report_content():  # Markdown counterpart of get_report_content(). Raw tool output goes into code fences to avoid Markdown mangling
+    def overview():
+        md = "# AutoEASM Report\n\n## General information\n\n"
+        md += f"- **Scanned domains:** {', '.join(Domains)}\n"
+        md += f"- **Generated on:** {datetime.now().strftime('%a, %d %b %Y, %H:%M:%S')}\n"
+        md += f"- **Level of detail:** {Global.DetailsLevel}\n"
+        md += f"- **Load level:** {Global.LoadLevel}\n"
+        if Global.ExcludedHosts:
+            md += f"- **Excluded subdomains:** {'; '.join(Global.ExcludedHosts[::3])}\n"
+        if Flags:
+            md += f"- **Flags:** {' '.join(Flags)}\n"
+        return md + "\n"
+
+    def found_services():
+        md = "## Found network services\n\n"
+        if Global.Services:
+            for service in Global.Services:
+                md += f"- {service}\n"
+        else:
+            md += "No network services found.\n"
+        return md + "\n"
+
+    def found_assets():
+        md = "## Found websites\n\n"
+        if not Global.HTTPAssets and not Global.AssetsWithWAF:
+            return md + "No websites found.\n\n"
+        if Global.AssetsWithWAF and Global.HTTPAssets:
+            md += "### Without firewall\n\n"
+        for link in Global.HTTPAssets:
+            md += f"- {link}\n"
+        if Global.AssetsWithWAF:
+            md += "\n### With firewall\n\n"
+            for link in Global.AssetsWithWAF:
+                md += f"- {link} - {Global.AssetsWithWAF[link]}\n"
+        return md + "\n"
+
+    def nuclei_findings():
+        def render_group(title, findings):
+            text = f"### {title}\n\n"
+            count = 0
+            for severity in findings:
+                if findings[severity]:
+                    text += f"#### Issues with {severity} severity\n\n```\n"
+                    for finding in findings[severity]:
+                        text += finding + "\n"
+                        count += 1
+                    text += "```\n\n"
+            if count == 0:
+                text += "No findings this time :(\n\n"
+            return text
+
+        md = "## Nuclei Security Findings\n\n"
+        md += render_group("Main findings", NucleiFindings)
+        md += render_group("Config findings", NucleiConfigFindings)
+        md += render_group("DAST scanning findings", NucleiDASTFindings)
+        md += render_group("Leaked tokens findings", NucleiTokensFindings)
+        md += render_group("Subdomain takeover findings", NucleiTakeoverFindings)
+        return md
+
+    def fuzzing_results():
+        md = "## Fuzzed files and directories\n\n"
+        count = 0
+        for HTTP_code in FuzzedDirectories:
+            if FuzzedDirectories[HTTP_code]:
+                md += f"### Endpoints with {HTTP_code} code\n\n"
+                for endpoint in FuzzedDirectories[HTTP_code]:
+                    md += f"- {endpoint}\n"
+                    count += 1
+                md += "\n"
+        if count == 0:
+            md += "No fuzzing results this time :(\n\n"
+        return md
+
+    def bypass403_results():
+        md = "## 403 and 401 codes bypass results\n\n"
+        if Global.Byp4xxResult:
+            md += "_Please note that 403 bypass tools often give false positives._\n\n"
+            if not Global.Details[Global.DetailsLevel]['CheckAll403links']:
+                md += "**Only 1 link was analyzed for each host. If a successful bypass was found, " \
+                      "manually check other 403/401 links on this domain.**\n\n"
+            for host_strings in Global.Byp4xxResult:
+                md += "```\n"
+                for host_string in host_strings:
+                    md += host_string + "\n"
+                md += "```\n\n"
+        else:
+            md += "No bypasses this time.\n\n"
+        return md
+
+    def host_manipulation():
+        def get_host_result(hosts_pair):
+            return f"**Try using host header `{hosts_pair[0]}` on {hosts_pair[1]}**\n\n" \
+                   f"```\n{get_host_scan_commands(hosts_pair)}```\n\n"
+
+        md = "## Host header manipulation\n\n### WAF bypass\n\n"
+        if Global.WAFBypassHosts:
+            for hosts_pair in Global.WAFBypassHosts:
+                md += get_host_result(hosts_pair)
+        elif Global.AssetsWithWAF:
+            md += "No successful WAF bypass attempts this time.\n\n"
+        else:
+            md += "No hosts with WAF found.\n\n"
+        md += "### Access to inactive hosts\n\n"
+        if Global.InactiveHostsAccess:
+            for hosts_pair in Global.InactiveHostsAccess:
+                md += get_host_result(hosts_pair)
+        else:
+            md += "No successful inactive hosts access attempts this time.\n\n"
+        return md
+
+    def social_media_bypass():
+        md = "## Inactive social media links\n\n"
+        if Global.NotExistingSocialMediaLinks:
+            for finding in NotExistingSocialMediaLinks:
+                md += f"- Inactive {finding[1]} link on the {finding[0]} page.\n"
+        else:
+            md += "No social media links takeover possibilities this time.\n"
+        return md + "\n"
+
+    def postleaks_results():
+        md = "## Postman leaks\n\n"
+        if Global.PostleaksResult:
+            for keyword, lines in Global.PostleaksResult.items():
+                md += f"### {keyword} results\n\n"
+                md += f"[Postman collection search link](https://www.postman.com/search?q={keyword}&scope=all&type=all)\n\n"
+                md += "```\n"
+                for line in lines:
+                    md += line + "\n"
+                md += "```\n\n"
+        else:
+            md += "No Postman leaks this time.\n"
+        return md + "\n"
+
+    def leakix_results():
+        md = "## Leakix results\n\n"
+        if LeakixFindings:
+            for finding in LeakixFindings:
+                if finding.event_source in Leakix_info:
+                    md += f"### {Leakix_info[finding.event_source][1]}\n\n"
+                    md += f"- URL: {finding.url}\n"
+                    if finding.severity:
+                        md += f"- Severity: {finding.severity}\n"
+                    elif Leakix_info[finding.event_source][0]:
+                        md += f"- Severity: {Leakix_info[finding.event_source][0]}\n"
+                    md += f"- [More info here](https://leakix.net/domain/{finding.host})\n\n"
+                    md += "```\n" + Leakix_info[finding.event_source][2].rstrip("\n") + "\n```\n\n"
+                else:
+                    md += f"### {finding.event_source}\n\n"
+                    md += f"- URL: {finding.url}\n"
+                    if finding.severity:
+                        md += f"- Severity: {finding.severity}\n"
+                    md += f"- [More info here](https://leakix.net/domain/{finding.host})\n\n"
+        else:
+            md += "No Leakix results this time.\n"
+        return md + "\n"
 
     return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
         + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()

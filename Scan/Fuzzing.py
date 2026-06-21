@@ -162,17 +162,11 @@ def launch_byp4xx():
             for index, string in enumerate(useful_strings):
                 if string.startswith("====="):
                     if len(current_host_strings) > 1:
-                        Global.Byp4xxResult += f"<b>{current_host_strings[0]}</b><br>\n"
-                        for host_string in current_host_strings[1:]:
-                            Global.Byp4xxResult += host_string + "<br>\n"
-                        Global.Byp4xxResult += "<br><br>\n"
+                        Global.Byp4xxResult.append(current_host_strings)
                     current_host_strings = [string]
                 elif string == "==END OF OUTPUT==":
                     if len(current_host_strings) > 1:
-                        Global.Byp4xxResult += f"<b>{current_host_strings[0]}</b><br>\n"
-                        for host_string in current_host_strings[1:]:
-                            Global.Byp4xxResult += host_string + "<br>\n"
-                        Global.Byp4xxResult += "<br><br>\n"
+                        Global.Byp4xxResult.append(current_host_strings)
                 elif string.startswith("=="):
                     if not useful_strings[index+1].startswith("=="):
                         current_host_strings.append(string)

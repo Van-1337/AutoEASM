@@ -49,16 +49,14 @@ def bruteforce_subdomains(console_output=True):
         print("[*] Bruteforcing subdomains...")
     if '-v' in Flags:
         print("[v] Executing command: " + command)
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    result = command_exec(command, "DNSX_bruteforce.txt")  # Via command_exec so this step (unlike subfinder/DNSX) can be skipped with Ctrl+C
 
-    if result.returncode == 0:
-        Global.RawSubdomains.extend([x for x in result.stdout.splitlines() if x])
+    if result != "-":
+        Global.RawSubdomains.extend([x for x in result if x])
         Global.RawSubdomains = list(dict.fromkeys(Global.RawSubdomains))
         Global.RawSubdomains = [x for x in Global.RawSubdomains if x not in Global.ExcludedHosts]
     else:
-        print("[e] Error when running DNSX utility for subdomains bruteforce:")
-        print("[e] Command: " + command)
-        print("[e] Error: " + result.stderr)
+        print("[e] Error when running DNSX utility for subdomains bruteforce.")
         sys.exit(1)
 
 
