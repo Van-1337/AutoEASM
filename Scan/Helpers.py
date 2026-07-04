@@ -101,6 +101,16 @@ class LeakixVulnerability:
     url: str
 
 
+@dataclass(frozen=True)
+class QualysWebAppResult:  # One record per asset processed by the Qualys WAS sync (-q flag)
+    host: str
+    parent: str
+    action: str          # "skipped" | "created" | "scheduled" | "scanned" | "error" (or "would-..." in dry-run)
+    webapp_id: str = ""
+    scan_id: str = ""
+    message: str = ""
+
+
 def extract_leakix_vulnerability(entry: dict) -> LeakixVulnerability:
     event_source = entry.get('event_source', '').strip()
     host = entry.get('host', '').strip()

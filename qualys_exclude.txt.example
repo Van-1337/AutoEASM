@@ -1,0 +1,11 @@
+# Qualys WAS exclude list - one host or fnmatch pattern per line.
+# Copy this file to qualys_exclude.txt (next to main.py) and add your entries.
+# Hosts matching any line here are NOT created/scheduled/scanned in Qualys WAS when running with -q.
+# qualys_exclude.txt is auto-detected - no flag needed. Blank lines and lines starting with # are
+# ignored. Matching is case-insensitive.
+#
+# Examples:
+#   dev.example.com          exact host
+#   *.staging.example.com    any subdomain of staging.example.com
+#   test-*                   any host starting with test-
+#   *.internal.example.com

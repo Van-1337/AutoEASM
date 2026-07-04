@@ -11,6 +11,7 @@ from Scan.Crawl import launch_katana, launch_uro, delete_assets_with_waf, delete
 from Scan.HostChecks import launch_waf_bypass, launch_hidden_hosts_scan, send_urls_to_burp
 from Scan.Postleaks import launch_postleaks, set_postleaks_waiting
 from Scan.Leakix import check_leakix
+from Scan.Qualys import sync_qualys_was
 from Scan.NucleiScan import launch_nuclei, check_subdomains_takeover
 from Scan.Fuzzing import launch_feroxbuster, launch_byp4xx
 
@@ -54,6 +55,10 @@ def scanning():
             leakix_thread = threading.Thread(target=check_leakix, name="LeakixThread", daemon=True)
             leakix_thread.start()
             time.sleep(1)  # To avoid problems with console output
+        if '-q' in Flags:
+            qualys_thread = threading.Thread(target=sync_qualys_was, name="QualysThread", daemon=True)
+            qualys_thread.start()
+            time.sleep(1)  # To avoid problems with console output
         if '-ba' in Flags or '-bw' in Flags or '-bf' in Flags:
             burp_sending_thread = threading.Thread(target=send_urls_to_burp, name="BurpSendingThread", daemon=True)
             burp_sending_thread.start()
@@ -89,6 +94,13 @@ def scanning():
                     leakix_thread.join(timeout=1)
             except KeyboardInterrupt:
                 print("[*] Finishing leakix check...")
+        if 'qualys_thread' in locals() and qualys_thread.is_alive():
+            print("[*] Waiting until Qualys WAS sync finishes...")
+            try:
+                while qualys_thread.is_alive():
+                    qualys_thread.join(timeout=1)
+            except KeyboardInterrupt:
+                print("[*] Finishing Qualys WAS sync...")
         if 'social_networks_thread' in locals() and social_networks_thread.is_alive():
             print("[*] Waiting until social media takeover checks finishes...")
             try:

@@ -127,6 +127,7 @@ def get_report_start():
         <button class="tablink" onclick="openTab(event, 'SocialMedia')">Social media takeover</button>
         <button class="tablink" onclick="openTab(event, 'Postleaks')">Postman leaks</button>
         <button class="tablink" onclick="openTab(event, 'Leakix')">Leakix results</button>
+        <button class="tablink" onclick="openTab(event, 'QualysWAS')">Qualys WAS</button>
     </div>
 
     <div class="content">\n"""
@@ -379,8 +380,30 @@ def get_report_content():
         leakix_text += "</div>"
         return leakix_text
 
+    def qualys_results():
+        qualys_text = """\n\n<div id="QualysWAS" class="tab-content">\n<h2>Qualys WAS sync</h2><br>\n"""
+        if Global.QualysWASResults:
+            for r in Global.QualysWASResults:
+                line = f"<b>{escape(r.action)}</b>: {escape(r.host)}"
+                if r.parent and r.parent != r.host:
+                    line += f" (parent: {escape(r.parent)})"
+                details = []
+                if r.webapp_id:
+                    details.append(f"web app id: {escape(r.webapp_id)}")
+                if r.scan_id:
+                    details.append(f"scan id: {escape(r.scan_id)}")
+                if details:
+                    line += " - " + ", ".join(details)
+                if r.message:
+                    line += f" - {escape(r.message)}"
+                qualys_text += line + "<br>\n"
+        else:
+            qualys_text += "Qualys WAS sync was not run (enable it with the -q flag)."
+        qualys_text += "</div>"
+        return qualys_text
+
     return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
-        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()
+        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results() + qualys_results()
 
 
 def get_md_report_content():  # Markdown counterpart of get_report_content(). Raw tool output goes into code fences to avoid Markdown mangling
@@ -539,5 +562,26 @@ def get_md_report_content():  # Markdown counterpart of get_report_content(). Ra
             md += "No Leakix results this time.\n"
         return md + "\n"
 
+    def qualys_results():
+        md = "## Qualys WAS sync\n\n"
+        if Global.QualysWASResults:
+            for r in Global.QualysWASResults:
+                line = f"- **{r.action}**: {r.host}"
+                if r.parent and r.parent != r.host:
+                    line += f" (parent: {r.parent})"
+                details = []
+                if r.webapp_id:
+                    details.append(f"web app id: {r.webapp_id}")
+                if r.scan_id:
+                    details.append(f"scan id: {r.scan_id}")
+                if details:
+                    line += " - " + ", ".join(details)
+                if r.message:
+                    line += f" - {r.message}"
+                md += line + "\n"
+        else:
+            md += "Qualys WAS sync was not run (enable it with the -q flag).\n"
+        return md + "\n"
+
     return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
-        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()
+        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results() + qualys_results()

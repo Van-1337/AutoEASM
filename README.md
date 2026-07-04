@@ -105,6 +105,67 @@ Also, the useful flags include:
 
 For example, `-ll 1` can be used if the hosts can go down from the load, or `-ld 1` can be used if there is not a lot of time to check for findings.
 
+## Qualys WAS integration (`-q`)
+
+The optional `-q` flag pushes every **live web service** found by the scan (root domains and subdomains that HTTPX confirmed as reachable websites, with or without a WAF) into **Qualys Web Application Scanning (WAS)**. For each asset that does **not** already exist as a Qualys web app it will:
+
+1. **Create the web app** — inheriting the parent domain's tags and default option profile.
+2. **Create an active scan schedule** — `default_vulnerability_scan` option profile, progressive scanning enabled, and the recurrence + distribution group + pre-scan notification **copied from the parent domain's schedule**.
+3. **Launch an immediate scan** with the `Fast_Scan` option profile.
+4. Send a **summary email** of the launched scans (if SMTP is configured) and add a **Qualys WAS** section to the HTML/Markdown report.
+
+Assets already present in Qualys are skipped. The feature is **off by default** — a normal run never touches Qualys.
+
+```
+python main.py -d example.com -q
+```
+
+### Configuration
+
+Credentials are resolved once at startup in this order: **AWS SSM Parameter Store → environment variables → hardcoded values in `Global.py`**. For a quick local test, replace the `CHANGEME` values in the Qualys block at the end of `Global.py`. Everything can also be set via environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `QUALYS_API_URL` | `https://qualysapi.qualys.com` | QPS API host — set to your platform/POD (e.g. `https://qualysapi.qualys.eu`) |
+| `QUALYS_USERNAME` / `QUALYS_PASSWORD` | `CHANGEME` | Qualys credentials (Basic auth) |
+| `QUALYS_SSM_USER_PARAM` / `QUALYS_SSM_PASSWORD_PARAM` | *(empty)* | AWS SSM Parameter Store names for the credentials (SecureString). Requires `boto3` |
+| `QUALYS_SSM_REGION` | `AWS_REGION` | AWS region for the SSM calls |
+| `QUALYS_SCAN_PROFILE` | `Fast_Scan` | Option profile for the immediate, script-launched scan |
+| `QUALYS_DEFAULT_PROFILE` | `default_vulnerability_scan` | Option profile assigned to created web apps and their schedules |
+| `QUALYS_PROGRESSIVE_SCANNING` | `ENABLED` | Progressive scanning on created schedules (`DEFAULT`/`ENABLED`/`DISABLED`) |
+| `QUALYS_WEBUI_URL` | derived from `QUALYS_API_URL` | Portal host for the WAS REST 1.0 API, e.g. `https://qualysguard.qualys.eu` |
+| `QUALYS_DISTRIBUTION_UUIDS` | *(empty)* | Override distribution-group UUID(s). Empty = copy from the parent domain's schedule |
+| `QUALYS_SCHEDULE_SENDMAIL` | `false` | Schedule "send mail at scan completion" (off avoids emailing all admins with view access) |
+| `QUALYS_SCAN_SENDMAIL` | `false` | The immediate scan's completion email |
+| `QUALYS_SCHEDULE_RECIPIENTS` | *(edit for your org)* | Additional recipient(s) for the schedule's pre-scan notification |
+| `QUALYS_NOTIFICATION_MESSAGE` | *(edit for your org)* | Custom pre-scan notification message |
+| `QUALYS_IGNORE_HOSTS` | *(empty)* | Comma-separated hosts/patterns to skip (merged with `qualys_exclude.txt`) |
+| `QUALYS_IGNORE_FILE` | *(empty)* | Path override for the exclude file |
+| `QUALYS_NOTIFY_EMAIL` | *(edit for your org)* | Recipient of AutoEASM's own launched-scans summary email |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` / `SMTP_TLS` | *(empty / 587 / on)* | SMTP server for the summary email (if unset, the summary is only printed) |
+
+> **Distribution groups** exist only in the newer WAS REST 1.0 API on the portal host (`QUALYS_WEBUI_URL`). AutoEASM creates the schedule via the QPS 3.0 API, then attaches the group through that API with the same Basic-auth credentials. If the portal rejects Basic auth, the schedule is still created (without the group).
+
+### Excluding hosts
+
+Create a **`qualys_exclude.txt`** file next to `main.py` — copy the included **`qualys_exclude.txt.example`** — with one host or `fnmatch` wildcard per line. Matching domains/subdomains are never created, scheduled, or scanned in Qualys. It is **auto-detected**, no flag needed; blank lines and `#` comments are ignored, matching is case-insensitive. (`qualys_exclude.txt` itself is git-ignored so your internal hostnames stay local.)
+
+```
+dev.example.com
+*.staging.example.com
+test-*
+```
+
+### Testing without a full scan
+
+`qualys_sync_test.py` runs only the Qualys sync against hosts you supply, skipping the discovery pipeline. Use `--dry-run` first (read-only — resolves and prints intended actions, mutates nothing):
+
+```
+python qualys_sync_test.py -d example.com --assets https://example.com,https://api.example.com --dry-run -v
+```
+
+`-d` sets the parent/root domains (for parent resolution and copy-from-parent); `--assets` / `--assets-file` is the list of live web services to sync. `--ignore` / `--ignore-file` add exclusions, and `--newapi-get <schedule_id>` dumps a schedule from the portal API for troubleshooting.
+
 ## Useful notes
 
 - You can press Ctrl+C to skip the current stage of scanning (all results obtained so far will be saved). Quickly press Ctrl+C again to finish the program completely. The first stage cannot be skipped.

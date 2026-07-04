@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-q] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -39,6 +39,13 @@ DISABLING FEATURES:
 -dl - disable Leakix checking
 -daff - disable automatic form filling in Katana
 -dh - disable headless scan in Katana
+
+QUALYS WAS INTEGRATION:
+-q - sync discovered live web services into Qualys WAS: for every domain/subdomain not already
+     present as a web app, create it, copy the parent domain's scan schedule, and launch an
+     immediate scan with the Fast_Scan option profile (off by default; needs Qualys credentials,
+     see README). A summary email is sent for the launched scans. Hosts listed in qualys_exclude.txt
+     (auto-detected, one host/pattern per line) or in QUALYS_IGNORE_HOSTS are skipped
 
 SENDING TO PROXY:
 -ba - send all collected endpoints to Burp proxy including with WAF
@@ -135,3 +142,44 @@ LeakixFindings = []
 Byp4xxResult = []  # [[host_title_line, result_line, result_line], ...] - raw byp4xx output grouped per host
 
 LeakixAPIKey = os.environ.get("LeakIX_API_key", "CHANGEME")  # Change CHANGEME to your API key
+
+# ---Qualys WAS integration (enabled with the -q flag)---
+QualysAPIURL = os.environ.get("QUALYS_API_URL", "https://qualysapi.qualys.com")  # Must match your Qualys platform (POD), e.g. https://qualysapi.qualys.eu or https://qualysapi.qg2.apps.qualys.com
+
+# Credentials (username + password). Resolved once at startup; first source that yields a value wins:
+#   1. AWS SSM Parameter Store (used when the *_SSM_PARAM vars below are set) - preferred
+#   2. environment variables QUALYS_USERNAME / QUALYS_PASSWORD
+#   3. the hardcoded fallbacks below - just replace CHANGEME for a quick local test
+QualysUsername = os.environ.get("QUALYS_USERNAME", "CHANGEME")  # Hardcode here for local testing
+QualysPassword = os.environ.get("QUALYS_PASSWORD", "CHANGEME")  # Hardcode here for local testing
+QualysSSMUserParam = os.environ.get("QUALYS_SSM_USER_PARAM", "")          # e.g. /autoeasm/qualys/username (SecureString)
+QualysSSMPasswordParam = os.environ.get("QUALYS_SSM_PASSWORD_PARAM", "")  # e.g. /autoeasm/qualys/password (SecureString)
+QualysSSMRegion = os.environ.get("QUALYS_SSM_REGION", "") or os.environ.get("AWS_REGION", "")  # boto3 region for the SSM calls
+
+QualysScanProfileName = os.environ.get("QUALYS_SCAN_PROFILE", "Fast_Scan")     # Option profile for the immediate script-launched scans
+QualysDefaultProfile = os.environ.get("QUALYS_DEFAULT_PROFILE", "default_vulnerability_scan")  # Option profile assigned to created web apps and their schedules
+QualysIgnoreHosts = os.environ.get("QUALYS_IGNORE_HOSTS", "")  # Comma-separated hosts/patterns (fnmatch, e.g. "dev.example.com,*.staging.example.com") to skip in the Qualys WAS sync. Merged with the auto-detected qualys_exclude.txt file (one pattern per line)
+# Default schedule applied to a freshly created root domain when there is no parent schedule to copy:
+QualysDefaultSchedule = {"frequency": "WEEKLY", "weekDays": "SUNDAY", "startHour": 3, "timeZone": "UTC"}
+QualysScheduleRecipients = os.environ.get("QUALYS_SCHEDULE_RECIPIENTS", "")  # Additional recipient(s) for the schedule's pre-scan notification (comma-separated)
+QualysScheduleSendMail = os.environ.get("QUALYS_SCHEDULE_SENDMAIL", "false").lower() == "true"  # Schedule "send mail at scan completion" - off by default (Qualys otherwise emails all admins with view access)
+QualysNotificationMessage = os.environ.get("QUALYS_NOTIFICATION_MESSAGE", "A Qualys scan is scheduled to start soon.")  # Custom pre-scan notification message on created schedules
+QualysProgressiveScanning = os.environ.get("QUALYS_PROGRESSIVE_SCANNING", "ENABLED")  # Progressive scanning on created schedules: DEFAULT | ENABLED | DISABLED
+# Distribution groups live only in the newer WAS REST 1.0 API on the portal host (not the QPS 3.0
+# XML API). After a schedule is created via QPS, the group is attached via that API.
+QualysWebUIURL = os.environ.get("QUALYS_WEBUI_URL", "") or QualysAPIURL.replace("qualysapi", "qualysguard")  # portal host, e.g. https://qualysguard.qualys.eu
+QualysDistributionUuids = os.environ.get("QUALYS_DISTRIBUTION_UUIDS", "")  # Override distribution group UUID(s), comma-separated. Empty => copy from the parent domain's schedule
+# Qualys scan-completion email for the immediate (script-launched) Fast_Scan. Qualys emails ALL
+# users with view access to the web app (not selectable to "owner only"), so this defaults off to
+# avoid spamming admins; set QUALYS_SCAN_SENDMAIL=true to let Qualys send it.
+QualysScanSendMail = os.environ.get("QUALYS_SCAN_SENDMAIL", "false").lower() == "true"
+QualysWASResults = []  # List of QualysWebAppResult records, shown in the report
+
+# Email notification for the launched immediate scans
+QualysNotifyEmail = os.environ.get("QUALYS_NOTIFY_EMAIL", "")
+SMTPHost = os.environ.get("SMTP_HOST", "")          # Empty => notification is logged but not sent
+SMTPPort = int(os.environ.get("SMTP_PORT", "587"))
+SMTPUser = os.environ.get("SMTP_USER", "")
+SMTPPassword = os.environ.get("SMTP_PASSWORD", "")
+SMTPFrom = os.environ.get("SMTP_FROM", "") or SMTPUser
+SMTPUseTLS = os.environ.get("SMTP_TLS", "true").lower() == "true"
