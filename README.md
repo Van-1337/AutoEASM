@@ -166,6 +166,15 @@ python qualys_sync_test.py -d example.com --assets https://example.com,https://a
 
 `-d` sets the parent/root domains (for parent resolution and copy-from-parent); `--assets` / `--assets-file` is the list of live web services to sync. `--ignore` / `--ignore-file` add exclusions, and `--newapi-get <schedule_id>` dumps a schedule from the portal API for troubleshooting.
 
+## SecurityTrails historical IP checks
+
+If a **PAID** SecurityTrails API key is available in the `SecurityTrails_API_key` environment variable, AutoEASM uses historical DNS (A record) data to look for the real IPs behind the current infrastructure. It runs automatically only if the key is present. If all correct, you will see the `[+] Found SecurityTrails API key...` message in console on the first line.
+
+Two checks are performed (one SecurityTrails query per host), and results are added to the existing **Host header manipulation** report tab:
+
+- **Origin behind WAF** — for every subdomain that has a WAF, each historical IP is probed with a `Host: <subdomain>` header. If an IP answers like the real site and is **not** itself behind a WAF, it is reported under **WAF bypass** as a likely origin server hidden behind the firewall.
+- **Access to inactive hosts** — for every subdomain that no longer responds, each historical IP is probed with a `Host: <subdomain>` header. If a server answers (using the same response checks as the regular inactive-hosts scan), it is reported under **Access to inactive hosts** as external access to an internal/decommissioned web application.
+
 ## Useful notes
 
 - You can press Ctrl+C to skip the current stage of scanning (all results obtained so far will be saved). Quickly press Ctrl+C again to finish the program completely. The first stage cannot be skipped.

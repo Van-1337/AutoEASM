@@ -9,6 +9,7 @@ from Scan.Helpers import create_run_directory
 from Scan.Discovery import launch_subfinder_dnsx_naabu, launch_httpx
 from Scan.Crawl import launch_katana, launch_uro, delete_assets_with_waf, delete_urls_with_waf, check_social_networks
 from Scan.HostChecks import launch_waf_bypass, launch_hidden_hosts_scan, send_urls_to_burp
+from Scan.SecurityTrails import launch_securitytrails_scan
 from Scan.Postleaks import launch_postleaks, set_postleaks_waiting
 from Scan.Leakix import check_leakix
 from Scan.Qualys import sync_qualys_was
@@ -51,6 +52,8 @@ def scanning():
             launch_waf_bypass()
         if '-di' not in Flags:
             launch_hidden_hosts_scan()
+        if '-dst' not in Flags:
+            launch_securitytrails_scan()
         if '-dl' not in Flags:
             leakix_thread = threading.Thread(target=check_leakix, name="LeakixThread", daemon=True)
             leakix_thread.start()

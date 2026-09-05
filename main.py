@@ -148,7 +148,7 @@ if __name__ == '__main__':
                 or sys.argv[i] == "-dc" or sys.argv[i] == "-db" or sys.argv[i] == "-dm" or sys.argv[i] == "-dt"\
                 or sys.argv[i] == "-dw" or sys.argv[i] == "-di" or sys.argv[i] == "-daff" or sys.argv[i] == "-dh"\
                 or sys.argv[i] == "--docker" or sys.argv[i] == "-i" or sys.argv[i] == "-q" or sys.argv[i] == "-ba" or sys.argv[i] == "-bw"\
-                or sys.argv[i] == "-bf" or sys.argv[i] == "-bb":
+                or sys.argv[i] == "-bf" or sys.argv[i] == "-bb" or sys.argv[i] == "-dst":
             Flags.append(sys.argv[i])
         else:
             print(f"Unknown flag: {sys.argv[i]}. Use -h to get help menu")
@@ -162,6 +162,16 @@ if __name__ == '__main__':
             print("[!] LeakIX key not specified in the docker parameters, this check will be skipped! Use -e LeakIX_API_key=\"CHANGEME\"")
         else:
             print("[!] LeakIX key not specified in the Global.py file! LeakIX check will be skipped.")
+    if '-dst' not in Flags:
+        if not Global.SecurityTrailsAPIKey:
+            Flags.append('-dst')  # No SecurityTrails_API_key in the environment => silently skip, no error (as requested)
+        else:
+            from Scan.SecurityTrails import securitytrails_key_works
+            if securitytrails_key_works():
+                print("[+] Found SecurityTrails API key, historical IP checks (origin behind WAF + inactive hosts access) are enabled")
+            else:
+                Flags.append('-dst')
+                print("[!] SecurityTrails API key found but it is invalid or the account is blocked - this check will be skipped.")
     if '-q' in Flags:
         from Scan.Qualys import resolve_qualys_credentials, credentials_configured, QualysError
         creds_ok = False

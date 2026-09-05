@@ -159,6 +159,18 @@ def is_site_real_by_response(response):
     return not body_contains_keyword
 
 
+def is_http_to_https_redirect(response, request_url):
+    # HTTP→HTTPS redirects are not exploitable on their own: either HTTPS already works on this
+    # host (and would be found by the HTTPS probe / the https:// asset) or it doesn't, so the
+    # client is sent to a URL that never answers on this IP.
+    if not request_url.startswith("http://"):
+        return False
+    if response.status_code not in (301, 302, 303, 307, 308):
+        return False
+    location = response.headers.get("Location") or response.headers.get("location") or ""
+    return location.lower().startswith("https://")
+
+
 def replace_last_colon(s: str) -> str:  # For 403 bypass results reporing
     idx = s.rfind(':')
     if idx == -1:

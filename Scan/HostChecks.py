@@ -6,6 +6,7 @@ import concurrent.futures
 from Scan.Helpers import (
     get_host_from_url, get_host_from_url_list, get_random_string,
     is_site_available, is_WAF_signatures_in_response, is_site_real_by_response,
+    is_http_to_https_redirect,
 )
 
 
@@ -27,6 +28,7 @@ def launch_waf_bypass():
                                 not is_WAF_signatures_in_response(last_response) and\
                                 ("Location" not in last_response.headers or url_without_waf in last_response.headers["Location"])\
                                 and ("location" not in last_response.headers or url_without_waf in last_response.headers["location"])\
+                                and not is_http_to_https_redirect(last_response, url_without_waf)\
                                 and is_site_real_by_response(last_response):
                             Global.WAFBypassHosts.append((get_host_from_url(domain_with_waf), url_without_waf))
                             if send_to_burp:
@@ -90,6 +92,7 @@ def launch_hidden_hosts_scan():
                             last_response.status_code != 429 and last_response.status_code != 402 and last_response.status_code//100 != 5\
                             and ("Location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["Location"])\
                             and ("location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["location"])\
+                            and not is_http_to_https_redirect(last_response, working_url)\
                             and is_site_real_by_response(last_response):
                         Global.InactiveHostsAccess.append((inactive_domain, working_url))
                         found = True

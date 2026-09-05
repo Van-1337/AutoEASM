@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-q] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-q] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-dst] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -37,6 +37,7 @@ DISABLING FEATURES:
 -dm - disable social media takeover checking
 -dp - disable public Postman collections checking
 -dl - disable Leakix checking
+-dst - disable SecurityTrails historical IP checks
 -daff - disable automatic form filling in Katana
 -dh - disable headless scan in Katana
 
@@ -103,7 +104,7 @@ Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-det
 Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc")
 Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup,cache,logs,listing -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc -fuzz-param-frequency 1000")
 Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc")
-Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\/Mess\" -X \"firewall on this server is blocking your\" $FeroxbusterRate --no-recursion --quiet "
+Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\\/Mess\" -X \"firewall on this server is blocking your\" $FeroxbusterRate --no-recursion --quiet "
                                "-w $FuzzingDictPath --stdin --redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
 Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags --output $PostleaksOutput")
 Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlags -p $KatanaParallels $KatanaRate")
@@ -144,6 +145,7 @@ LeakixFindings = []
 Byp4xxResult = []  # [[host_title_line, result_line, result_line], ...] - raw byp4xx output grouped per host
 
 LeakixAPIKey = os.environ.get("LeakIX_API_key", "CHANGEME")  # Change CHANGEME to your API key
+SecurityTrailsAPIKey = os.environ.get("SecurityTrails_API_key", "")  # Historical-DNS checks (origin behind WAF + access to inactive hosts). Empty => the check is silently disabled
 
 # ---Qualys WAS integration (enabled with the -q flag)---
 QualysAPIURL = os.environ.get("QUALYS_API_URL", "https://qualysapi.qualys.com")  # Must match your Qualys platform (POD), e.g. https://qualysapi.qualys.eu or https://qualysapi.qg2.apps.qualys.com
