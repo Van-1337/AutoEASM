@@ -234,7 +234,7 @@ def check_social_networks():
                 r'https?://(?:[A-Za-z]+\.)?youtube\.com/channel/[A-Za-z0-9-_]+/?',
                 r'https?://(?:[A-Za-z]+\.)?youtube\.com/user/[A-Za-z0-9]+/?',
                 r'https?://(?:[A-Za-z]+\.)?youtube\.com/@[A-Za-z0-9\-_]+/?',
-                r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist)/)[A-Za-z0-9-_]+/?',
+                r'https?://(?:[A-Za-z]+\.)?youtube\.com/(?!(?:user|channel|embed|watch|playlist|oembed|api|redirect|s)(?:/|[^A-Za-z0-9-_]|$))[A-Za-z0-9-_]+/?',
             ],
             "test_url": "https://www.youtube.com/@gjenwoepnfwvj",
             "should_exist_on_test": False,
