@@ -52,7 +52,7 @@ def CreateReport(report_name="Report", auto_increment=False):
 
 
 def get_report_start():
-    return """<!DOCTYPE html>
+    report_start = """<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -127,10 +127,13 @@ def get_report_start():
         <button class="tablink" onclick="openTab(event, 'SocialMedia')">Social media takeover</button>
         <button class="tablink" onclick="openTab(event, 'Postleaks')">Postman leaks</button>
         <button class="tablink" onclick="openTab(event, 'Leakix')">Leakix results</button>
-        <button class="tablink" onclick="openTab(event, 'QualysWAS')">Qualys WAS</button>
-    </div>
+"""
+    if '-q' in Flags:
+        report_start += """        <button class="tablink" onclick="openTab(event, 'QualysWAS')">Qualys WAS</button>\n"""
+    report_start += """    </div>
 
     <div class="content">\n"""
+    return report_start
 
 
 def get_report_end():
@@ -398,12 +401,16 @@ def get_report_content():
                     line += f" - {escape(r.message)}"
                 qualys_text += line + "<br>\n"
         else:
-            qualys_text += "Qualys WAS sync was not run (enable it with the -q flag)."
+            qualys_text += "No Qualys WAS sync results this time - the sync was interrupted (Ctrl+C) or crashed "\
+                           "before it processed anything. Check the console output for details."
         qualys_text += "</div>"
         return qualys_text
 
-    return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
-        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results() + qualys_results()
+    report_content = overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results()\
+        + bypass403_results() + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()
+    if '-q' in Flags:
+        report_content += qualys_results()
+    return report_content
 
 
 def get_md_report_content():  # Markdown counterpart of get_report_content(). Raw tool output goes into code fences to avoid Markdown mangling
@@ -580,8 +587,12 @@ def get_md_report_content():  # Markdown counterpart of get_report_content(). Ra
                     line += f" - {r.message}"
                 md += line + "\n"
         else:
-            md += "Qualys WAS sync was not run (enable it with the -q flag).\n"
+            md += "No Qualys WAS sync results this time - the sync was interrupted (Ctrl+C) or crashed "\
+                  "before it processed anything. Check the console output for details.\n"
         return md + "\n"
 
-    return overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results() + bypass403_results()\
-        + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results() + qualys_results()
+    md_report = overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results()\
+        + bypass403_results() + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()
+    if '-q' in Flags:
+        md_report += qualys_results()
+    return md_report

@@ -21,3 +21,4 @@ test.py
 __pycache__/
 Logs/
 test/
+EASM_scripts/

@@ -656,6 +656,13 @@ def notify_launched_scans(launched, dry_run=False):
 # ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
+def _abort(message, tag="[e]"):
+    """Log why the sync stopped before any asset was processed and record it, so the reason ends up
+    in the report instead of only in the console output."""
+    print(f"{tag} Qualys: {message}")
+    Global.QualysWASResults.append(QualysWebAppResult("sync aborted", "", "error", message=message))
+
+
 def sync_qualys_was(dry_run=False):
     """Entry point. Sync live web services into Qualys WAS (see module docstring).
 
@@ -666,10 +673,10 @@ def sync_qualys_was(dry_run=False):
     try:
         resolve_qualys_credentials()
     except QualysError as e:
-        print(f"[e] Qualys: {e}")
+        _abort(str(e))
         return
     if not credentials_configured():
-        print("[!] Qualys credentials not configured - skipping Qualys WAS sync.")
+        _abort("credentials are not configured - skipping the Qualys WAS sync", "[!]")
         return
 
     patterns = _refresh_ignore_patterns()
@@ -678,18 +685,17 @@ def sync_qualys_was(dry_run=False):
 
     assets = build_asset_list()
     if not assets:
-        print("[!] No live web services to sync to Qualys WAS.")
+        _abort("no live websites were found, so there was nothing to sync", "[!]")
         return
     assets.sort(key=lambda a: 0 if is_parent_level(a[0], Global.Domains) else 1)  # parents first
 
     try:
         fast_scan_id = resolve_option_profile_id(Global.QualysScanProfileName)
     except QualysError as e:
-        print(f"[e] Qualys: {e}")
+        _abort(str(e))
         return
     if not fast_scan_id:
-        print(f"[e] Qualys: option profile '{Global.QualysScanProfileName}' not found - "
-              "cannot launch scans. Aborting Qualys sync.")
+        _abort(f"option profile '{Global.QualysScanProfileName}' was not found in Qualys - cannot launch scans")
         return
     try:
         default_profile_id = resolve_option_profile_id(Global.QualysDefaultProfile) or fast_scan_id
