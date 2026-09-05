@@ -8,6 +8,7 @@ from Scan.Helpers import get_host_from_url
 
 
 if __name__ == '__main__':
+    sys.stdout.reconfigure(line_buffering=True)  # Python switches stdout to block buffering when it is redirected to a file, so progress lines would appear only at the end
     report_file = "Report"
     report_name_specified = False
     argument_was_used = False
