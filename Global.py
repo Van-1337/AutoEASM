@@ -110,6 +110,8 @@ Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s
 Uro_command = "uro"
 Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -t $byp4xx_threads $Pages403File")
 
+UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 Firefox/156.0"  # User-Agent used in our own HTTP requests
+
 
 # ---Variables used by other utilities---
 Flags = []  # Flags without additional arguments, like ['-do', '-v', '-dl']

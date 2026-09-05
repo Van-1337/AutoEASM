@@ -166,7 +166,7 @@ def delete_urls_with_waf():
 
 def check_social_networks():
     def social_media_account_exists(account_link):
-        sm_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+        sm_headers = {"User-Agent": Global.UserAgent,
                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                    "Sec-Fetch-Site": "none"}
 
@@ -207,7 +207,7 @@ def check_social_networks():
         return True
 
     requests.packages.urllib3.disable_warnings()
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
+    headers = {"User-Agent": Global.UserAgent}
     # Each network keeps its patterns next to the relevance probe. should_exist_on_test
     # is the expected result of social_media_account_exists for test_url: a fake account
     # should report False, a real account True. If reality differs the detection is

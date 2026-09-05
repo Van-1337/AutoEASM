@@ -17,7 +17,7 @@ def launch_waf_bypass():
             for url_without_waf in Global.HTTPAssets:
                 try:
                     headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                        "User-Agent": Global.UserAgent,
                         "Host": get_host_from_url(domain_with_waf)}
                     last_response = requests.get(url_without_waf, verify=False, headers=headers, timeout=15,
                                                  allow_redirects=False)
@@ -45,8 +45,8 @@ def launch_waf_bypass():
         try:
             print("[*] Trying to bypass the WAF by finding the host on the same server without a firewall...")
             requests.packages.urllib3.disable_warnings()
-            user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
-            wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+            user_agent_header = {"User-Agent": Global.UserAgent}
+            wrong_host_headers = {"User-Agent": Global.UserAgent,
                                    "Host": "qwertg.su"}
             send_to_burp = False
             if '-bb' in Flags:
@@ -81,7 +81,7 @@ def launch_hidden_hosts_scan():
             for working_url in working_domains_list:
                 try:
                     headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                        "User-Agent": Global.UserAgent,
                         "Host": inactive_domain}
                     last_response = requests.get(working_url, verify=False, headers=headers, timeout=15,
                                                  allow_redirects=False)
@@ -121,7 +121,7 @@ def launch_hidden_hosts_scan():
 
             headers_sets = {}
             responses_length = {}
-            wrong_host_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
+            wrong_host_headers = {"User-Agent": Global.UserAgent}
             for host in Global.HTTPAssets + assets_with_waf_list:
                 try:
                     wrong_host_headers["Host"] = f"{get_random_string(10)}.com"
@@ -153,7 +153,7 @@ def send_urls_to_burp():
     proxy_url = 'http://' + Global.BurpProxy
     proxies = {'http': proxy_url, 'https': proxy_url}
     requests.packages.urllib3.disable_warnings()
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"}
+    headers = {"User-Agent": Global.UserAgent}
     print("[*] Sending requests to Burp in parallel...")
 
     if '-ba' in Flags or '-bw' in Flags:
