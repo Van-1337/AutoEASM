@@ -130,6 +130,13 @@ if __name__ == '__main__':
             else:
                 print("Please specify subdomains wordlist path after -sw argument. Example: -sw Scan/subdomains-top1million-5000.txt")
                 sys.exit(1)
+        elif sys.argv[i] == '-ua':
+            if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
+                Global.UserAgent = sys.argv[i + 1]
+                argument_was_used = True
+            else:
+                print("Please specify User-Agent after -ua argument. Example: -ua \"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 Firefox/156.0\"")
+                sys.exit(1)
         elif sys.argv[i] == '-ex':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 Global.ExcludedHosts.append(get_host_from_url(sys.argv[i + 1], remove_port=True))

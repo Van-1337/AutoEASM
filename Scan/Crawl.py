@@ -24,7 +24,8 @@ def launch_katana():
             command = Katana_command.substitute(
                 KatanaAdditionalFlags=Details[Global.DetailsLevel]['KatanaAdditionalFlags'],
                 KatanaParallels=str(Threads[Global.LoadLevel]['KatanaParallels']),
-                KatanaRate=Threads[Global.LoadLevel]['KatanaRate'])
+                KatanaRate=Threads[Global.LoadLevel]['KatanaRate'],
+                UserAgent=Global.UserAgent)
             if "-ds" in Flags:
                 command += " -fs fqdn"
             jsonl_file = None

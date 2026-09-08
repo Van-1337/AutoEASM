@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-q] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-dst] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> -ua <string> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-q] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-dst] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -21,6 +21,7 @@ OPTIONAL FLAGS:
 -rl <integer number> - rate limit for tools (max requests per second on one host)
 -tem - specify directory with Nuclei templates
 -sw <file> - wordlist for subdomains bruteforce
+-ua <string> - User-Agent for HTTP requests and for Nuclei, Katana, Feroxbuster and byp4xx
 -i - IP scan (skipping DNSX check, subdomain enumeration and Postman checking)
 
 DISABLING FEATURES:
@@ -99,17 +100,17 @@ DNSX_Naabu_command = Template("dnsx -silent -t $dnsxThreads -retry 5 -a | naabu 
 Naabu_command = Template("naabu -s s -tp $NaabuPorts -ec -c $NaabuThreads -rate $NaabuRate -silent $NaabuFlags")
 HTTPX_command = Template("httpx -t $HTTPXthreads -rl $HTTPXrate -silent -retries 5")
 CDNCheck_command = Template("cdncheck -i $AssetsListFile -silent -nc -resp -waf")
-Nuclei_default_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -etags backup,cache,logs,listing,config,exposure,panel,debug,network,js -s $NucleiCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc")
-Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -tags config,exposure,panel,debug,network,js -s $NucleiConfigCritical -rl $NucleiRate -c $NucleiParallels -silent -nc")
-Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc")
-Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup,cache,logs,listing -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc -fuzz-param-frequency 1000")
-Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc")
-Feroxbuster_command = Template("feroxbuster --insecure -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\\/Mess\" -X \"firewall on this server is blocking your\" $FeroxbusterRate --no-recursion --quiet "
+Nuclei_default_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -etags backup,cache,logs,listing,config,exposure,panel,debug,network,js -s $NucleiCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc -H \"User-Agent: $UserAgent\"")
+Nuclei_config_command = Template("nuclei -ss host-spray -eid waf-detect,tech-detect,dns-waf-detect -tags config,exposure,panel,debug,network,js -s $NucleiConfigCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -H \"User-Agent: $UserAgent\"")
+Nuclei_tokens_command = Template("nuclei -ss host-spray -tags token,tokens,takeover -s $NucleiTokensCritical -silent -nc -duc -H \"User-Agent: $UserAgent\"")
+Nuclei_DAST_command = Template("nuclei -ss host-spray -dast -etags backup,cache,logs,listing -s $NucleiDASTCritical -rl $NucleiRate -c $NucleiParallels -silent -nc -duc -fuzz-param-frequency 1000 -H \"User-Agent: $UserAgent\"")
+Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile subdomain-takeovers -rl $NucleiRate -c $NucleiParallels -silent -nc -H \"User-Agent: $UserAgent\"")
+Feroxbuster_command = Template("feroxbuster --insecure --user-agent \"$UserAgent\" -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\\/Mess\" -X \"firewall on this server is blocking your\" $FeroxbusterRate --no-recursion --quiet "
                                "-w $FuzzingDictPath --stdin --redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
 Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags --output $PostleaksOutput")
-Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlags -p $KatanaParallels $KatanaRate")
+Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlags -p $KatanaParallels $KatanaRate -H \"User-Agent: $UserAgent\"")
 Uro_command = "uro"
-Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -t $byp4xx_threads $Pages403File")
+Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -H \"User-Agent: $UserAgent\" -t $byp4xx_threads $Pages403File")
 
 UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 Firefox/156.0"  # User-Agent used in our own HTTP requests
 

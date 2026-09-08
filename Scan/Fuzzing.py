@@ -63,7 +63,8 @@ def launch_feroxbuster():
             FeroxbusterThreads=threads,
             FeroxbusterTimeLimit=timelimit,
             FeroxbusterRate=rate,
-            FeroxbusterAdditionalFlags=Details[Global.DetailsLevel]["FeroxbusterAdditionalFlags"])
+            FeroxbusterAdditionalFlags=Details[Global.DetailsLevel]["FeroxbusterAdditionalFlags"],
+            UserAgent=Global.UserAgent)
 
         if '-v' in Flags:
             print("[v] Executing command: " + command)
@@ -147,7 +148,8 @@ def launch_byp4xx():
         command = Byp4xx_command.substitute(
             byp4xx_threads=Threads[LoadLevel]['byp4xx_threads'],
             Byp4xx_flags=Details[DetailsLevel]['Byp4xx_flags'],
-            Pages403File=pages_403_file)
+            Pages403File=pages_403_file,
+            UserAgent=Global.UserAgent)
         print("[*] Trying to bypass 403 and 401 errors...")
 
         if '-v' in Flags:
