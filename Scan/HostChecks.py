@@ -30,7 +30,7 @@ def launch_waf_bypass():
                                 and ("location" not in last_response.headers or url_without_waf in last_response.headers["location"])\
                                 and not is_http_to_https_redirect(last_response, url_without_waf)\
                                 and is_site_real_by_response(last_response):
-                            Global.WAFBypassHosts.append((get_host_from_url(domain_with_waf), url_without_waf))
+                            Global.WAFBypassHosts.append((get_host_from_url(domain_with_waf), url_without_waf, last_response.status_code))
                             if send_to_burp:
                                 try:
                                     requests.get(url_without_waf, verify=False, headers=headers, timeout=15,
@@ -94,7 +94,7 @@ def launch_hidden_hosts_scan():
                             and ("location" not in last_response.headers or get_host_from_url(working_url) in last_response.headers["location"])\
                             and not is_http_to_https_redirect(last_response, working_url)\
                             and is_site_real_by_response(last_response):
-                        Global.InactiveHostsAccess.append((inactive_domain, working_url))
+                        Global.InactiveHostsAccess.append((inactive_domain, working_url, last_response.status_code))
                         found = True
                         if send_to_burp:
                             try:

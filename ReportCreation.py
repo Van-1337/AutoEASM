@@ -310,7 +310,8 @@ def get_report_content():
 
     def host_manipulation():  # Get WAF bypass and inactive hosts access
         def get_host_result(hosts_pair):
-            return f"<details><summary>Try using host header <b>{hosts_pair[0]}</b> on {hosts_pair[1]}</summary>" \
+            return f"<details><summary>Try using host header <b>{hosts_pair[0]}</b> on {hosts_pair[1]} " \
+                   f"(<b>{hosts_pair[2]}</b> status code)</summary>" \
                    f"<br><pre>{get_host_scan_commands(hosts_pair)}</pre></details><br><br>\n"
 
         host_manipulation_text = """\n\n<div id="HostManipulation" class="tab-content">\n<h1>Host header manipulation</h1><br>\n"""
@@ -508,7 +509,7 @@ def get_md_report_content():  # Markdown counterpart of get_report_content(). Ra
 
     def host_manipulation():
         def get_host_result(hosts_pair):
-            return f"**Try using host header `{hosts_pair[0]}` on {hosts_pair[1]}**\n\n" \
+            return f"**Try using host header `{hosts_pair[0]}` on {hosts_pair[1]} ({hosts_pair[2]} status code)**\n\n" \
                    f"```\n{get_host_scan_commands(hosts_pair)}```\n\n"
 
         md = "## Host header manipulation\n\n### WAF bypass\n\n"

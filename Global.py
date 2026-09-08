@@ -11,7 +11,7 @@ REQUIRED FLAGS:
 
 OPTIONAL FLAGS:
 -h - show this help menu
--o <file> - name of the final report file (used for the HTML report and the MD report if -md is set). Caution, the file will be overwritten if it already exists!
+-o <file> - name of the final report file. Caution, the file will be overwritten if it already exists!
 -md - additionally generate the report in Markdown (.md) format (the HTML report is always generated)
 -v - verbose output
 -ll <number> - internet load level, affects the number of threads in utilities. Number: 1-3, 1 - minimum load, 3 - maximum, Default: 2
@@ -20,7 +20,7 @@ OPTIONAL FLAGS:
 -sa - scan ALL ports instead of 100 or 1000
 -rl <integer number> - rate limit for tools (max requests per second on one host)
 -tem - specify directory with Nuclei templates
--sw <file> - wordlist for subdomains bruteforce (done during subdomains enumeration)
+-sw <file> - wordlist for subdomains bruteforce
 -i - IP scan (skipping DNSX check, subdomain enumeration and Postman checking)
 
 DISABLING FEATURES:
@@ -37,9 +37,9 @@ DISABLING FEATURES:
 -dm - disable social media takeover checking
 -dp - disable public Postman collections checking
 -dl - disable Leakix checking
--dst - disable SecurityTrails historical IP checks
 -daff - disable automatic form filling in Katana
 -dh - disable headless scan in Katana
+-dst - disable SecurityTrails historical IP checks
 
 QUALYS WAS INTEGRATION:
 -q - sync discovered live web services into Qualys WAS: for every domain/subdomain not already
@@ -138,8 +138,8 @@ NucleiTokensFindings = {"critical": [], "high": [], "medium": [], "low": [], "in
 NucleiDASTFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 NucleiTakeoverFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}
 FuzzedDirectories = {"200": [], "3xx": [], "401": [], "403": [], "405": []}  # {"200": ["http://example.com/backup", http://example.com/admin]}
-WAFBypassHosts = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
-InactiveHostsAccess = []  # [("siteinhostheader.com", "https://destinationhost.com"), ("host1.com", "http://host2.com")]
+WAFBypassHosts = []  # [("siteinhostheader.com", "https://destinationhost.com", 200), ("host1.com", "http://host2.com", 301)]
+InactiveHostsAccess = []  # [("siteinhostheader.com", "https://destinationhost.com", 200), ("host1.com", "http://host2.com", 200)]
 PostleaksResult = {}  # {"keyword": ["[+] (ID...) GET: ...", " - Headers: ...", " > Potential secret found: ..."]} - raw postleaks output lines per keyword
 NotExistingSocialMediaLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]
 LeakixFindings = []

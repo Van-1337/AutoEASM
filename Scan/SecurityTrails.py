@@ -138,7 +138,7 @@ def _probe_origin_behind_waf(ip, domain, original, proxies):
         if _looks_like_original(original, response):
             if proxies:
                 _send_to_burp(target, domain, proxies)
-            return (domain, target)
+            return (domain, target, response.status_code)
     return None
 
 
@@ -159,7 +159,7 @@ def _probe_inactive_host(ip, domain, proxies):
         if _differs_from_default(baseline, response):
             if proxies:
                 _send_to_burp(target, domain, proxies)
-            return (domain, target)
+            return (domain, target, response.status_code)
     return None
 
 
