@@ -131,6 +131,7 @@ BurpProxy = "127.0.0.1:8080"  # By default
 RunDir = "Logs"  # Set at the start of each scan to Logs/<first_domain>_<timestamp>. All logs and temporary files of the run are stored here
 
 # ---Final results---
+GeneralInfoNotes = []  # Extra lines printed at the end of the "General information" report section: excluded domains, non-fatal errors, enabled modules, etc.
 NucleiFindings = {"critical": [], "high": [], "medium": [], "low": [], "unknown": []}  # {"high": ["finding text", "finding text 2"]}
 NucleiConfigFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}  # {"high": ["finding text", "finding text 2"]}
 NucleiTokensFindings = {"critical": [], "high": [], "medium": [], "low": [], "info": [], "unknown": []}

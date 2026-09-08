@@ -7,8 +7,50 @@ import subprocess
 import sys
 import re
 import os
+import socket
+import threading
+import time
 from Scan.CommandRun import command_exec
-from Scan.Helpers import delete_http_duplicates
+from Scan.Helpers import delete_http_duplicates, get_random_string
+
+WILDCARD_PROBE_TIMEOUT = 7  # Seconds to wait for the DNS answer for the non-existent subdomain
+
+
+def check_dns_wildcards():
+    # A domain with a DNS wildcard resolves ANY subdomain, so subdomain enumeration would mark
+    # thousands of non-existent hosts as alive. Such domains are dropped from the scan.
+    wildcard_domains = []
+
+    def probe_domain(domain):
+        probe = get_random_string(10).lower() + '.' + domain
+        if '-v' in Flags:
+            print(f"[v] Resolving {probe} to check {domain} for a DNS wildcard")
+        try:
+            socket.getaddrinfo(probe, None)
+        except OSError:
+            return  # Does not resolve - the expected result for a domain without a wildcard
+        wildcard_domains.append(domain)
+
+    print("[*] Checking root domains for DNS wildcards...")
+    threads = [threading.Thread(target=probe_domain, args=(domain,), daemon=True) for domain in Global.Domains]
+    for thread in threads:
+        thread.start()
+    deadline = time.monotonic() + WILDCARD_PROBE_TIMEOUT
+    for thread in threads:
+        thread.join(max(deadline - time.monotonic(), 0))  # Threads still resolving after the timeout are abandoned, their domain counts as fine
+
+    if not wildcard_domains:
+        return
+    for domain in wildcard_domains:
+        print(f"[e] {domain} resolves any non-existent subdomain (DNS wildcard), so subdomain enumeration would return only false results!")
+    if len(wildcard_domains) == len(Global.Domains):
+        print("[e] None of the specified root domains can be scanned for subdomains. Terminating.")
+        sys.exit(1)
+    for domain in wildcard_domains:
+        Global.Domains.remove(domain)  # In place - other modules keep a reference to this list
+    print(f"[!] Excluded from the scan: {', '.join(wildcard_domains)}. Continuing with: {', '.join(Global.Domains)}")
+    Global.GeneralInfoNotes.append("Excluded from the scan because of a DNS wildcard (any non-existent subdomain resolves, "
+                                   f"so subdomain enumeration is impossible): {', '.join(wildcard_domains)}")
 
 
 def launch_httpx():

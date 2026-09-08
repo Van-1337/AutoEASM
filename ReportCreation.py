@@ -172,7 +172,9 @@ def get_report_content():
         if Global.ExcludedHosts:
             html_overview += f"<b>Excluded subdomains:</b> {'; '.join(Global.ExcludedHosts[::3])}<br>\n"
         if Flags:
-            html_overview += f"<b>Flags:</b> {' '.join(Flags)}"
+            html_overview += f"<b>Flags:</b> {' '.join(Flags)}<br>\n"
+        for note in Global.GeneralInfoNotes:
+            html_overview += f"<br>{escape(note)}\n"
         html_overview += "</p>\n</div>\n"
         return html_overview
 
@@ -424,6 +426,8 @@ def get_md_report_content():  # Markdown counterpart of get_report_content(). Ra
             md += f"- **Excluded subdomains:** {'; '.join(Global.ExcludedHosts[::3])}\n"
         if Flags:
             md += f"- **Flags:** {' '.join(Flags)}\n"
+        for note in Global.GeneralInfoNotes:
+            md += f"\n{note}\n"
         return md + "\n"
 
     def found_services():

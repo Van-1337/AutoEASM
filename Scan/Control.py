@@ -6,7 +6,7 @@ import time
 
 from Scan.CommandRun import check_installed_tools
 from Scan.Helpers import create_run_directory
-from Scan.Discovery import launch_subfinder_dnsx_naabu, launch_httpx
+from Scan.Discovery import launch_subfinder_dnsx_naabu, launch_httpx, check_dns_wildcards
 from Scan.Crawl import launch_katana, launch_uro, delete_assets_with_waf, delete_urls_with_waf, check_social_networks
 from Scan.HostChecks import launch_waf_bypass, launch_hidden_hosts_scan, send_urls_to_burp
 from Scan.SecurityTrails import launch_securitytrails_scan
@@ -22,6 +22,8 @@ def scanning():
         if check_installed_tools() != 0:
             print("[e] Not all required utilities are installed. Terminating.")
             sys.exit(1)
+        if '-ds' not in Flags and '-i' not in Flags:
+            check_dns_wildcards()
         print("[N] Note: you can stop any current check with Ctrl+C")
         Global.RunDir = create_run_directory(Domains[0])
         print(f"[*] Logs and temporary files for this run will be stored in: {Global.RunDir}")
