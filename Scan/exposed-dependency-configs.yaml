@@ -1,0 +1,87 @@
+id: exposed-dependency-configs
+
+info:
+  name: Exposed Dependency Configuration Files
+  author: autoeasm
+  severity: medium
+  description: Detects publicly accessible dependency manifests and lockfiles that can be checked for dependency confusion and known CVEs.
+  tags: exposure,files,dependencies,config
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/package.json"
+      - "{{BaseURL}}/package-lock.json"
+      - "{{BaseURL}}/npm-shrinkwrap.json"
+      - "{{BaseURL}}/yarn.lock"
+      - "{{BaseURL}}/pnpm-lock.yaml"
+      - "{{BaseURL}}/composer.json"
+      - "{{BaseURL}}/composer.lock"
+      - "{{BaseURL}}/.composer/composer.json"
+      - "{{BaseURL}}/vendor/composer/installed.json"
+      - "{{BaseURL}}/requirements.txt"
+      - "{{BaseURL}}/pyproject.toml"
+      - "{{BaseURL}}/poetry.lock"
+      - "{{BaseURL}}/Pipfile"
+      - "{{BaseURL}}/Pipfile.lock"
+      - "{{BaseURL}}/pom.xml"
+      - "{{BaseURL}}/Gemfile"
+      - "{{BaseURL}}/Gemfile.lock"
+      - "{{BaseURL}}/go.mod"
+      - "{{BaseURL}}/go.sum"
+
+    headers:
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: dsl
+        dsl:
+          - "len(body) > 20 && len(body) < 1048576"
+
+      - type: word
+        part: body
+        words:
+          - "<html"
+          - "<HTML"
+          - "<!DOCTYPE html"
+          - "<!doctype html"
+        negative: true
+        condition: or
+
+      - type: regex
+        part: body
+        condition: or
+        regex:
+          # npm / yarn / pnpm
+          - '"(dependencies|devDependencies|peerDependencies)"\s*:\s*\{'
+          - '"lockfileVersion"\s*:\s*[0-9]+'
+          - '(?i)lockfileVersion\s*:'
+          - '(?i)yarn lockfile'
+          - '(?m)^__metadata:'
+          # Python
+          - '(?m)^\[tool\.poetry'
+          - '(?m)^\[\[package\]\]'
+          - '(?m)^\[packages\]'
+          - '(?m)^\[\[source\]\]'
+          - '"pipfile-spec"\s*:'
+          - '(?m)^[A-Za-z0-9._-]+\[?\]?\s*([<>=!~]=|[<>=])\s*[0-9]'
+          # Maven
+          - '(?s)<project[\s>].*<artifactId>'
+          - '(?s)<groupId>[^<]+</groupId>'
+          # Ruby
+          - '(?m)^gem\s+[''"][A-Za-z0-9_-]+'
+          - '(?m)^GEM\s*$'
+          - '(?m)^DEPENDENCIES$'
+          # PHP
+          - '"require"\s*:\s*\{'
+          - '"packages"\s*:\s*\['
+          - '"content-hash"\s*:'
+          # Go
+          - '(?m)^module\s+\S+'
+          - '(?m)^go\s+1\.\d+'
+          - ' h1:'

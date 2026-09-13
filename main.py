@@ -155,7 +155,7 @@ if __name__ == '__main__':
                 or sys.argv[i] == "-dc" or sys.argv[i] == "-db" or sys.argv[i] == "-dm" or sys.argv[i] == "-dt"\
                 or sys.argv[i] == "-dw" or sys.argv[i] == "-di" or sys.argv[i] == "-daff" or sys.argv[i] == "-dh"\
                 or sys.argv[i] == "--docker" or sys.argv[i] == "-i" or sys.argv[i] == "-q" or sys.argv[i] == "-ba" or sys.argv[i] == "-bw"\
-                or sys.argv[i] == "-bf" or sys.argv[i] == "-bb" or sys.argv[i] == "-dst":
+                or sys.argv[i] == "-bf" or sys.argv[i] == "-bb" or sys.argv[i] == "-dst" or sys.argv[i] == "-dcf":
             Flags.append(sys.argv[i])
         else:
             print(f"Unknown flag: {sys.argv[i]}. Use -h to get help menu")

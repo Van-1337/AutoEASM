@@ -15,6 +15,7 @@ from Scan.Leakix import check_leakix
 from Scan.Qualys import sync_qualys_was
 from Scan.NucleiScan import launch_nuclei, check_subdomains_takeover
 from Scan.Fuzzing import launch_feroxbuster, launch_byp4xx
+from Scan.DependencyCheck import collect_dependency_files, analyze_dependency_files, has_dependency_files
 
 
 def scanning():
@@ -50,6 +51,12 @@ def scanning():
         else:
             Global.CrawledURLs = Global.HTTPAssets
         delete_urls_with_waf()  # And add them to URLsWithWAF
+        dep_thread = None
+        if '-dcf' not in Flags:
+            collect_dependency_files()
+            if has_dependency_files():
+                dep_thread = threading.Thread(target=analyze_dependency_files, name="DependencyCheckThread", daemon=True)
+                dep_thread.start()
         if '-dw' not in Flags:
             launch_waf_bypass()
         if '-di' not in Flags:
@@ -113,6 +120,13 @@ def scanning():
                     social_networks_thread.join(timeout=1)
             except KeyboardInterrupt:
                 print("[*] Finishing social networks check...")
+        if dep_thread is not None and dep_thread.is_alive():
+            print("[*] Waiting until dependency check finishes...")
+            try:
+                while dep_thread.is_alive():
+                    dep_thread.join(timeout=1)
+            except KeyboardInterrupt:
+                print("[*] Finishing dependency check...")
     except KeyboardInterrupt:
         print("[!] Ctrl+C detected, exiting...")
         sys.exit(1)

@@ -112,39 +112,6 @@ def get_report_start():
             margin-bottom: 10px;
             line-height: 1.6;
         }
-        table.dep-cves {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 8px 0 16px 0;
-        }
-        table.dep-cves th, table.dep-cves td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 14px;
-        }
-        table.dep-cves th {
-            background-color: #f4f4f4;
-        }
-        table.dep-cves th.sortable {
-            cursor: pointer;
-            user-select: none;
-            white-space: nowrap;
-        }
-        table.dep-cves th.sortable:hover {
-            background-color: #e8e8e8;
-        }
-        table.dep-cves th.sorted::after {
-            content: " ▲";
-            font-size: 11px;
-        }
-        table.dep-cves th.sorted.desc::after {
-            content: " ▼";
-        }
-        table.dep-cves td.url {
-            word-break: break-all;
-        }
     </style>
 </head>
 <body>
@@ -154,10 +121,10 @@ def get_report_start():
         <button class="tablink" onclick="openTab(event, 'FoundNetworkAssets')">Found network services</button>
         <button class="tablink" onclick="openTab(event, 'FoundHTTPAssets')">Found websites</button>
         <button class="tablink" onclick="openTab(event, 'SecurityFindings')">Security findings</button>
+        <button class="tablink" onclick="openTab(event, 'DependencyCheck')">Dependency check</button>
         <button class="tablink" onclick="openTab(event, 'Fuzzed')">Interesting directories</button>
         <button class="tablink" onclick="openTab(event, 'Bypass403')">403 bypass</button>
         <button class="tablink" onclick="openTab(event, 'HostManipulation')">Host header manipulation</button>
-        <button class="tablink" onclick="openTab(event, 'DependencyCheck')">Dependency check</button>
         <button class="tablink" onclick="openTab(event, 'SocialMedia')">Social media takeover</button>
         <button class="tablink" onclick="openTab(event, 'Postleaks')">Postman leaks</button>
         <button class="tablink" onclick="openTab(event, 'Leakix')">Leakix results</button>
@@ -189,36 +156,6 @@ def get_report_end():
             // Показать текущую вкладку и добавить активный класс к кнопке
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
-        }
-        function sortDepCves(th, col, mode) {
-            var table = th.closest("table");
-            var headers = table.getElementsByTagName("th");
-            var rows = Array.prototype.slice.call(table.getElementsByTagName("tr"), 1);
-            var rank = {critical: 0, high: 1, medium: 2, low: 3, unknown: 4};
-            var dir = th.getAttribute("data-dir") === "asc" ? -1 : 1;
-            for (var i = 0; i < headers.length; i++) {
-                headers[i].removeAttribute("data-dir");
-                headers[i].classList.remove("sorted", "desc");
-            }
-            th.setAttribute("data-dir", dir === 1 ? "asc" : "desc");
-            th.classList.add("sorted");
-            if (dir === -1) {
-                th.classList.add("desc");
-            }
-            rows.sort(function(a, b) {
-                var av = a.cells[col].innerText.trim().toLowerCase();
-                var bv = b.cells[col].innerText.trim().toLowerCase();
-                var cmp;
-                if (mode === "severity") {
-                    cmp = (rank[av] != null ? rank[av] : 9) - (rank[bv] != null ? rank[bv] : 9);
-                } else {
-                    cmp = av.localeCompare(bv);
-                }
-                return cmp * dir;
-            });
-            for (var j = 0; j < rows.length; j++) {
-                table.appendChild(rows[j]);
-            }
         }
     </script>
 
@@ -351,7 +288,7 @@ def get_report_content():
 
         text += "<br><h2>Scoped packages</h2><br>\n"
         if scoped:
-            text += "<i>These names were not found on the public registry. Whether the npm scope itself is already claimed cannot be determined automatically and requires manual verification.</i><br><br>\n"
+            text += "<i>These names were not found on the public registry. confused cannot tell whether the npm scope itself is already claimed — verify manually.</i><br><br>\n"
             text += "<p>\n"
             for finding in scoped:
                 text += f'{escape(finding["package"])} — <a href="{escape(finding["url"])}">{escape(finding["url"])}</a><br>\n'
@@ -360,26 +297,19 @@ def get_report_content():
             text += "No scoped package names this time.<br>\n"
 
         text += "<br><h2>Known vulnerabilities</h2><br>\n"
-        if Global.DepCveFindings:
-            text += "<i>Click the Severity, Package or File column header to sort the table by that field. " \
-                    "Click the same header again to reverse the order. Severity is ordered from critical to low by default.</i><br><br>\n"
-            text += "<table class=\"dep-cves\">\n<tr>" \
-                    "<th class=\"sortable sorted\" data-dir=\"asc\" onclick=\"sortDepCves(this, 0, 'severity')\">Severity</th>" \
-                    "<th class=\"sortable\" onclick=\"sortDepCves(this, 1)\">Package</th>" \
-                    "<th>Version</th><th>ID</th><th>Summary</th>" \
-                    "<th class=\"sortable\" onclick=\"sortDepCves(this, 5)\">File</th></tr>\n"
-            for severity in ("critical", "high", "medium", "low", "unknown"):
-                for finding in [f for f in Global.DepCveFindings if f["severity"] == severity]:
-                    text += (
-                        f'<tr><td>{escape(finding["severity"])}</td>'
-                        f'<td>{escape(finding["package"])}</td>'
-                        f'<td>{escape(finding["version"])}</td>'
-                        f'<td>{escape(finding["vuln_id"])}</td>'
-                        f'<td>{escape(finding["summary"])}</td>'
-                        f'<td class="url"><a href="{escape(finding["url"])}">{escape(finding["url"])}</a></td></tr>\n'
-                    )
-            text += "</table>\n"
-        else:
+        cve_count = 0
+        for severity in ("critical", "high", "medium", "low", "unknown"):
+            items = [f for f in Global.DepCveFindings if f["severity"] == severity]
+            if not items:
+                continue
+            cve_count += len(items)
+            text += f"<h3>Issues with {severity} severity</h3><br>\n<p>\n"
+            for finding in items:
+                summary = f' — {escape(finding["summary"])}' if finding["summary"] else ""
+                text += (f'{escape(finding["package"])} {escape(finding["version"])} — {escape(finding["vuln_id"])}{summary}'
+                         f' — <a href="{escape(finding["url"])}">{escape(finding["url"])}</a><br>\n')
+            text += "</p>\n"
+        if cve_count == 0:
             text += "No known vulnerabilities this time.<br>\n"
 
         text += "<br><h2>Exposed dependency files</h2><br>\n"
@@ -530,8 +460,8 @@ def get_report_content():
         qualys_text += "</div>"
         return qualys_text
 
-    report_content = overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results()\
-        + bypass403_results() + host_manipulation() + dependency_check() + social_media_bypass() + postleaks_results() + leakix_results()
+    report_content = overview() + found_services() + found_assets() + nuclei_findings() + dependency_check() + fuzzing_results()\
+        + bypass403_results() + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()
     if '-q' in Flags:
         report_content += qualys_results()
     return report_content
@@ -610,23 +540,25 @@ def get_md_report_content():  # Markdown counterpart of get_report_content(). Ra
             md += "No unclaimed package names this time.\n\n"
         md += "### Scoped packages\n\n"
         if scoped:
-            md += "_These names were not found on the public registry. Whether the npm scope itself is already claimed cannot be determined automatically and requires manual verification._\n\n"
+            md += "_These names were not found on the public registry. confused cannot tell whether the npm scope itself is already claimed — verify manually._\n\n"
             for finding in scoped:
                 md += f"- `{finding['package']}` — {finding['url']}\n"
             md += "\n"
         else:
             md += "No scoped package names this time.\n\n"
         md += "### Known vulnerabilities\n\n"
-        if Global.DepCveFindings:
-            md += "| Severity | Package | Version | ID | Summary | File |\n"
-            md += "| --- | --- | --- | --- | --- | --- |\n"
-            for severity in ("critical", "high", "medium", "low", "unknown"):
-                for finding in [f for f in Global.DepCveFindings if f["severity"] == severity]:
-                    summary = (finding["summary"] or "").replace("|", "\\|").replace("\n", " ")
-                    md += (f"| {finding['severity']} | `{finding['package']}` | {finding['version']} "
-                           f"| {finding['vuln_id']} | {summary} | {finding['url']} |\n")
+        cve_count = 0
+        for severity in ("critical", "high", "medium", "low", "unknown"):
+            items = [f for f in Global.DepCveFindings if f["severity"] == severity]
+            if not items:
+                continue
+            cve_count += len(items)
+            md += f"#### Issues with {severity} severity\n\n"
+            for finding in items:
+                summary = f" — {finding['summary']}" if finding["summary"] else ""
+                md += f"- `{finding['package']}` {finding['version']} — {finding['vuln_id']}{summary} — {finding['url']}\n"
             md += "\n"
-        else:
+        if cve_count == 0:
             md += "No known vulnerabilities this time.\n\n"
         md += "### Exposed dependency files\n\n"
         if Global.DepExposedFiles:
@@ -756,8 +688,8 @@ def get_md_report_content():  # Markdown counterpart of get_report_content(). Ra
                   "before it processed anything. Check the console output for details.\n"
         return md + "\n"
 
-    md_report = overview() + found_services() + found_assets() + nuclei_findings() + fuzzing_results()\
-        + bypass403_results() + host_manipulation() + dependency_check() + social_media_bypass() + postleaks_results() + leakix_results()
+    md_report = overview() + found_services() + found_assets() + nuclei_findings() + dependency_check() + fuzzing_results()\
+        + bypass403_results() + host_manipulation() + social_media_bypass() + postleaks_results() + leakix_results()
     if '-q' in Flags:
         md_report += qualys_results()
     return md_report

@@ -2,7 +2,7 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> -ua <string> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-q] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-dst] [-ba] [-bw] [-bf] [-bb]
+HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> -ua <string> [-h] [-v] [-md] [-sa] [-aff] [-dh] [-i] [-q] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-dst] [-dcf] [-ba] [-bw] [-bf] [-bb]
 
 REQUIRED FLAGS:
 -f - file with domains to scan
@@ -41,6 +41,7 @@ DISABLING FEATURES:
 -daff - disable automatic form filling in Katana
 -dh - disable headless scan in Katana
 -dst - disable SecurityTrails historical IP checks
+-dcf - disable dependency check (exposed manifests, dependency confusion, CVE scan)
 
 QUALYS WAS INTEGRATION:
 -q - sync discovered live web services into Qualys WAS: for every domain/subdomain not already
@@ -57,7 +58,8 @@ SENDING TO PROXY:
 -p <proxy> - burp proxy (default: 127.0.0.1:8080)"""
 
 utilities_flags = {"subfinder": "-ds", "dnsx": "-ds", "naabu": "No flag", "httpx": "No flag",
-                   "cdncheck": "No flag", "katana": "-dc", "uro": "-dc"}  # "Utility": "Flag_to_disable". Required to check if the utility is installed
+                   "cdncheck": "No flag", "katana": "-dc", "uro": "-dc",
+                   "confused": "-dcf", "osv-scanner": "-dcf"}  # "Utility": "Flag_to_disable". Required to check if the utility is installed
 
 LoadLevel = 2
 Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 15, 'HTTPXrate': 70,
@@ -108,7 +110,7 @@ Nuclei_subdomains_takeover_command = Template("nuclei -ss host-spray -profile su
 Feroxbuster_command = Template("feroxbuster --insecure --user-agent \"$UserAgent\" -X \"requested URL was rejected\" -X \"blocked by AWS WAF\" -X \"sage>Access Denied<\\/Mess\" -X \"firewall on this server is blocking your\" $FeroxbusterRate --no-recursion --quiet "
                                "-w $FuzzingDictPath --stdin --redirects --parallel $FeroxbusterParallels -t $FeroxbusterThreads --dont-extract-links -C 404 500 --time-limit $FeroxbusterTimeLimit $FeroxbusterAdditionalFlags")
 Postleaks_command = Template("postleaks -k $domain $PostleaksAditionalFlags --output $PostleaksOutput")
-Katana_command = Template("katana -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlags -p $KatanaParallels $KatanaRate -H \"User-Agent: $UserAgent\"")
+Katana_command = Template("katana -ef css,png,jpg,jpeg,woff2 -silent -nc -s breadth-first $KatanaAdditionalFlags -p $KatanaParallels $KatanaRate -H \"User-Agent: $UserAgent\"")
 Uro_command = "uro"
 Byp4xx_command = Template("go run Scan/byp4xx.go -xM -xUA $Byp4xx_flags -H \"User-Agent: $UserAgent\" -t $byp4xx_threads $Pages403File")
 
@@ -145,6 +147,9 @@ PostleaksResult = {}  # {"keyword": ["[+] (ID...) GET: ...", " - Headers: ...", 
 NotExistingSocialMediaLinks = []  # [("http://example.com", "https://facebook.com/example"),  ("http://example.com/page", "https://t.me/example")]
 LeakixFindings = []
 Byp4xxResult = []  # [[host_title_line, result_line, result_line], ...] - raw byp4xx output grouped per host
+DepExposedFiles = []  # URLs of leaked dependency manifests/lockfiles
+DepConfusionFindings = []  # [{"url", "package", "scoped"}]
+DepCveFindings = []  # [{"url", "package", "version", "vuln_id", "severity", "summary"}]
 
 LeakixAPIKey = os.environ.get("LeakIX_API_key", "CHANGEME")  # Change CHANGEME to your API key
 SecurityTrailsAPIKey = os.environ.get("SecurityTrails_API_key", "")  # Historical-DNS checks (origin behind WAF + access to inactive hosts). Empty => the check is silently disabled

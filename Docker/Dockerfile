@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s /usr/local/bin
 
-ENV GO_VERSION=1.21.0
+ENV GO_VERSION=1.23.6
 RUN wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
     rm go${GO_VERSION}.linux-amd64.tar.gz
@@ -26,7 +26,9 @@ RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
     go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest && \
     go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
     go install -v github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest && \
-	go install -v github.com/projectdiscovery/katana/cmd/katana@latest
+	go install -v github.com/projectdiscovery/katana/cmd/katana@latest && \
+    go install github.com/knavesec/confused@latest && \
+    go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest
 
 RUN pip install --no-cache-dir requests postleaks uro
 

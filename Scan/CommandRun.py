@@ -56,9 +56,9 @@ def check_installed_tools():
             print("[!] To crawl hosts protected by a WAF in headless mode, Katana needs to download the “leakless” script.\n"
                   "If this script is blocked by Windows Defender, you can either disable headless mode using the -dh flag "
                   "or add an exclusion in Windows Defender (Windows Security → Protection History → Threat quarantined → Actions → Restore).")
-    if not ("-dn" in Flags and "-dt" in Flags):
+    if not ("-dn" in Flags and "-dt" in Flags and "-dcf" in Flags):
         nuclei_result = subprocess.run(f"nuclei -h", shell=True, capture_output=True)
         if nuclei_result.returncode != 0:
-            print(f"[!] Nuclei was not found, please install it and add to the path or use both -dn and -dt flags!")
+            print(f"[!] Nuclei was not found, please install it and add to the path or use -dn, -dt and -dcf flags!")
             errors_count += 1
     return errors_count

@@ -16,6 +16,7 @@ alwaysApply: true
 - Scan/HostChecks.py - WAF bypass, inactive host access, sending URLs to Burp.
 - Scan/Postleaks.py - public Postman collections checking (postleaks).
 - Scan/Leakix.py - Leakix API checks.
+- Scan/DependencyCheck.py - exposed dependency manifests, dependency confusion (confused) and CVE scan (osv-scanner).
 - Scan/Helpers.py - auxiliary functions for simple tasks (URL/host helpers, log directory, etc.). Prefer adding small helpers here rather than in Control.py or the scan modules above.
 
 3. We keep it all simple and always keep in mind that the more complex the code - the more difficult it will be to maintain. It's just a combine of utilities and our own checks. We don't need to build architecture with the expectation that the project will someday grow tenfold, and we don't need to process every single potentially possible error scenario if we're not sure that such a thing could happen. We consider it an advantage that the tool can perform a large number of checks with such a relatively small amount of code (but nevertheless, we still try to anticipate potential issues and handle them). Don't overcomplicate the code!
