@@ -20,10 +20,13 @@ whole run.
 from Global import Flags
 import Global
 import time
+import copy
 import fnmatch
 import os
+import re
 import smtplib
 from email.message import EmailMessage
+from urllib.parse import urlparse
 from xml.sax.saxutils import escape as xml_escape
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
@@ -61,6 +64,35 @@ def resolve_parent(host, domains):
 def is_parent_level(host, domains):
     """True for a registered root domain or an orphan host (no matching root)."""
     return resolve_parent(host, domains) == host
+
+
+def normalize_url(url):
+    """Canonical form for creating and comparing web app URLs: lowercase scheme and host, no
+    trailing slash, no query or fragment - so https://example.com/ and https://example.com are
+    the same app instead of two."""
+    raw = (url or "").strip()
+    if "://" not in raw:
+        raw = "https://" + raw
+    parsed = urlparse(raw)
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}{parsed.path.rstrip('/')}"
+
+
+def strip_www(host):
+    """example.com for www.example.com; every other host unchanged."""
+    h = (host or "").strip().lower()
+    return h[4:] if h.startswith("www.") else h
+
+
+def root_key(host, domains):
+    """The root domain a host belongs to, counting www.example.com as example.com."""
+    return resolve_parent(strip_www(host), domains)
+
+
+def is_root_level(host, domains):
+    """True for a root domain, its www. form, or an orphan host. A www./port variant is root level
+    but not the canonical root, so it inherits from the canonical app instead of being bootstrapped
+    with the default schedule and no tags."""
+    return root_key(host, domains) == strip_www(host)
 
 
 def build_asset_list():
@@ -278,8 +310,13 @@ def resolve_option_profile_id(name):
 
 
 def find_webapp(host, url):
-    """Return the id of an existing web app matching the url (preferred) or name, else None."""
-    for field, value in (("url", url), ("name", host)):
+    """Id of an existing web app for this asset, else None.
+
+    Tries the normalized url, the same url with a trailing slash (apps created before URLs were
+    normalized), the name, and finally any app on the same host whose url matches once normalized -
+    without that last step a slash or case difference creates a duplicate app."""
+    target = normalize_url(url)
+    for field, value in (("url", target), ("url", target + "/"), ("name", host)):
         if not value:
             continue
         body = ('<ServiceRequest><filters>'
@@ -289,6 +326,14 @@ def find_webapp(host, url):
         wa = _find(root, "WebApp")
         if wa is not None:
             return _findtext(wa, "id")
+    if host:
+        body = ('<ServiceRequest><filters>'
+                f'<Criteria field="url" operator="CONTAINS">{xml_escape(host)}</Criteria>'
+                '</filters></ServiceRequest>')
+        root = _request("POST", "/qps/rest/3.0/search/was/webapp", body)
+        for el in root.iter():
+            if _local(el.tag) == "WebApp" and normalize_url(_findtext(el, "url")) == target:
+                return _findtext(el, "id")
     return None
 
 
@@ -319,6 +364,46 @@ def get_schedule(schedule_id):
     return _find(root, "WasScanSchedule")
 
 
+# The API returns a numeric <dayOrder>; a create/update request only accepts the enum.
+_DAY_ORDER = {"1": "FIRST", "2": "SECOND", "3": "THIRD", "4": "FOURTH", "5": "LAST", "-1": "LAST"}
+
+
+def _fix_scheduling(scheduling_xml):
+    """Make a copied <scheduling> block acceptable to WAS: translate a numeric <dayOrder> (1..5)
+    into FIRST..LAST, and drop the server-computed timeZone <offset>. Without this, copying a
+    monthly "first Monday every 3 months" parent schedule fails with INVALID_XML."""
+    xml = re.sub(r"<offset>.*?</offset>", "", scheduling_xml or "", flags=re.S)
+    return re.sub(r"<dayOrder>\s*(.*?)\s*</dayOrder>",
+                  lambda mo: "<dayOrder>" + _DAY_ORDER.get(mo.group(1), mo.group(1)) + "</dayOrder>",
+                  xml, flags=re.S)
+
+
+def _future_start(scheduling_xml, margin_minutes=10):
+    """WAS rejects a create whose start time is in the past ("Start Time cannot be before current
+    time"), and a parent schedule is usually anchored months ago. Keep the time of day and the
+    recurrence, move the date to the next day that is still ahead of now."""
+    found = re.search(r"<startDate>(.*?)</startDate>", scheduling_xml or "", flags=re.S)
+    if not found:
+        return scheduling_xml
+    text = found.group(1).strip()
+    when = None
+    for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ"):
+        try:
+            when = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+            break
+        except ValueError:
+            continue
+    if when is None:
+        return scheduling_xml
+    limit = datetime.now(timezone.utc) + timedelta(minutes=margin_minutes)
+    if when > limit:
+        return scheduling_xml
+    while when <= limit:
+        when += timedelta(days=1)
+    return (scheduling_xml[:found.start()] + "<startDate>" + when.strftime("%Y-%m-%dT%H:%M:%SZ")
+            + "</startDate>" + scheduling_xml[found.end():])
+
+
 def extract_schedule_config(schedule_elem):
     """Capture the reusable parts of a parent schedule so they can be copied onto a new app.
 
@@ -328,7 +413,7 @@ def extract_schedule_config(schedule_elem):
         return None
     return {
         "type": _findtext(schedule_elem, "type", "VULNERABILITY"),
-        "scheduling_xml": _subtree_xml(schedule_elem, "scheduling"),  # copied verbatim (recurrence/timing)
+        "scheduling_xml": _fix_scheduling(_subtree_xml(schedule_elem, "scheduling")),  # recurrence/timing
         "scanner_xml": _subtree_xml(schedule_elem, "scannerAppliance"),
         "notification_xml": _subtree_xml(schedule_elem, "notification"),  # parent's distribution groups + recipients, copied verbatim
     }
@@ -389,10 +474,39 @@ def default_schedule_cfg():
 # ---------------------------------------------------------------------------
 # Write operations
 # ---------------------------------------------------------------------------
+_tag_id_cache = {}
+
+
+def resolve_tag_ids(names):
+    """Tag ids for a comma-separated list of tag names (QUALYS_ENSURE_TAGS). Unknown names are
+    reported once and skipped - tags cannot be created through the API."""
+    ids = []
+    for name in [n.strip() for n in (names or "").split(",") if n.strip()]:
+        key = name.lower()
+        if key not in _tag_id_cache:
+            body = ('<ServiceRequest><filters>'
+                    f'<Criteria field="name" operator="EQUALS">{xml_escape(name)}</Criteria>'
+                    '</filters></ServiceRequest>')
+            try:
+                root = _request("POST", "/qps/rest/2.0/search/am/tag", body)
+            except QualysError as e:
+                print(f"[!] Qualys: could not look up tag '{name}' ({e})")
+                _tag_id_cache[key] = None
+            else:
+                tag = _find(root, "Tag")
+                _tag_id_cache[key] = _findtext(tag, "id") if tag is not None else None
+                if not _tag_id_cache[key]:
+                    print(f"[!] Qualys: no tag named '{name}' exists - baseline tag skipped")
+        if _tag_id_cache[key]:
+            ids.append(_tag_id_cache[key])
+    return ids
+
+
 def create_webapp(host, url, parent_elem, default_profile_id):
     """Create a web app. Subdomains inherit defaultProfile/tags from the parent app; root domains
     use the configured default option profile. Returns (new_id, app_default_profile_id)."""
-    parts = [f"<name>{xml_escape(host)}</name>", f"<url>{xml_escape(url)}</url>"]
+    parts = [f"<name>{xml_escape(host)}</name>",
+             f"<url>{xml_escape(normalize_url(url))}</url>"]   # never with a trailing slash
     profile_id = ""
     if parent_elem is not None:
         dp = _find(parent_elem, "defaultProfile")
@@ -402,13 +516,19 @@ def create_webapp(host, url, parent_elem, default_profile_id):
     if profile_id:
         parts.append(f"<defaultProfile><id>{xml_escape(profile_id)}</id></defaultProfile>")
     if parent_elem is not None:
-        tag_ids = _tag_ids(parent_elem)  # inherit parent tags, rebuilt; skip when none to avoid an empty <set>
-        if tag_ids:
-            parts.append("<tags><set>" + "".join(f"<Tag><id>{xml_escape(t)}</id></Tag>" for t in tag_ids) + "</set></tags>")
-            if '-v' in Flags:
-                print(f"[v] Qualys: copying {len(tag_ids)} tag(s) from parent to {host}")
-        elif '-v' in Flags:
-            print(f"[v] Qualys: parent app has no tags to copy to {host}")
+        tag_ids = _tag_ids(parent_elem)       # subdomain: whatever the root app carries
+        source = "inherited from the parent"
+    else:
+        tag_ids = resolve_tag_ids(Global.QualysEnsureTags)   # new root: nothing to inherit
+        source = "baseline (QUALYS_ENSURE_TAGS)"
+    if tag_ids:
+        parts.append("<tags><set>"
+                     + "".join(f"<Tag><id>{xml_escape(t)}</id></Tag>" for t in tag_ids)
+                     + "</set></tags>")
+        if '-v' in Flags:
+            print(f"[v] Qualys: {len(tag_ids)} tag(s) on {host} - {source}")
+    elif '-v' in Flags:
+        print(f"[v] Qualys: no tags to set on {host}")
     body = f"<ServiceRequest><data><WebApp>{''.join(parts)}</WebApp></data></ServiceRequest>"
     root = _request("POST", "/qps/rest/3.0/create/was/webapp", body)
     wa = _find(root, "WebApp")
@@ -436,7 +556,8 @@ def create_schedule(new_app_id, host, schedule_cfg, app_profile_id):
     ]
     if app_profile_id:
         parts.append(f"<profile><id>{xml_escape(str(app_profile_id))}</id></profile>")
-    parts.append(cfg.get("scheduling_xml") or _default_scheduling_xml())
+    parts.append(_future_start(_fix_scheduling(cfg.get("scheduling_xml")))
+                 or _default_scheduling_xml())
     body = f"<ServiceRequest><data><WasScanSchedule>{''.join(parts)}</WasScanSchedule></data></ServiceRequest>"
     root = _request("POST", "/qps/rest/3.0/create/was/wasscanschedule", body)
     sched = _find(root, "WasScanSchedule")
@@ -504,70 +625,48 @@ def distribution_uuids_of_schedule(schedule_id):
 
 
 def _build_put_body(obj, completion_uuids, notification_uuids):
-    """Map a schedule GET response into the leaner shape the PUT endpoint expects (webApps as ids,
-    owner as id, startTime HH:MM, fromScanAddressOption, etc.), injecting the completion and
-    notification distribution groups into their OWN sections. Everything else (profile, scheduling,
-    progressive scanning) is preserved."""
-    basic = obj.get("basicSection") or {}
-    owner = basic.get("owner")
-    owner_id = owner.get("id") if isinstance(owner, dict) else owner
-    target = obj.get("targetSection") or {}
-    webapps = target.get("webapps") or target.get("webApps") or []
-    webapp_ids = [w.get("id") if isinstance(w, dict) else w for w in webapps]
-    s = obj.get("settingsSection") or {}
-    sched = obj.get("schedulingSection") or {}
-    notif = obj.get("notificationSection") or {}
-    start_time = (sched.get("startTime") or "")[:5]  # "03:00:00" -> "03:00"
-    recipients = (Global.QualysScheduleRecipients or "").strip()  # extra pre-scan notification recipient(s)
-    notify_on = bool(notification_uuids) or bool(recipients)
+    """Body for PUT /was/rest/1.0/scan/schedule/{id}.
 
-    return {
-        "id": obj.get("id"),
-        "scanMode": obj.get("scanMode", 1),
-        "basicSection": {
-            "name": basic.get("name"),
-            "deactivatedTask": basic.get("deactivatedTask", False),
-            "owner": owner_id,
-        },
-        "targetSection": {"webApps": webapp_ids},
-        "settingsSection": {
-            "aiPoweredScan": s.get("aiPoweredScan", False),
-            "profileId": s.get("profileId"),
-            "progressiveScanning": s.get("progressiveScanning") or "ENABLED",
-            "scannerId": s.get("scannerId") or 0,
-            "wafAuthScan": s.get("wafAuthScan", False),
-            "sendMail": Global.QualysScheduleSendMail,  # completion email off by default (no admin blast)
-            "stopScanAfterCompletion": s.get("stopScanAfterCompletion", False),
-            "resetProgression": s.get("resetProgression", False),
-            "completionDistributionEmailListUuids": completion_uuids,
-            "completionRecipients": s.get("completionRecipients") or "",
-            "fromScanAddressOption": s.get("fromAddressOption") or "QUALYS_SUPPORT",
-        },
-        "schedulingSection": {
-            "timeZone": sched.get("timeZone") or "UTC",
-            "occurrenceType": sched.get("occurrenceType") or "WEEKLY",
-            "startDate": sched.get("startDate"),
-            "updated": False,
-            "isNow": False,
-            "endDate": "",
-            "endOption": sched.get("endOption") or "AFTER",
-            "occurrenceDailyCount": sched.get("occurrenceDailyCount"),
-            "occurrenceWeeklyCount": sched.get("occurrenceWeeklyCount"),
-            "occurrenceWeeklyDays": sched.get("occurrenceWeeklyDays"),
-            "occurrenceCount": sched.get("occurrenceCount"),
-            "startTime": start_time,
-        },
-        "notificationSection": {
-            "notification": notify_on,
-            "distributionEmailListUuids": notification_uuids,
-            "notificationDelay": notif.get("notificationDelay") or 1,
-            "notificationDelayUnit": notif.get("notificationDelayUnit") or "DAY",
-            "notificationRecipients": recipients,
-            "notificationMessage": Global.QualysNotificationMessage or "A Qualys scan is scheduled to start soon.",
-            "postponeNotification": notif.get("postponeNotification", False),
-            "fromAddress": notif.get("fromAddress") or "QUALYS_SUPPORT",
-        },
-    }
+    The endpoint wants the WHOLE schedule echoed back, with two shape fixes, or it answers
+    HTTP 500 and the distribution group is never attached:
+      * basicSection.owner must be the owner id, not the owner object;
+      * targetSection.webApps must be a list of web app ids - the GET returns them under the
+        lowercase key "webapps" as objects, and an empty webApps is rejected with
+        "At least one target is required".
+    Only the notification fields are changed; profile, scheduling and progressive scanning are
+    left exactly as the schedule already has them."""
+    body = copy.deepcopy(obj or {})
+
+    basic = body.get("basicSection") or {}
+    owner = basic.get("owner")
+    if isinstance(owner, dict):
+        basic["owner"] = owner.get("id")
+    body["basicSection"] = basic
+
+    target = body.get("targetSection") or {}
+    app_ids = []
+    for key in ("webApps", "webapps", "webAppIds"):
+        for item in (target.get(key) or []):
+            app_id = item.get("id") if isinstance(item, dict) else item
+            if app_id and app_id not in app_ids:
+                app_ids.append(app_id)
+    target["webApps"] = app_ids
+    body["targetSection"] = target
+
+    settings = body.get("settingsSection") or {}
+    settings["completionDistributionEmailListUuids"] = list(completion_uuids or [])
+    settings["sendMail"] = Global.QualysScheduleSendMail   # off by default: no all-admin blast
+    body["settingsSection"] = settings
+
+    recipients = (Global.QualysScheduleRecipients or "").strip()
+    notif = body.get("notificationSection") or {}
+    notif["distributionEmailListUuids"] = list(notification_uuids or [])
+    notif["notification"] = bool(notification_uuids) or bool(recipients)
+    notif["notificationRecipients"] = recipients
+    notif["notificationMessage"] = (Global.QualysNotificationMessage
+                                    or "A Qualys scan is scheduled to start soon.")
+    body["notificationSection"] = notif
+    return body
 
 
 def apply_schedule_settings(child_schedule_id, parent_schedule_id):
@@ -687,7 +786,7 @@ def sync_qualys_was(dry_run=False):
     if not assets:
         _abort("no live websites were found, so there was nothing to sync", "[!]")
         return
-    assets.sort(key=lambda a: 0 if is_parent_level(a[0], Global.Domains) else 1)  # parents first
+    assets.sort(key=lambda a: 0 if is_root_level(a[0], Global.Domains) else 1)  # parents first
 
     try:
         fast_scan_id = resolve_option_profile_id(Global.QualysScanProfileName)
@@ -726,6 +825,8 @@ def sync_qualys_was(dry_run=False):
         if parent_host in parent_cache:
             return parent_cache[parent_host]
         existing = find_webapp(parent_host, "https://" + parent_host)
+        if not existing:      # plenty of roots exist only as www.<domain>
+            existing = find_webapp("www." + parent_host, "https://www." + parent_host)
         if existing:
             parent_cache[parent_host] = (existing, schedule_cfg_for_existing(existing))
             return parent_cache[parent_host]
@@ -753,7 +854,7 @@ def sync_qualys_was(dry_run=False):
         return parent_cache[parent_host]
 
     for host, url in assets:
-        parent = resolve_parent(host, Global.Domains)
+        parent = root_key(host, Global.Domains)
         if is_ignored(host):
             record(host, parent, "skipped", message="ignored (QUALYS_IGNORE_HOSTS)")
             continue
@@ -761,15 +862,16 @@ def sync_qualys_was(dry_run=False):
             existing = find_webapp(host, url)
             if existing:
                 record(host, parent, "skipped", webapp_id=existing, message="already exists in Qualys WAS")
-                if is_parent_level(host, Global.Domains) and host not in parent_cache:
+                if is_root_level(host, Global.Domains) and host not in parent_cache:
                     parent_cache[host] = (existing, schedule_cfg_for_existing(existing))
                 continue
 
-            is_root = is_parent_level(host, Global.Domains)
+            is_root = is_root_level(host, Global.Domains)
+            canonical = root_key(host, Global.Domains)
             parent_elem = None
             schedule_cfg = None
-            if not is_root:
-                p_id, schedule_cfg = ensure_parent(parent)
+            if not is_root or canonical != host:   # subdomain, or a www./port variant of the root
+                p_id, schedule_cfg = ensure_parent(canonical)
                 if p_id and not dry_run:
                     parent_elem = get_webapp(p_id)  # inherit profile/tags from the parent app
 
@@ -788,8 +890,8 @@ def sync_qualys_was(dry_run=False):
             scan_id = launch_scan(new_id, host, fast_scan_id)
             record(host, parent, "scanned", webapp_id=new_id, scan_id=scan_id)
             launched.append({"host": host, "webapp_id": new_id, "scan_id": scan_id})
-            if is_root:
-                parent_cache[host] = (new_id, default_schedule_cfg())  # subdomains copy this exact schedule config
+            if is_root and canonical == host:
+                parent_cache[host] = (new_id, default_schedule_cfg())  # subdomains copy this schedule
         except QualysError as e:
             record(host, parent, "error", message=str(e))
             continue
