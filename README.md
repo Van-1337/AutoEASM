@@ -139,6 +139,7 @@ Credentials are resolved once at startup in this order: **AWS SSM Parameter Stor
 | `QUALYS_SCAN_SENDMAIL` | `false` | The immediate scan's completion email |
 | `QUALYS_SCHEDULE_RECIPIENTS` | *(edit for your org)* | Additional recipient(s) for the schedule's pre-scan notification |
 | `QUALYS_NOTIFICATION_MESSAGE` | *(edit for your org)* | Custom pre-scan notification message |
+| `QUALYS_ENSURE_TAGS` | `prod,webapp` | Tags applied to a newly bootstrapped **root domain** app, which has no parent to inherit from. Subdomains always inherit the root's tags instead. Tags must already exist in Qualys |
 | `QUALYS_IGNORE_HOSTS` | *(empty)* | Comma-separated hosts/patterns to skip (merged with `qualys_exclude.txt`) |
 | `QUALYS_IGNORE_FILE` | *(empty)* | Path override for the exclude file |
 | `QUALYS_NOTIFY_EMAIL` | *(edit for your org)* | Recipient of AutoEASM's own launched-scans summary email |

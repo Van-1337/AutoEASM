@@ -164,6 +164,7 @@ QualysSSMRegion = os.environ.get("QUALYS_SSM_REGION", "") or os.environ.get("AWS
 
 QualysScanProfileName = os.environ.get("QUALYS_SCAN_PROFILE", "Fast_Scan")     # Option profile for the immediate script-launched scans
 QualysDefaultProfile = os.environ.get("QUALYS_DEFAULT_PROFILE", "default_vulnerability_scan")  # Option profile assigned to created web apps and their schedules
+QualysEnsureTags = os.environ.get("QUALYS_ENSURE_TAGS", "prod,webapp")  # Tag names applied to a newly bootstrapped ROOT domain app, which has no parent to inherit tags from. Subdomains always inherit the root app's tags instead. Tags must already exist in Qualys - the API cannot create them
 QualysIgnoreHosts = os.environ.get("QUALYS_IGNORE_HOSTS", "")  # Comma-separated hosts/patterns (fnmatch, e.g. "dev.example.com,*.staging.example.com") to skip in the Qualys WAS sync. Merged with the auto-detected qualys_exclude.txt file (one pattern per line)
 # Default schedule applied to a freshly created root domain when there is no parent schedule to copy:
 QualysDefaultSchedule = {"frequency": "WEEKLY", "weekDays": "SUNDAY", "startHour": 3, "timeZone": "UTC"}
