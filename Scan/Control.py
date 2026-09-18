@@ -15,7 +15,7 @@ from Scan.Leakix import check_leakix
 from Scan.Qualys import sync_qualys_was
 from Scan.NucleiScan import launch_nuclei, check_subdomains_takeover
 from Scan.Fuzzing import launch_feroxbuster, launch_byp4xx
-from Scan.DependencyCheck import collect_dependency_files, analyze_dependency_files, has_dependency_files
+from Scan.DependencyCheck import collect_dependency_files, analyze_dependency_files
 
 
 def scanning():
@@ -54,9 +54,8 @@ def scanning():
         dep_thread = None
         if '-dcf' not in Flags:
             collect_dependency_files()
-            if has_dependency_files():
-                dep_thread = threading.Thread(target=analyze_dependency_files, name="DependencyCheckThread", daemon=True)
-                dep_thread.start()
+            dep_thread = threading.Thread(target=analyze_dependency_files, name="DependencyCheckThread", daemon=True)
+            dep_thread.start()
         if '-dw' not in Flags:
             launch_waf_bypass()
         if '-di' not in Flags:

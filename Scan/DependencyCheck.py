@@ -1,7 +1,7 @@
 from Global import Flags, Threads
 import Global
 from Scan.CommandRun import command_exec
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import json
 import os
 import re
@@ -52,11 +52,96 @@ OSV_NATIVE = {
     "pom.xml", "Gemfile.lock", "go.mod",
 }
 
+# Filename/path stem -> npm name. Patterns follow common CDNs and Retire.js URI/filename extractors.
+_JS_FILENAME_LIBS = {
+    "jquery": "jquery",
+    "jquery-migrate": "jquery-migrate",
+    "jquery-ui": "jquery-ui",
+    "jquery.ui": "jquery-ui",
+    "jquery.mobile": "jquery-mobile",
+    "jquery.validate": "jquery-validation",
+    "jquery.validation": "jquery-validation",
+    "lodash": "lodash",
+    "underscore": "underscore",
+    "bootstrap.bundle": "bootstrap",
+    "bootstrap": "bootstrap",
+    "angularjs": "angular",
+    "angular": "angular",
+    "vue": "vue",
+    "react-dom": "react-dom",
+    "react": "react",
+    "moment": "moment",
+    "handlebars": "handlebars",
+    "mustache": "mustache",
+    "backbone": "backbone",
+    "axios": "axios",
+    "d3": "d3",
+    "popper.js": "popper.js",
+    "popper": "popper.js",
+    "knockout": "knockout",
+    "ember": "ember",
+    "leaflet": "leaflet",
+    "swiper": "swiper",
+    "select2": "select2",
+    "three": "three",
+    "core-js": "core-js",
+    "tinymce": "tinymce",
+    "ckeditor": "ckeditor",
+    "jquery.datatables": "datatables.net",
+    "datatables": "datatables.net",
+    "chart.js": "chart.js",
+    "chart": "chart.js",
+    "highcharts": "highcharts",
+    "alpinejs": "alpinejs",
+    "alpine": "alpinejs",
+    "echarts": "echarts",
+    "video.js": "video.js",
+    "quill": "quill",
+    "marked": "marked",
+    "highlight.js": "highlight.js",
+    "highlight": "highlight.js",
+    "svelte": "svelte",
+    "mathjax": "mathjax",
+}
+_CDN_NAME_ALIASES = {
+    "lodash.js": "lodash",
+    "twitter-bootstrap": "bootstrap",
+    "angular.js": "angular",
+    "angularjs": "angular",
+    "vue.js": "vue",
+    "react.js": "react",
+    "moment.js": "moment",
+    "ember.js": "ember",
+    "backbone.js": "backbone",
+    "jqueryui": "jquery-ui",
+    "three.js": "three",
+    "chart.js": "chart.js",
+}
+_js_names_alt = "|".join(re.escape(n) for n in sorted(_JS_FILENAME_LIBS, key=len, reverse=True))
+_js_ver = r"(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.]+)?)"
+_js_filename_re = re.compile(
+    rf"(?i)(?:^|/)({_js_names_alt})[-_.](\d+)[._-](\d+)[._-](\d+)(?:[-+][0-9A-Za-z.]+)?"
+    r"(?:\.(?:min|slim|bundle|development|production|with-locales))*\.(?:js|css)(?:$|[?#])"
+)
+_js_verdir_re = re.compile(
+    rf"(?i)/{_js_ver}/(?:js/)?({_js_names_alt})(?:\.(?:min|slim|bundle|with-locales))*\.(?:js|css)(?:$|[?#])"
+)
+_js_cdn_res = (
+    (re.compile(r"(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net/npm/((?:@[^/]+/)?[^/@]+)@" + _js_ver, re.I), False),
+    (re.compile(r"esm\.run/((?:@[^/]+/)?[^/@]+)@" + _js_ver, re.I), False),
+    (re.compile(r"unpkg\.com/((?:@[^/]+/)?[^/@]+)@" + _js_ver, re.I), False),
+    (re.compile(r"esm\.sh/((?:@[^/]+/)?[^/@]+)@" + _js_ver, re.I), False),
+    (re.compile(r"skypack\.dev/((?:@[^/]+/)?[^/@]+)@" + _js_ver, re.I), False),
+    (re.compile(r"jspm\.io/npm:((?:@[^/]+/)?[^/@]+)@" + _js_ver, re.I), False),
+    (re.compile(r"(?:cdnjs\.cloudflare\.com|cdn\.bootcdn\.net|cdn\.bootcss\.com)/ajax/libs/([^/]+)/" + _js_ver, re.I), True),
+    (re.compile(r"ajax\.googleapis\.com/ajax/libs/([^/]+)/" + _js_ver, re.I), True),
+    (re.compile(r"(?:cdn\.staticfile\.org|lib\.baomitu\.com|cdn\.baomitu\.com|libs\.baidu\.com|apps\.bdimg\.com/libs)/([^/]+)/" + _js_ver, re.I), True),
+)
+_bootstrapcdn_re = re.compile(r"bootstrapcdn\.com/bootstrap/" + _js_ver, re.I)
+_aspnet_bootstrap_re = re.compile(r"aspnetcdn\.com/ajax/bootstrap/" + _js_ver, re.I)
+_aspnet_jqueryui_re = re.compile(r"aspnetcdn\.com/ajax/jqueryui/" + _js_ver, re.I)
+
 _downloaded = []  # [{"url", "dir", "filename"}]
-
-
-def has_dependency_files():
-    return bool(_downloaded)
 
 
 def collect_dependency_files():
@@ -90,16 +175,17 @@ def collect_dependency_files():
 
 
 def analyze_dependency_files():
-    if not _downloaded:
-        return
-    print("[*] Checking downloaded dependency files...")
     allowed = set(Global.Details[Global.DetailsLevel]["NucleiCritical"].split(","))
-    for item in _downloaded:
-        Global.DepExposedFiles.append(item["url"])
-        _run_confused(item)
-        _run_osv(item, allowed)
-    print(f"[+] Dependency check: {len(Global.DepConfusionFindings)} unclaimed packages, "
-          f"{len(Global.DepCveFindings)} CVEs")
+    if _downloaded:
+        print("[*] Checking downloaded dependency files...")
+        for item in _downloaded:
+            Global.DepExposedFiles.append(item["url"])
+            _run_confused(item)
+            _run_osv(item, allowed)
+    scanned_js = _scan_js_cdn_cves(allowed)
+    if _downloaded or scanned_js:
+        print(f"[+] Dependency check: {len(Global.DepConfusionFindings)} unclaimed packages, "
+              f"{len(Global.DepCveFindings)} CVEs")
 
 
 def filename_from_url(url):
@@ -603,31 +689,136 @@ def _cvss_label(score_text):
     return "unknown"
 
 
-def _run_osv(item, allowed_severities):
-    lock_arg = _osv_lock_arg(item)
-    if not lock_arg:
+def _cdn_npm_name(name):
+    name = (name or "").strip()
+    key = name.lower()
+    if key in _CDN_NAME_ALIASES:
+        return _CDN_NAME_ALIASES[key]
+    if key.endswith(".js") and len(key) > 3:
+        stem = key[:-3]
+        if stem in _CDN_NAME_ALIASES:
+            return _CDN_NAME_ALIASES[stem]
+        if stem in _JS_FILENAME_LIBS:
+            return _JS_FILENAME_LIBS[stem]
+        return stem
+    return name
+
+
+def _add_js_package(packages, url_map, name, version, url):
+    pin = _pinned_version(version)
+    if not name or not pin or pin.count(".") < 2:
         return
-    out_file = os.path.join(item["dir"], "osv.json")
+    key = (name, pin)
+    if key in url_map:
+        return
+    url_map[key] = url
+    packages.append({"package": {"name": name, "version": pin, "ecosystem": "npm"}})
+
+
+def _packages_from_crawled_urls():
+    packages = []
+    url_map = {}
+    seen = set()
+    for url in list(Global.CrawledURLs) + list(Global.URLsWithWAF) + list(Global.JSlinks) + _script_srcs_from_katana():
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        for regex, remap in _js_cdn_res:
+            match = regex.search(url)
+            if match:
+                name = _cdn_npm_name(match.group(1)) if remap else match.group(1)
+                _add_js_package(packages, url_map, name, match.group(2), url)
+                break
+        else:
+            boot = _bootstrapcdn_re.search(url) or _aspnet_bootstrap_re.search(url)
+            if boot:
+                _add_js_package(packages, url_map, "bootstrap", boot.group(1), url)
+                continue
+            jqueryui = _aspnet_jqueryui_re.search(url)
+            if jqueryui:
+                _add_js_package(packages, url_map, "jquery-ui", jqueryui.group(1), url)
+                continue
+            file_match = _js_filename_re.search(url)
+            if file_match:
+                name = _JS_FILENAME_LIBS[file_match.group(1).lower()]
+                ver = f"{file_match.group(2)}.{file_match.group(3)}.{file_match.group(4)}"
+                _add_js_package(packages, url_map, name, ver, url)
+                continue
+            dir_match = _js_verdir_re.search(url)
+            if dir_match:
+                name = _JS_FILENAME_LIBS[dir_match.group(2).lower()]
+                _add_js_package(packages, url_map, name, dir_match.group(1), url)
+    return packages, url_map
+
+
+def _script_srcs_from_katana():
+    urls = []
+    src_re = re.compile(r"""<(?:script[^>]+src|link[^>]+href)=["']([^"']+)["']""", re.I)
+    for name in ("Katana.jsonl", "Katana_WAF.jsonl"):
+        path = os.path.join(Global.RunDir, name)
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as file:
+                for line in file:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entry = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    body = (entry.get("response") or {}).get("body") or ""
+                    page = (entry.get("request") or {}).get("endpoint") or ""
+                    if not body or not page:
+                        continue
+                    for src in src_re.findall(body):
+                        urls.append(urljoin(page, src))
+        except OSError:
+            pass
+    return urls
+
+
+def _scan_js_cdn_cves(allowed_severities):
+    packages, url_map = _packages_from_crawled_urls()
+    if not packages:
+        return False
+    print("[*] Checking JS/CDN library versions...")
+    dest_dir = os.path.join(Global.RunDir, "dep_files", "js_cdn")
+    os.makedirs(dest_dir, exist_ok=True)
+    if not _write_osv_custom(dest_dir, packages):
+        return False
+    data = _osv_json(dest_dir, "osv-scanner:converted-osv.json", "JS/CDN URLs")
+    if data:
+        _store_osv_findings(data, allowed_severities, lambda name, ver: url_map.get((name, ver), ""))
+    return True
+
+
+def _osv_json(cwd, lock_arg, label):
     try:
         result = subprocess.run(
             ["osv-scanner", "scan", "source", "-L", lock_arg, "--format", "json",
              "--output-file", "osv.json", "--verbosity", "error", "--no-resolve"],
-            cwd=item["dir"], capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
     except OSError:
         print("[e] Error when running osv-scanner")
-        return
+        return None
     if result.returncode not in (0, 1):
         if "-v" in Flags:
-            print(f"[v] osv-scanner skipped {item['url']}: {result.stderr or result.returncode}")
-        return
+            print(f"[v] osv-scanner skipped {label}: {result.stderr or result.returncode}")
+        return None
+    out_file = os.path.join(cwd, "osv.json")
     if not os.path.exists(out_file):
-        return
+        return None
     try:
         with open(out_file, encoding="utf-8") as file:
-            data = json.load(file)
+            return json.load(file)
     except (OSError, json.JSONDecodeError):
-        return
+        return None
+
+
+def _store_osv_findings(data, allowed_severities, url_for_pkg):
     for source in data.get("results") or []:
         for pkg_entry in source.get("packages") or []:
             pkg = pkg_entry.get("package") or {}
@@ -652,10 +843,19 @@ def _run_osv(item, allowed_severities):
                     if summary:
                         break
                 Global.DepCveFindings.append({
-                    "url": item["url"],
+                    "url": url_for_pkg(name, version),
                     "package": name,
                     "version": version,
                     "vuln_id": vuln_id,
                     "severity": severity,
                     "summary": summary,
                 })
+
+
+def _run_osv(item, allowed_severities):
+    lock_arg = _osv_lock_arg(item)
+    if not lock_arg:
+        return
+    data = _osv_json(item["dir"], lock_arg, item["url"])
+    if data:
+        _store_osv_findings(data, allowed_severities, lambda name, ver: item["url"])

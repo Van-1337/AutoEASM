@@ -38,10 +38,10 @@ DISABLING FEATURES:
 -dm - disable social media takeover checking
 -dp - disable public Postman collections checking
 -dl - disable Leakix checking
+-dcf - disable dependency check (exposed manifests, dependency confusion, CVE scan)
 -daff - disable automatic form filling in Katana
 -dh - disable headless scan in Katana
 -dst - disable SecurityTrails historical IP checks
--dcf - disable dependency check (exposed manifests, dependency confusion, CVE scan)
 
 QUALYS WAS INTEGRATION:
 -q - sync discovered live web services into Qualys WAS: for every domain/subdomain not already

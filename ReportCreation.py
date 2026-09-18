@@ -362,7 +362,7 @@ def get_report_content():
         text += "<br><h2>Known vulnerabilities</h2><br>\n"
         if Global.DepCveFindings:
             text += "<i>Click the Severity, Package or File column header to sort the table by that field. " \
-                    "Click the same header again to reverse the order. Severity is ordered from critical to low by default.</i><br><br>\n"
+                    "Click the same header again to reverse the order.</i><br><br>\n"
             text += "<table class=\"dep-cves\">\n<tr>" \
                     "<th class=\"sortable sorted\" data-dir=\"asc\" onclick=\"sortDepCves(this, 0, 'severity')\">Severity</th>" \
                     "<th class=\"sortable\" onclick=\"sortDepCves(this, 1)\">Package</th>" \
