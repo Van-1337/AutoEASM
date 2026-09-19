@@ -118,7 +118,7 @@ def launch_feroxbuster():
                     Threads[Global.LoadLevel]['FeroxbusterRate'])
     if not Details[Global.DetailsLevel]['WAFfiltering'] and Global.AssetsWithWAF:
         print("[*] Fuzzing suspicious directories on sites with WAF (may take a long time)...")
-        launch_fuzz("Scan/resources/fuzz.txt", Global.HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m',
+        launch_fuzz("Scan/resources/fuzz.txt", Global.AssetsWithWAF, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m',
                     Threads[Global.LoadLevel]['FeroxbusterRate'])
     clear_state_files()
 

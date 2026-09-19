@@ -152,9 +152,7 @@ def launch_subfinder_dnsx_naabu(scan_subdomains, console_output=True):
         Global.Services.extend(result.stdout.splitlines())
         Global.Services = list(dict.fromkeys(Global.Services))
         if '-ba' in Flags or '-bw' in Flags or '-bf' in Flags:
-            for index, service in enumerate(Global.Services):
-                if service.startswith('localhost.'):
-                    del Global.Services[index]
+            Global.Services = [s for s in Global.Services if not s.startswith('localhost.')]
     else:
         print("[e] Error when running Subfinder, DNSX or Naabu utilities:")
         print("[e] Command: " + command)

@@ -53,7 +53,7 @@ def CreateReport(report_name="Report", auto_increment=False):
 
 def get_report_start():
     report_start = """<!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>AutoEASM Report</title>

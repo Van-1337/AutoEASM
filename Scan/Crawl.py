@@ -158,11 +158,13 @@ def delete_urls_with_waf():
         print("[v] Divide the links into those with and without WAF...")
 
     hosts_with_waf = get_host_from_url_list(Global.AssetsWithWAF)
-    for index, url in enumerate(CrawledURLs):
-        current_host = get_host_from_url(url)
-        if current_host in hosts_with_waf:
+    kept_urls = []
+    for url in CrawledURLs:
+        if get_host_from_url(url) in hosts_with_waf:
             URLsWithWAF.append(url)
-            del CrawledURLs[index]
+        else:
+            kept_urls.append(url)
+    CrawledURLs[:] = kept_urls
 
 
 def check_social_networks():
