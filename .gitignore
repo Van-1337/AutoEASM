@@ -6,7 +6,7 @@
 !Scan/templates/*
 !Scan/resources/subdomains-top1million-5000.txt
 !Scan/resources/subdomains-top1million-20000.txt
-Scan/resources/fuzz.txt
+!Scan/resources/fuzz.txt
 *.zip
 *.cfg
 *.docx
