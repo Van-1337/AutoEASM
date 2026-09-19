@@ -25,7 +25,7 @@ Download and open **"Report Example.html"** file to see what you get when you ru
 &nbsp;
 
 
-![Flowchart](https://github.com/Van-1337/AutoEASM/raw/master/Flowchart.jpg)
+![Flowchart](https://raw.githubusercontent.com/Van-1337/AutoEASM/refs/heads/main/Flowchart.jpg)
 &nbsp;
 
 ## Installation
