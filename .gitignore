@@ -4,9 +4,9 @@
 !Report Example.html
 *.txt
 !Scan/templates/*
-!Scan/subdomains-top1million-5000.txt
-!Scan/subdomains-top1million-20000.txt
-Scan/fuzz.txt
+!Scan/resources/subdomains-top1million-5000.txt
+!Scan/resources/subdomains-top1million-20000.txt
+Scan/resources/fuzz.txt
 *.zip
 *.cfg
 *.docx

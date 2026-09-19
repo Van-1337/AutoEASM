@@ -25,7 +25,7 @@ def get_host_scan_commands(hosts_pair):  # Suggested manual scan commands for a 
            f" {Global.Details[Global.DetailsLevel]['KatanaAdditionalFlags']} -p {Global.Threads[Global.LoadLevel]['KatanaParallels']}" \
            f" | nuclei -header Host:{hosts_pair[0]} -dast -etags backup -s {Global.Details[Global.DetailsLevel]['NucleiCritical']} -rl " \
            f"{Global.Threads[Global.LoadLevel]['NucleiRate']} -c {Global.Threads[Global.LoadLevel]['NucleiParallels']}\n" \
-           f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
+           f"feroxbuster -H Host:{hosts_pair[0]} -u {hosts_pair[1]} -w Scan/resources/fuzz.txt --insecure --auto-tune --no-recursion --redirects " \
            f"-t {(Global.Threads[Global.LoadLevel]['FeroxbusterThreads']*Global.Threads[Global.LoadLevel]['FeroxbusterParallels'])//2} " \
            f"--dont-extract-links -C 404 500 --time-limit {Global.Threads[Global.LoadLevel]['FeroxbusterTimeLimit']}\n"
 

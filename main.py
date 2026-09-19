@@ -128,7 +128,7 @@ if __name__ == '__main__':
                     sys.exit(1)
                 argument_was_used = True
             else:
-                print("Please specify subdomains wordlist path after -sw argument. Example: -sw Scan/subdomains-top1million-5000.txt")
+                print("Please specify subdomains wordlist path after -sw argument. Example: -sw Scan/resources/subdomains-top1million-5000.txt")
                 sys.exit(1)
         elif sys.argv[i] == '-ua':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':

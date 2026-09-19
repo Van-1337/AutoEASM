@@ -8,7 +8,7 @@ import re
 import subprocess
 import requests
 
-TEMPLATE_PATH = "Scan/exposed-dependency-configs.yaml"
+TEMPLATE_PATH = "Scan/resources/exposed-dependency-configs.yaml"
 MAX_BODY_BYTES = 1048576
 
 MANIFEST_SUFFIXES = (

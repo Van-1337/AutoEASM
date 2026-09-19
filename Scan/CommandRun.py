@@ -51,10 +51,12 @@ def check_installed_tools():
                 else:
                     print(f"[!] {utility} was not found, please install it and add to the path or use {utilities_flags[utility]} flag!")
     # Windows Katana binaries omit jsluice; -jsl stays in the command, crawling still runs.
-    if "-dc" not in Flags and sys.platform == "win32" and katana_has_jsluice() is False:
+    if ("-dc" not in Flags and sys.platform == "win32"
+            and "-jsl" in Global.Details[Global.DetailsLevel]["KatanaAdditionalFlags"]
+            and katana_has_jsluice() is False):
         print("[!] Windows Katana does not include jsluice, so it will not extract endpoints from JavaScript files.")
         print("    For deeper JS crawling, run this once from the AutoEASM folder:")
-        print("    powershell -ExecutionPolicy Bypass -File Scan\\install_katana_jsluice.ps1")
+        print("    powershell -ExecutionPolicy Bypass -File Scan\\resources\\install_katana_jsluice.ps1")
     if "-dc" not in Flags and "-dh" not in Flags:
         result = subprocess.run(f"katana -headless --no-sandbox -u example.com -ct 3s", shell=True, capture_output=True)
         if result.returncode != 0:

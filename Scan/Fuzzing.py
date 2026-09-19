@@ -27,22 +27,22 @@ def launch_feroxbuster():
 
     def check_wrong_directory_in_file():
         nonlocal wrong_directory
-        if not os.path.exists("Scan/fuzz.txt"):
-            print("[!] Scan/fuzz.txt was not found! Skipping directory scanning with Feroxbuster.")
+        if not os.path.exists("Scan/resources/fuzz.txt"):
+            print("[!] Scan/resources/fuzz.txt was not found! Skipping directory scanning with Feroxbuster.")
             return False
 
-        with open("Scan/fuzz.txt", "r", encoding="utf-8") as file:
+        with open("Scan/resources/fuzz.txt", "r", encoding="utf-8") as file:
             lines = file.readlines()
 
         if lines:
             first_line = lines[0].strip()
         else:
-            print("[!] File Scan/fuzz.txt is empty or unable to read! Skipping directory scanning with Feroxbuster.")
+            print("[!] File Scan/resources/fuzz.txt is empty or unable to read! Skipping directory scanning with Feroxbuster.")
             return False
 
         if wrong_directory_keyword not in first_line:
             new_content = wrong_directory + "\n" + "".join(lines)
-            with open("Scan/fuzz.txt", "w", encoding="utf-8") as file:
+            with open("Scan/resources/fuzz.txt", "w", encoding="utf-8") as file:
                 file.write(new_content)
         else:
             wrong_directory = first_line
@@ -113,12 +113,12 @@ def launch_feroxbuster():
     prefix = get_command_prefix()
     if Global.HTTPAssets:
         print("[*] Fuzzing suspicious directories (may take some time)...")
-        launch_fuzz("Scan/fuzz.txt", Global.HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels'],
+        launch_fuzz("Scan/resources/fuzz.txt", Global.HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels'],
                     Threads[Global.LoadLevel]['FeroxbusterThreads'], Threads[Global.LoadLevel]['FeroxbusterTimeLimit'],
                     Threads[Global.LoadLevel]['FeroxbusterRate'])
     if not Details[Global.DetailsLevel]['WAFfiltering'] and Global.AssetsWithWAF:
         print("[*] Fuzzing suspicious directories on sites with WAF (may take a long time)...")
-        launch_fuzz("Scan/fuzz.txt", Global.HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m',
+        launch_fuzz("Scan/resources/fuzz.txt", Global.HTTPAssets, prefix, Threads[Global.LoadLevel]['FeroxbusterParallels']*2, 1, '45m',
                     Threads[Global.LoadLevel]['FeroxbusterRate'])
     clear_state_files()
 

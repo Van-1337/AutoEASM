@@ -803,11 +803,11 @@ admin: 308<br>
 No hosts with WAF found.<br><br><h2>Access to inactive hosts</h2><br>
 <details><summary>Try using host header <b>testphp.vulnweb.com</b> on http://testhtml5.vulnweb.com</summary><br><pre>nuclei -u http://testhtml5.vulnweb.com -header Host:testphp.vulnweb.com -s low,medium,high,critical -rl 40 -c 10
 katana -u http://testhtml5.vulnweb.com -headers Host:testphp.vulnweb.com -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn -iqp -kf all -d 3 -ct 180 -p 7 -rl 70 | nuclei -header Host:testphp.vulnweb.com -dast -etags backup -s medium,high,critical -rl 40 -c 10
-feroxbuster -H Host:testphp.vulnweb.com -u http://testhtml5.vulnweb.com -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects -t 25 --dont-extract-links -C 404 500 --time-limit 30m
+feroxbuster -H Host:testphp.vulnweb.com -u http://testhtml5.vulnweb.com -w Scan/resources/fuzz.txt --insecure --auto-tune --no-recursion --redirects -t 25 --dont-extract-links -C 404 500 --time-limit 30m
 </pre></details><br><br>
 <details><summary>Try using host header <b>testphp.vulnweb.com</b> on http://vulnweb.com</summary><br><pre>nuclei -u http://vulnweb.com -header Host:testphp.vulnweb.com -s low,medium,high,critical -rl 40 -c 10
 katana -u http://vulnweb.com -headers Host:testphp.vulnweb.com -ef css,json,png,jpg,jpeg,woff2 -silent -nc -s breadth-first -fs fqdn -iqp -kf all -d 3 -ct 180 -p 7 -rl 70 | nuclei -header Host:testphp.vulnweb.com -dast -etags backup -s medium,high,critical -rl 40 -c 10
-feroxbuster -H Host:testphp.vulnweb.com -u http://vulnweb.com -w Scan/fuzz.txt --insecure --auto-tune --no-recursion --redirects -t 25 --dont-extract-links -C 404 500 --time-limit 30m
+feroxbuster -H Host:testphp.vulnweb.com -u http://vulnweb.com -w Scan/resources/fuzz.txt --insecure --auto-tune --no-recursion --redirects -t 25 --dont-extract-links -C 404 500 --time-limit 30m
 </pre></details><br><br>
 </div>
 
