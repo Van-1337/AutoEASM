@@ -176,3 +176,12 @@ def replace_last_colon(s: str) -> str:  # For 403 bypass results reporing
     if idx == -1:
         return s
     return s[:idx] + ' -' + s[idx+1:]
+
+
+def katana_has_jsluice():
+    # Official Windows Katana still ships without the jsluice parser. Patched builds embed gotreesitter.
+    path = shutil.which("katana")
+    if not path:
+        return None
+    with open(path, "rb") as f:
+        return b"gotreesitter" in f.read()
