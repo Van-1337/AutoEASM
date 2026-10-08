@@ -5,7 +5,7 @@ import threading
 import time
 
 from Scan.CommandRun import check_installed_tools
-from Scan.Helpers import create_run_directory
+from Scan.Helpers import create_run_directory, get_domains_for_enumeration
 from Scan.Discovery import launch_subfinder_dnsx_naabu, launch_httpx, check_dns_wildcards
 from Scan.Crawl import launch_katana, launch_uro, delete_assets_with_waf, delete_urls_with_waf, check_social_networks
 from Scan.HostChecks import launch_waf_bypass, launch_hidden_hosts_scan, send_urls_to_burp
@@ -20,15 +20,19 @@ from Scan.DependencyCheck import collect_dependency_files, analyze_dependency_fi
 
 def scanning():
     try:
+        wildcard_thread = None
+        if '-ds' not in Flags and '-i' not in Flags:  # Needs only the system DNS resolver, so it runs while the utilities are being checked
+            wildcard_thread = threading.Thread(target=check_dns_wildcards, name="WildcardCheckThread", daemon=True)
+            wildcard_thread.start()
         if check_installed_tools() != 0:
             print("[e] Not all required utilities are installed. Terminating.")
             sys.exit(1)
-        if '-ds' not in Flags and '-i' not in Flags:
-            check_dns_wildcards()
+        if wildcard_thread:
+            wildcard_thread.join()
         print("[N] Note: you can stop any current check with Ctrl+C")
         Global.RunDir = create_run_directory(Domains[0])
         print(f"[*] Logs and temporary files for this run will be stored in: {Global.RunDir}")
-        if '-ds' in Flags or '-i' in Flags:
+        if '-ds' in Flags or '-i' in Flags or not get_domains_for_enumeration():  # Nothing left to enumerate => scan the root domains only
             launch_subfinder_dnsx_naabu(scan_subdomains=False)
         else:
             launch_subfinder_dnsx_naabu(scan_subdomains=True)

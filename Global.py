@@ -121,6 +121,7 @@ UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 
 Flags = []  # Flags without additional arguments, like ['-do', '-v', '-dl']
 RawSubdomains = []  # Unchecked subdomains
 Domains = []  # Means root domains
+WildcardDomains = []  # Root domains resolving any non-existent subdomain: enumeration is skipped for them, only the root domain itself is scanned
 Services = []  # All network services
 HTTPAssets = []  # Subdomains and domains without WAF, also contains root domains services
 AssetsWithWAF = {}  # {"https://site.com": "cloudflare"}

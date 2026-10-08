@@ -80,6 +80,10 @@ def get_host_from_url_list(urls, remove_ports=False):
     return result
 
 
+def get_domains_for_enumeration():  # Root domains whose subdomains are worth enumerating (the ones with a DNS wildcard are not)
+    return [domain for domain in Global.Domains if domain not in Global.WildcardDomains]
+
+
 def get_random_string(length):
     return ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', k=length))
 
