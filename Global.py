@@ -77,12 +77,12 @@ Threads = {1: {'DNSX': 20, 'NaabuThreads': 10, 'NaabuRate': 70, 'HTTPXthreads': 
 DetailsLevel = 2
 Details = {1: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'NucleiCritical': "high,critical",  # NucleiCritical is also currently using for DAST
                'NucleiConfigCritical': 'medium,high,critical', 'NucleiTokensCritical': 'low,medium,high,critical',
-               'FeroxbusterAdditionalFlags': '-X "<html"', 'PostleaksAditionalFlags': '--strict',
+               'FeroxbusterAdditionalFlags': '-X "<html" --auto-bail', 'PostleaksAditionalFlags': '--strict',
                'KatanaAdditionalFlags': '-iqp -kf all -d 2 -ct 120 -jc', 'Byp4xx_flags': '-xV -xX -xS -xD', 'CheckAll403links': False,
                'TimeoutModifier': 0.7, 'SubdomainsDict': 'Scan/resources/subdomains-top1million-5000.txt'},
            2: {'NaabuPorts': 100, 'NaabuFlags': '', 'WAFfiltering': True, 'NucleiCritical': "medium,high,critical",
                'NucleiConfigCritical': 'low,medium,high,critical', 'NucleiTokensCritical': 'info,low,medium,high,critical',
-               'FeroxbusterAdditionalFlags': "", 'PostleaksAditionalFlags': '--strict',
+               'FeroxbusterAdditionalFlags': "--auto-bail", 'PostleaksAditionalFlags': '--strict',
                'KatanaAdditionalFlags': '-iqp -kf all -d 3 -ct 180 -jc -jsl', 'Byp4xx_flags': '-xV -xX -xS -xD', 'CheckAll403links': False,
                'TimeoutModifier': 1, 'SubdomainsDict': 'Scan/resources/subdomains-top1million-5000.txt'},
            3: {'NaabuPorts': 1000, 'NaabuFlags': '-sa', 'WAFfiltering': True, 'NucleiCritical': "low,medium,high,critical",
