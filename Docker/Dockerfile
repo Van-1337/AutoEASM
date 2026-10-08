@@ -34,7 +34,7 @@ RUN pip install --no-cache-dir requests postleaks uro
 
 WORKDIR /app
 
-RUN git clone https://github.com/Van-1337/EASM-automate.git .
+RUN git clone https://github.com/Van-1337/AutoEASM.git .
 
 RUN chmod +x Scan/byp4xx.go
 
