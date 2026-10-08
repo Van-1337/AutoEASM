@@ -88,6 +88,20 @@ def get_random_string(length):
     return ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', k=length))
 
 
+def get_shuffled_wordlist(dictionary):
+    # Fuzzing is cut off by a time limit, so an alphabetically sorted wordlist means the same first
+    # part of it is checked every run. The first line must stay first: it is the non-existing
+    # directory used to detect hosts answering the same status code to everything.
+    with open(dictionary, "r", encoding="utf-8") as file:
+        lines = file.read().splitlines()
+    words = lines[1:]
+    random.shuffle(words)
+    shuffled_path = Global.RunDir + "/fuzz_shuffled.txt"
+    with open(shuffled_path, "w", encoding="utf-8") as file:
+        file.write('\n'.join(lines[:1] + words) + '\n')
+    return shuffled_path
+
+
 def is_site_available(url):
     try:
         user_agent_headers = {
