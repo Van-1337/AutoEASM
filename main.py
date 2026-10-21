@@ -158,7 +158,7 @@ if __name__ == '__main__':
                 or sys.argv[i] == "-dn" or sys.argv[i] == "-dp" or sys.argv[i] == "-dd" or sys.argv[i] == "-dl"\
                 or sys.argv[i] == "-dc" or sys.argv[i] == "-db" or sys.argv[i] == "-dm" or sys.argv[i] == "-dt"\
                 or sys.argv[i] == "-dw" or sys.argv[i] == "-di" or sys.argv[i] == "-daff" or sys.argv[i] == "-dh"\
-                or sys.argv[i] == "--docker" or sys.argv[i] == "-i" or sys.argv[i] == "-q" or sys.argv[i] == "-ba" or sys.argv[i] == "-bw"\
+                or sys.argv[i] == "--docker" or sys.argv[i] == "-i" or sys.argv[i] == "-q" or sys.argv[i] == "-asa" or sys.argv[i] == "-ba" or sys.argv[i] == "-bw"\
                 or sys.argv[i] == "-bf" or sys.argv[i] == "-bb" or sys.argv[i] == "-dst" or sys.argv[i] == "-dcf":
             Flags.append(sys.argv[i])
         else:
@@ -195,6 +195,14 @@ if __name__ == '__main__':
             Flags.remove('-q')
             print("[!] Qualys credentials not configured - Qualys WAS sync (-q) will be skipped. Set "
                   "QUALYS_USERNAME/QUALYS_PASSWORD, the SSM params, or hardcode them in Global.py (see README).")
+    if '-asa' in Flags:
+        try:
+            import boto3
+            boto3.client("securityagent", region_name=Global.SecurityAgentRegion)
+        except Exception as e:
+            Flags.remove('-asa')
+            print(f"[!] AWS Security Agent sync (-asa) will be skipped: boto3 with the securityagent client is required "
+                  f"(pip install -U boto3). Details: {e}")
 
     Scan.Control.scanning()
     CreateReport(report_file, auto_increment=not report_name_specified)

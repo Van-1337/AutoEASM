@@ -164,6 +164,8 @@ def get_report_start():
 """
     if '-q' in Flags:
         report_start += """        <button class="tablink" onclick="openTab(event, 'QualysWAS')">Qualys WAS</button>\n"""
+    if '-asa' in Flags:
+        report_start += """        <button class="tablink" onclick="openTab(event, 'SecurityAgent')">AWS Security Agent</button>\n"""
     report_start += """    </div>
 
     <div class="content">\n"""
@@ -534,6 +536,14 @@ def get_report_content():
         + bypass403_results() + host_manipulation() + dependency_check() + social_media_bypass() + postleaks_results() + leakix_results()
     if '-q' in Flags:
         report_content += qualys_results()
+    if '-asa' in Flags:
+        report_content += '\n\n<div id="SecurityAgent" class="tab-content">\n<h2>AWS Security Agent pentest targets</h2><br>\n'
+        if Global.SecurityAgentResults:
+            for action, rest in security_agent_lines():
+                report_content += f"<b>{escape(action)}</b>{escape(rest)}<br>\n"
+        else:
+            report_content += "No AWS Security Agent results this time - the sync was interrupted or crashed. Check the console output."
+        report_content += "</div>"
     return report_content
 
 
@@ -760,4 +770,25 @@ def get_md_report_content():  # Markdown counterpart of get_report_content(). Ra
         + bypass403_results() + host_manipulation() + dependency_check() + social_media_bypass() + postleaks_results() + leakix_results()
     if '-q' in Flags:
         md_report += qualys_results()
+    if '-asa' in Flags:
+        md_report += "## AWS Security Agent pentest targets\n\n"
+        if Global.SecurityAgentResults:
+            md_report += "".join(f"- **{action}**{rest}\n" for action, rest in security_agent_lines())
+        else:
+            md_report += "No AWS Security Agent results this time - the sync was interrupted or crashed.\n"
+        md_report += "\n"
     return md_report
+
+
+def security_agent_lines():  # [(action, ": host (root) - pentest - message"), ...] shared by the HTML and Markdown reports
+    lines = []
+    for r in Global.SecurityAgentResults:
+        rest = f": {r.host}"
+        if r.parent and r.parent != r.host:
+            rest += f" (root: {r.parent})"
+        if r.pentest:
+            rest += f" - pentest: {r.pentest}"
+        if r.message:
+            rest += f" - {r.message}"
+        lines.append((r.action, rest))
+    return lines
