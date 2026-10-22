@@ -22,3 +22,7 @@ __pycache__/
 Logs/
 test/
 EASM_scripts/
+# Web UI
+!WebUI/templates/index.html
+!WebUI/README.md
+WebUI/history/

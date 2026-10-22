@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AutoEASM — External Attack Surface Management</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/sharingan.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">
+        <span class="logo-mark" aria-hidden="true"><img src="{{ url_for('static', filename='img/sharingan.png') }}" alt=""></span>
+        Auto<span class="logo-accent">EASM</span>
+    </div>
+    <div class="brand-sub">External Attack Surface Management</div>
+
+    <nav class="nav">
+        <div class="nav-category" data-i18n="nav_scan">Сканирование</div>
+        <button class="nav-item active" type="button" data-view="scan">
+            <span class="nav-glyph" aria-hidden="true">&#9889;</span>
+            <span data-i18n="nav_new">Новый скан</span>
+        </button>
+        <button class="nav-item" type="button" data-view="monitor">
+            <span class="nav-glyph" aria-hidden="true">&#9678;</span>
+            <span data-i18n="nav_monitor">Монитор</span>
+        </button>
+        <button class="nav-item" type="button" data-view="reports">
+            <span class="nav-glyph" aria-hidden="true">&#128202;</span>
+            <span data-i18n="nav_reports">Отчёты</span>
+        </button>
+        <button class="nav-item" type="button" data-view="flow">
+            <span class="nav-glyph" aria-hidden="true">&#9672;</span>
+            <span data-i18n="nav_flow">Схема</span>
+        </button>
+
+        <div class="nav-category" data-i18n="nav_resources">Ресурсы</div>
+        <a class="nav-item" href="https://github.com/Van-1337/AutoEASM" target="_blank" rel="noopener">
+            <span class="nav-glyph" aria-hidden="true">&#128279;</span>
+            <span data-i18n="nav_github">GitHub проекта</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="foot-label" data-i18n="lang_label">Язык</div>
+        <div class="lang-row" id="lang-row">
+            <button class="lang-btn" type="button" data-lang="uk">UA</button>
+            <button class="lang-btn" type="button" data-lang="ru">RU</button>
+            <button class="lang-btn" type="button" data-lang="en">EN</button>
+            <button class="lang-btn" type="button" data-lang="pl">PL</button>
+        </div>
+        <div class="foot-label foot-label-gap" data-i18n="theme_label">Тема оформления</div>
+        <div class="theme-row" id="theme-row"></div>
+    </div>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-title" id="topbar-title">Новый скан</span>
+            <div class="topbar-side">
+                <span class="chip chip-idle" id="global-chip"><span class="chip-dot"></span><span data-i18n="chip_ready">Готов к запуску</span></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="content">
+
+        <!-- ================================================ VIEW: SCAN CONFIG -->
+        <section class="view" id="view-scan">
+
+            <div class="card">
+                <div class="card-header" data-i18n="targets">Цели сканирования</div>
+                <div class="card-body">
+                    <div class="two-col">
+                        <div class="field">
+                            <span class="field-label-row">
+                                <span class="field-label" data-i18n="domains">Корневые домены</span>
+                                <button class="btn btn-ghost btn-small" type="button" id="domains-file-btn" data-i18n="load_file">Загрузить из файла…</button>
+                                <input type="file" id="domains-file" accept=".txt,.lst,.list,.csv,text/plain" hidden>
+                            </span>
+                            <textarea id="domains" placeholder="example.com&#10;example.org"></textarea>
+                            <span class="field-hint" data-i18n="domains_hint">По одному домену в строке — эквивалент нескольких флагов -domain или файла -file. Поддомены будут найдены автоматически.</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label-row">
+                                <span class="field-label" data-i18n="exclude">Исключить хосты</span>
+                            </span>
+                            <textarea id="exclude" placeholder="dev.example.com&#10;test.example.com"></textarea>
+                            <span class="field-hint" data-i18n="exclude_hint">Необязательно. Точное имя хоста, каждый — отдельный флаг -exclude.</span>
+                            <span class="field-warn" id="exclude-warn" data-i18n="exclude_warn" hidden>Маски (* и ?) флаг -exclude не поддерживает — такой хост ничего не исключит, запуск будет отклонён.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" data-i18n="load_title">Режимы нагрузки и детализации</div>
+                <div class="card-body">
+                    <div class="seg-row">
+                        <span>
+                            <span class="seg-label" data-i18n="load_label">Нагрузка на сеть</span>
+                            <span class="seg-help" data-i18n="load_help"> — количество потоков утилит (-load)</span>
+                        </span>
+                        <span class="seg" id="ll-seg">
+                            <button type="button" data-level="1" data-i18n="load_1">1 · мягко</button>
+                            <button type="button" data-level="2" data-i18n="load_2">2 · баланс</button>
+                            <button type="button" data-level="3" data-i18n="load_3">3 · максимум</button>
+                        </span>
+                    </div>
+                    <div class="seg-row">
+                        <span>
+                            <span class="seg-label" data-i18n="deep_label">Детализация</span>
+                            <span class="seg-help" data-i18n="deep_help"> — больше находок, дольше скан (-deep)</span>
+                        </span>
+                        <span class="seg" id="ld-seg">
+                            <button type="button" data-level="1" data-i18n="deep_1">1 · быстро</button>
+                            <button type="button" data-level="2">2</button>
+                            <button type="button" data-level="3">3</button>
+                            <button type="button" data-level="4" data-i18n="deep_4">4 · максимум</button>
+                        </span>
+                    </div>
+                    <div class="two-col">
+                        <div class="field">
+                            <span class="field-label" data-i18n="rate_label">Rate limit, запросов/сек на хост</span>
+                            <input class="input-text" id="rate-limit" type="number" min="1" step="1" data-i18n-placeholder="rate_ph" placeholder="пусто — по умолчанию (-rate)">
+                        </div>
+                        <div class="field">
+                            <span class="field-label" data-i18n="report_label">Имя файла отчёта</span>
+                            <input class="input-text" id="report-name" type="text" data-i18n-placeholder="report_ph" placeholder="Report (-report)">
+                        </div>
+                    </div>
+                    <div class="modules-grid">
+                        <label class="toggle-row" for="all-ports">
+                            <span class="toggle-info">
+                                <span class="toggle-name"><span data-i18n="all_ports">Сканировать все порты</span><span class="toggle-flag">-all-ports</span></span>
+                                <span class="toggle-desc" data-i18n="all_ports_desc">вместо 100/1000 популярных</span>
+                            </span>
+                            <span class="switch"><input type="checkbox" id="all-ports"><span class="track"></span><span class="thumb"></span></span>
+                        </label>
+                        <label class="toggle-row" for="ip-mode">
+                            <span class="toggle-info">
+                                <span class="toggle-name"><span data-i18n="ip_mode">Режим IP-скана</span><span class="toggle-flag">-ip</span></span>
+                                <span class="toggle-desc" data-i18n="ip_mode_desc">пропустить DNS и поиск поддоменов</span>
+                            </span>
+                            <span class="switch"><input type="checkbox" id="ip-mode"><span class="track"></span><span class="thumb"></span></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span data-i18n="modules">Модули сканирования</span>
+                    <span class="card-note" data-i18n="modules_note">выключенный модуль добавляет в команду свой флаг отключения</span>
+                </div>
+                <div class="card-body">
+                    <div class="modules-grid" id="modules-grid"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" data-i18n="integrations">Интеграции</div>
+                <div class="card-body">
+                    <div class="seg-row">
+                        <span>
+                            <span class="seg-label" data-i18n="burp_label">Эндпоинты краулинга → Burp Suite</span>
+                            <span class="seg-help" data-i18n="burp_help"> — «Все» дополнительно шлёт URL за WAF (-burp / -burp-all)</span>
+                        </span>
+                        <span class="seg" id="burp-seg"></span>
+                    </div>
+                    <div class="modules-grid">
+                        <label class="toggle-row" for="burp-fuzz">
+                            <span class="toggle-info">
+                                <span class="toggle-name"><span data-i18n="burp_dirs">Найденные директории → Burp</span><span class="toggle-flag">-burp-dirs</span></span>
+                                <span class="toggle-desc" data-i18n="burp_dirs_desc">результаты фаззинга feroxbuster</span>
+                                <span class="toggle-moot"></span>
+                            </span>
+                            <span class="switch"><input type="checkbox" id="burp-fuzz"><span class="track"></span><span class="thumb"></span></span>
+                        </label>
+                        <label class="toggle-row" for="burp-bypass">
+                            <span class="toggle-info">
+                                <span class="toggle-name"><span data-i18n="burp_hits">Обходы WAF и старые хосты → Burp</span><span class="toggle-flag">-burp-hits</span></span>
+                                <span class="toggle-desc" data-i18n="burp_hits_desc">успешные подмены Host для ручной проверки</span>
+                                <span class="toggle-moot"></span>
+                            </span>
+                            <span class="switch"><input type="checkbox" id="burp-bypass"><span class="track"></span><span class="thumb"></span></span>
+                        </label>
+                    </div>
+                    <div class="field field-narrow">
+                        <span class="field-label"><span data-i18n="proxy_label">Адрес прокси Burp</span><span class="toggle-flag">-proxy</span></span>
+                        <input class="input-text" id="burp-proxy" type="text" value="127.0.0.1:8080">
+                        <span class="field-hint" data-i18n="proxy_hint">Burp должен слушать этот адрес. Активно, если включена хотя бы одна опция выше.</span>
+                    </div>
+                    <label class="toggle-row" for="qualys">
+                        <span class="toggle-info">
+                            <span class="toggle-name">Qualys WAS<span class="toggle-flag">-qualys</span></span>
+                            <span class="toggle-desc" data-i18n="qualys_desc">синхронизация активов в Qualys — нужны креды в переменных окружения</span>
+                        </span>
+                        <span class="switch"><input type="checkbox" id="qualys"><span class="track"></span><span class="thumb"></span></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" data-i18n="advanced">Ключи API и тонкая настройка</div>
+                <div class="card-body">
+                    <div class="fields-grid">
+                        <div class="field">
+                            <span class="field-label" data-i18n="leakix_key">LeakiX API-ключ</span>
+                            <input class="input-text" id="leakix-key" type="password" data-i18n-placeholder="leakix_ph" placeholder="бесплатный ключ — leakix.net/settings/api">
+                            <span class="field-hint" data-i18n="leakix_hint">Передаётся через переменную окружения LeakIX_API_key</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label" data-i18n="st_key">SecurityTrails API-ключ</span>
+                            <input class="input-text" id="st-key" type="password" data-i18n-placeholder="st_ph" placeholder="платный ключ, исторические IP">
+                            <span class="field-hint" data-i18n="st_hint">Без ключа проверка молча пропускается</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">User-Agent</span>
+                            <input class="input-text" id="ua" type="text" data-i18n-placeholder="ua_ph" placeholder="по умолчанию Firefox 156 (-user-agent)">
+                        </div>
+                        <div class="field">
+                            <span class="field-label" data-i18n="templates">Путь к шаблонам Nuclei</span>
+                            <input class="input-text" id="tem" type="text" data-i18n-placeholder="templates_ph" placeholder="пусто — стандартные шаблоны (-templates)">
+                        </div>
+                        <div class="field">
+                            <span class="field-label" data-i18n="wordlist">Словарь поддоменов</span>
+                            <input class="input-text" id="sw" type="text" data-i18n-placeholder="wordlist_ph" placeholder="например Scan/resources/subdomains-top1million-20000.txt (-wordlist)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" data-i18n="output">Вывод результатов</div>
+                <div class="card-body">
+                    <div class="modules-grid" id="outputs-grid"></div>
+                </div>
+            </div>
+
+            <div class="cmd-bar">
+                <div class="cmd-chip" id="cmd-preview"></div>
+                <button class="btn btn-ghost" type="button" id="copy-btn" data-i18n="copy_cmd">Копировать команду</button>
+                <button class="btn btn-success" type="button" id="launch-btn" data-i18n="launch">&#9654;&nbsp; Запустить скан</button>
+            </div>
+        </section>
+
+        <!-- ==================================================== VIEW: MONITOR -->
+        <section class="view" id="view-monitor" hidden>
+            <div class="card">
+                <div class="card-header">
+                    <span data-i18n="monitor_title">Монитор сканирования</span>
+                    <span class="chip chip-idle" id="monitor-chip"><span class="chip-dot"></span><span data-i18n="chip_idle">Не запущен</span></span>
+                </div>
+                <div class="card-body">
+                    <div class="kv"><span data-i18n="command">Команда:</span><b class="cmd-value" id="monitor-command"></b></div>
+                    <div class="terminal auto-scroll" id="terminal">
+                        <div class="terminal-empty" data-i18n="term_wait">Ожидание вывода сканера…</div>
+                    </div>
+                    <div class="row row-end">
+                        <button class="btn btn-ghost" type="button" id="back-btn" data-i18n="back">&#8592; К настройкам</button>
+                        <button class="btn btn-warning" type="button" id="skip-btn" data-i18n="skip" disabled>&#8630; Пропустить этап</button>
+                        <button class="btn btn-danger" type="button" id="stop-btn" data-i18n="stop" disabled>&#9632; Остановить скан</button>
+                    </div>
+                    <span class="card-note" data-i18n="monitor_note">«Пропустить этап» — как Ctrl+C в консоли: текущий этап прерывается, результаты сохраняются, скан продолжается. «Остановить» завершает скан целиком.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================= VIEW: FLOW -->
+        <section class="view" id="view-flow" hidden>
+            <div class="card flow-card">
+                <div class="card-header">
+                    <span data-i18n="view_flow">Схема сканирования</span>
+                    <span class="card-note" data-i18n="flow_hint">Наведите на блок — подсветится весь путь, которым до него доходит сканер. Остальное затемняется.</span>
+                </div>
+                <div class="card-body flow-body">
+                    <div class="flow-toolbar">
+                        <button class="btn btn-ghost btn-small" type="button" id="flow-zoom-out" title="−">&#8722;</button>
+                        <span class="flow-zoom-val" id="flow-zoom-val">100%</span>
+                        <button class="btn btn-ghost btn-small" type="button" id="flow-zoom-in" title="+">&#43;</button>
+                        <button class="btn btn-ghost btn-small" type="button" id="flow-zoom-fit" data-i18n="flow_fit">Вся схема</button>
+                    </div>
+                    <div id="flow-stage" class="flow-stage"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================================================== VIEW: REPORTS -->
+        <section class="view" id="view-reports" hidden>
+            <div class="card">
+                <div class="card-header">
+                    <span data-i18n="reports_title">Сгенерированные отчёты</span>
+                    <button class="btn btn-ghost btn-small" type="button" id="refresh-reports" data-i18n="refresh">&#8635; Обновить</button>
+                </div>
+                <div class="card-body">
+                    <div id="reports-list">
+                        <div class="list-empty" data-i18n="loading">Загрузка…</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="main-spacer" aria-hidden="true"></div>
+
+    <footer class="app-footer">
+        <div class="footer-inner">
+            <span><span data-i18n="footer">AutoEASM Web UI · дизайн-система перенесена из проекта</span> <span class="author-gradient">ESET IPMS</span> · <a href="https://github.com/Van-1337/AutoEASM" target="_blank" rel="noopener">Van-1337/AutoEASM</a></span>
+        </div>
+    </footer>
+</main>
+
+<script src="{{ url_for('static', filename='js/flow.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
