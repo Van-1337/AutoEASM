@@ -16,7 +16,14 @@ if __name__ == '__main__':
         if argument_was_used:
             argument_was_used = False
             continue
-        elif sys.argv[i] == '-h' or sys.argv[i] == '--help':
+        token = sys.argv[i]
+        if token.startswith("--") and token not in ("--docker", "--help"):
+            token = "-" + token[2:]
+        if token == "-i":
+            print("Flag -i was removed. Use -ip.")
+            sys.exit(1)
+        sys.argv[i] = Global.FlagAliases.get(token, token)
+        if sys.argv[i] == '-h' or sys.argv[i] == '--help':
             print(HelpText)
             sys.exit(0)
         elif sys.argv[i] == '-d':
@@ -24,7 +31,7 @@ if __name__ == '__main__':
                 Domains.append(get_host_from_url(sys.argv[i + 1], remove_port=True))
                 argument_was_used = True
             else:
-                print("Please specify domain to scan after -d argument. Example: -d example.com")
+                print("Please specify domain to scan after -domain. Example: -domain example.com")
                 sys.exit(1)
         elif sys.argv[i] == '-f':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
@@ -44,7 +51,7 @@ if __name__ == '__main__':
                     sys.exit(1)
                 argument_was_used = True
             else:
-                print("Please specify domain to scan after -f argument. Example: -f example.com")
+                print("Please specify the domain list after -file. Example: -file domains.txt")
                 sys.exit(1)
         elif sys.argv[i] == '-o':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
@@ -52,7 +59,7 @@ if __name__ == '__main__':
                 report_name_specified = True
                 argument_was_used = True
             else:
-                print("Please specify HTML report name right after -o argument. Example: -o Report3")
+                print("Please specify the report name after -report. Example: -report Report3")
                 sys.exit(1)
         elif sys.argv[i] == '-ll':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
@@ -61,11 +68,11 @@ if __name__ == '__main__':
                     if Global.LoadLevel not in Global.Threads:
                         raise ValueError("Wrong number")
                 except (ValueError, KeyError):
-                    print("Internet load level (-ll flag) should be a number between 1 and 3 (1 - minimum load, 3 - maximum, default: 2). Exiting!")
+                    print("Load (-load) should be a number from 1 to 3 (1 - minimum, 3 - maximum, default: 2). Exiting!")
                     sys.exit(1)
                 argument_was_used = True
             else:
-                print("Please specify number after -ll argument. Example: -ll 3")
+                print("Please specify a number after -load. Example: -load 3")
                 sys.exit(1)
         elif sys.argv[i] == '-ld':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
@@ -74,11 +81,11 @@ if __name__ == '__main__':
                     if Global.DetailsLevel not in Global.Details:
                         raise ValueError("Wrong number")
                 except (ValueError, KeyError):
-                    print("Level of detail (-ld flag) should be a number between 1 and 4 (1 - max speed, 4 - max findings, default: 2). Exiting!")
+                    print("Depth (-deep) should be a number from 1 to 4 (1 - fastest, 4 - most findings, default: 2). Exiting!")
                     sys.exit(1)
                 argument_was_used = True
             else:
-                print("Please specify number after -ld argument. Example: -ld 3")
+                print("Please specify a number after -deep. Example: -deep 3")
                 sys.exit(1)
         elif sys.argv[i] == '-rl':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
@@ -95,28 +102,28 @@ if __name__ == '__main__':
                         Global.Threads[level + 1]['byp4xx_threads'] = max(round(rate_limit/3), 1)
                         Global.Threads[level + 1]['WAFbypassThreads'] = min(Global.Threads[level + 1]['WAFbypassThreads'], rate_limit)
                 except (ValueError, KeyError):
-                    print("Rate limit (-rl flag) should be a positive number. Exiting!")
+                    print("Rate (-rate) should be a positive number. Exiting!")
                     sys.exit(1)
                 argument_was_used = True
             else:
-                print("Please specify number after -rl argument. Example: -rl 50")
+                print("Please specify a number after -rate. Example: -rate 50")
                 sys.exit(1)
         elif sys.argv[i] == '-p':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 Global.BurpProxy = sys.argv[i + 1].replace("http://", "").replace("https://", "")
                 if Global.BurpProxy.count('.') != 3 or ":" not in Global.BurpProxy:
-                    print("Burp proxy (-p flag) should be in format like 127.0.0.1:8080. Exiting!")
+                    print("Burp proxy (-proxy) should look like 127.0.0.1:8080. Exiting!")
                     sys.exit(1)
                 argument_was_used = True
             else:
-                print("Please specify proxy after -p argument. Example: -p 127.0.0.1:8080")
+                print("Please specify the proxy after -proxy. Example: -proxy 127.0.0.1:8080")
                 sys.exit(1)
         elif sys.argv[i] == '-tem':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 Global.TemplatesPath = sys.argv[i + 1]
                 argument_was_used = True
             else:
-                print("Please specify Nuclei templates path after -tem argument. Example: -tem /src/Nuclei-templates")
+                print("Please specify the Nuclei templates directory after -templates. Example: -templates /src/Nuclei-templates")
                 sys.exit(1)
         elif sys.argv[i] == '-sw':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
@@ -128,14 +135,14 @@ if __name__ == '__main__':
                     sys.exit(1)
                 argument_was_used = True
             else:
-                print("Please specify subdomains wordlist path after -sw argument. Example: -sw Scan/resources/subdomains-top1million-5000.txt")
+                print("Please specify the subdomain wordlist after -wordlist. Example: -wordlist Scan/resources/subdomains-top1million-5000.txt")
                 sys.exit(1)
         elif sys.argv[i] == '-ua':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 Global.UserAgent = sys.argv[i + 1]
                 argument_was_used = True
             else:
-                print("Please specify User-Agent after -ua argument. Example: -ua \"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 Firefox/156.0\"")
+                print("Please specify the User-Agent after -user-agent. Example: -user-agent \"Mozilla/5.0\"")
                 sys.exit(1)
         elif sys.argv[i] == '-ex':
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
@@ -144,7 +151,7 @@ if __name__ == '__main__':
                 Global.ExcludedHosts.append('http://' + get_host_from_url(sys.argv[i + 1], remove_port=True))
                 argument_was_used = True
             else:
-                print("Please specify host to exclude after -ex argument. Example: -ex test.example.com")
+                print("Please specify a host after -exclude. Example: -exclude test.example.com")
                 sys.exit(1)
         elif sys.argv[i] == '-sa':
             Flags.append('-sa')
@@ -165,7 +172,7 @@ if __name__ == '__main__':
             print(f"Unknown flag: {sys.argv[i]}. Use -h to get help menu")
 
     if not Domains:
-        print("No domains to scan! Please specify the -f or -d flag. Use -h to get help menu")
+        print("No domains to scan. Specify -domain or -file. Use -help to see all flags")
         sys.exit(0)
     if Global.LeakixAPIKey == "CHANGEME" and '-dl' not in Flags:
         Flags.append('-dl')
