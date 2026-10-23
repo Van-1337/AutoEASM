@@ -2,67 +2,84 @@ from sys import argv
 from string import Template
 import os
 
-HelpText = f"""Usage: {argv[0]} -f <file> -d example.com -o <file> -ll <number> -ld <number> -ex test.example.com -rl <number> -p <proxy> -tem <path> -sw <file> -ua <string> [-h] [-v] [-md] [-sa] [-waf] [-dh] [-i] [-q] [-asa] [-do] [-ds] [-df] [-dn] [-dt] [-dd] [-dc] [-db] [-dw] [-di] [-dm] [-dp] [-dl] [-dst] [-dcf] [-ba] [-bw] [-bf] [-bb]
+# Readable names accepted on the command line. The scan itself still looks at the
+# short flag (the value). Old short names keep working.
+FlagAliases = {
+    "-domain": "-d", "-file": "-f", "-report": "-o",
+    "-load": "-ll", "-deep": "-ld", "-rate": "-rl", "-exclude": "-ex",
+    "-all-ports": "-sa", "-scan-waf": "-waf", "-templates": "-tem", "-wordlist": "-sw", "-user-agent": "-ua",
+    "-ip": "-i", "-verbose": "-v", "-markdown": "-md", "-no-open": "-do",
+    "-no-subdomains": "-ds", "-no-vulns": "-dn", "-no-takeover": "-dt", "-no-params": "-dd",
+    "-no-crawl": "-dc", "-no-dirs": "-df", "-no-bypass": "-db", "-no-waf": "-dw",
+    "-no-inactive": "-di", "-no-social": "-dm", "-no-postman": "-dp", "-no-leakix": "-dl",
+    "-no-history": "-dst", "-no-deps": "-dcf", "-no-browser": "-dh", "-no-forms": "-daff",
+    "-qualys": "-q", "-aws-security-agent": "-asa", "-burp": "-bw", "-burp-all": "-ba", "-burp-dirs": "-bf", "-burp-hits": "-bb",
+    "-proxy": "-p", "-help": "-h",
+}
+
+HelpText = f"""Usage: {argv[0]} -file <file> -domain example.com -report <file> -load <number> -deep <number> -exclude test.example.com -rate <number> -proxy <proxy> -templates <path> -wordlist <file> -user-agent <string> [-help] [-verbose] [-markdown] [-all-ports] [-scan-waf] [-no-forms] [-no-browser] [-ip] [-qualys] [-aws-security-agent] [-no-open] [-no-subdomains] [-no-dirs] [-no-vulns] [-no-takeover] [-no-params] [-no-crawl] [-no-bypass] [-no-waf] [-no-inactive] [-no-social] [-no-postman] [-no-leakix] [-no-history] [-no-deps] [-burp-all] [-burp] [-burp-dirs] [-burp-hits]
+
+Each flag has a short form and a long form. Both are accepted, for example -ld and -deep.
 
 REQUIRED FLAGS:
--f - file with domains to scan
+-file - file with domains to scan
 ---OR---
--d - domain to scan. This parameter can be repeated
+-domain - domain to scan. This parameter can be repeated
 
 OPTIONAL FLAGS:
--h - show this help menu
--o <file> - name of the final report file. Caution, the file will be overwritten if it already exists!
--md - additionally generate the report in Markdown (.md) format (the HTML report is always generated)
--v - verbose output
--ll <number> - internet load level, affects the number of threads in utilities. Number: 1-3, 1 - minimum load, 3 - maximum, Default: 2
--ld <number> - level of detail, slightly increases the number of findings and greatly increases execution time and junk info. Number: 1-4, 1 - max speed, 4 - max findings, Default: 2
--ex <subdomain> - subdomain to exclude from scanning. This parameter can be repeated
--sa - scan ALL ports instead of 100 or 1000
--waf - scan hosts with WAF in Nuclei and Feroxbuster too
--rl <integer number> - rate limit for tools (max requests per second on one host)
--tem - specify directory with Nuclei templates
--sw <file> - wordlist for subdomains bruteforce
--ua <string> - User-Agent for HTTP requests and for Nuclei, Katana, Feroxbuster and byp4xx
--i - IP scan (skipping DNSX check, subdomain enumeration and Postman checking)
+-help - show this help menu
+-report <file> - name of the final report file. Caution, the file will be overwritten if it already exists!
+-markdown - additionally generate the report in Markdown (.md) format (the HTML report is always generated)
+-verbose - verbose output
+-load <number> - internet load level, affects the number of threads in utilities. Number: 1-3, 1 - minimum load, 3 - maximum, Default: 2
+-deep <number> - how deep to look: more findings, much more time. Number: 1-4, 1 - fastest, 4 - most findings, Default: 2
+-exclude <host> - host to exclude from scanning. Exact name, this parameter can be repeated
+-all-ports - scan ALL ports instead of 100 or 1000
+-scan-waf - scan hosts behind WAFs with Nuclei and Feroxbuster too (short: -waf)
+-rate <number> - max requests per second on one host
+-templates <path> - directory with Nuclei templates
+-wordlist <file> - wordlist for subdomain bruteforce
+-user-agent <string> - User-Agent for HTTP requests and for Nuclei, Katana, Feroxbuster and byp4xx
+-ip - scan only the given addresses (skip DNS, subdomain enumeration and Postman checking)
 
 DISABLING FEATURES:
--do - don't open a report file after its creation
--ds - disable subdomains enumeration
--df - disable directory fuzzing
--dn - disable Nuclei scan (except subdomains takeover)
--dt - disable subdomains takeover checking
--dd - disable DAST scan
--dc - disable links crawling (and tokens check in JS)
--db - disable 403 bypass attempts
--dw - disable WAF bypass attempts
--di - disable access search for inactive hosts
--dm - disable social media takeover checking
--dp - disable public Postman collections checking
--dl - disable Leakix checking
--dcf - disable dependency check (exposed manifests, dependency confusion, CVE scan)
--daff - disable automatic form filling in Katana
--dh - disable headless scan in Katana
--dst - disable SecurityTrails historical IP checks
+-no-open - don't open a report file after its creation
+-no-subdomains - disable subdomain enumeration
+-no-dirs - disable directory fuzzing
+-no-vulns - disable Nuclei vulnerability scan (except subdomain takeover)
+-no-takeover - disable subdomain takeover checking
+-no-params - disable parameter checks on collected links
+-no-crawl - disable link crawling (and the token check in JS)
+-no-bypass - disable 403/401 bypass attempts
+-no-waf - disable the search for the server behind a WAF
+-no-inactive - disable access search for inactive hosts
+-no-social - disable social media takeover checking
+-no-postman - disable public Postman collection checking
+-no-leakix - disable LeakIX checking
+-no-history - disable SecurityTrails historical IP checks
+-no-deps - disable dependency check (exposed manifests, dependency confusion, CVE scan)
+-no-forms - disable automatic form filling in Katana
+-no-browser - disable the headless browser in Katana
 
 QUALYS WAS INTEGRATION:
--q - sync discovered live web services into Qualys WAS: for every domain/subdomain not already
+-qualys - sync discovered live web services into Qualys WAS: for every domain/subdomain not already
      present as a web app, create it, copy the parent domain's scan schedule, and launch an
      immediate scan with the Fast_Scan option profile (off by default; needs Qualys credentials,
      see README). A summary email is sent for the launched scans. Hosts listed in qualys_exclude.txt
      (auto-detected, one host/pattern per line) or in QUALYS_IGNORE_HOSTS are skipped
 
 AWS SECURITY AGENT INTEGRATION:
--asa - add every discovered live domain/subdomain (except hosts in the Qualys exclude list) as a
+-aws-security-agent - add every discovered live domain/subdomain (except hosts in the Qualys exclude list) as a
        Target URL to an AWS Security Agent pentest - one pentest per root domain, created if missing.
        Pentests are not started. The root domain must be verified in Security Agent. Needs boto3 and
-       AWS credentials, see README
+       AWS credentials, see README (short: -asa)
 
 SENDING TO PROXY:
--ba - send all collected endpoints to Burp proxy including with WAF
--bw - send only collected endpoints without WAF to Burp proxy
--bf - send fuzzed directories to Burp proxy
--bb - send all successful WAF bypass attempts and old subdomains access to proxy
--p <proxy> - burp proxy (default: 127.0.0.1:8080)"""
+-burp-all - send all collected endpoints to Burp proxy, including those behind a WAF
+-burp - send only collected endpoints that are not behind a WAF
+-burp-dirs - send discovered directories to Burp proxy
+-burp-hits - send successful WAF bypasses and old-host access to Burp proxy
+-proxy <address> - Burp proxy (default: 127.0.0.1:8080)"""
 
 utilities_flags = {"subfinder": "-ds", "dnsx": "-ds", "naabu": "No flag", "httpx": "No flag",
                    "cdncheck": "No flag", "katana": "-dc", "uro": "-dc",
