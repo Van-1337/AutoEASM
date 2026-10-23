@@ -130,6 +130,15 @@ class QualysWebAppResult:  # One record per asset processed by the Qualys WAS sy
     message: str = ""
 
 
+@dataclass(frozen=True)
+class SecurityAgentResult:  # One record per host processed by the AWS Security Agent sync (-asa flag)
+    host: str
+    parent: str
+    action: str          # "added" | "already-in-pentest" | "excluded" | "skipped-not-verified" | "error" (or "would-..." in dry-run)
+    pentest: str = ""
+    message: str = ""
+
+
 def extract_leakix_vulnerability(entry: dict) -> LeakixVulnerability:
     event_source = entry.get('event_source', '').strip()
     host = entry.get('host', '').strip()

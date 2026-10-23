@@ -13,6 +13,7 @@ from Scan.SecurityTrails import launch_securitytrails_scan
 from Scan.Postleaks import launch_postleaks, set_postleaks_waiting
 from Scan.Leakix import check_leakix
 from Scan.Qualys import sync_qualys_was
+from Scan.SecurityAgent import sync_security_agent
 from Scan.NucleiScan import launch_nuclei, check_subdomains_takeover
 from Scan.Fuzzing import launch_feroxbuster, launch_byp4xx
 from Scan.DependencyCheck import collect_dependency_files, analyze_dependency_files
@@ -74,6 +75,10 @@ def scanning():
             qualys_thread = threading.Thread(target=sync_qualys_was, name="QualysThread", daemon=True)
             qualys_thread.start()
             time.sleep(1)  # To avoid problems with console output
+        if '-asa' in Flags:
+            security_agent_thread = threading.Thread(target=sync_security_agent, name="SecurityAgentThread", daemon=True)
+            security_agent_thread.start()
+            time.sleep(1)  # To avoid problems with console output
         if '-ba' in Flags or '-bw' in Flags or '-bf' in Flags:
             burp_sending_thread = threading.Thread(target=send_urls_to_burp, name="BurpSendingThread", daemon=True)
             burp_sending_thread.start()
@@ -116,6 +121,13 @@ def scanning():
                     qualys_thread.join(timeout=1)
             except KeyboardInterrupt:
                 print("[*] Finishing Qualys WAS sync...")
+        if 'security_agent_thread' in locals() and security_agent_thread.is_alive():
+            print("[*] Waiting until AWS Security Agent sync finishes...")
+            try:
+                while security_agent_thread.is_alive():
+                    security_agent_thread.join(timeout=1)
+            except KeyboardInterrupt:
+                print("[*] Finishing AWS Security Agent sync...")
         if 'social_networks_thread' in locals() and social_networks_thread.is_alive():
             print("[*] Waiting until social media takeover checks finishes...")
             try:

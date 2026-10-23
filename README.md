@@ -171,6 +171,31 @@ python qualys_sync_test.py -d example.com --assets https://example.com,https://a
 
 `-d` sets the parent/root domains (for parent resolution and copy-from-parent); `--assets` / `--assets-file` is the list of live web services to sync. `--ignore` / `--ignore-file` add exclusions, and `--newapi-get <schedule_id>` dumps a schedule from the portal API for troubleshooting.
 
+## AWS Security Agent integration (`-asa`)
+
+After discovery, every live domain/subdomain that is **not excluded** (same exclude list as the Qualys sync: `qualys_exclude.txt` + `QUALYS_IGNORE_HOSTS`) is added as a **Target URL** to an AWS Security Agent pentest:
+
+- one pentest per root domain, named `autoeasm_<root>` (e.g. `autoeasm_doctorsam_ua`), created if missing (Web application scope);
+- only hosts not already in the pentest are added; nothing is removed;
+- pentests are **not started** - run them yourself in the console;
+- the root domain must be a verified target domain (a verified root covers its subdomains). Verification is re-checked on every run; if the `_aws_securityagent-challenge` TXT record was removed from DNS, the root is skipped and the record to add is printed.
+
+Requirements: `pip install -U boto3` (with the `securityagent` client) and AWS credentials (default boto3 chain). IAM: `securityagent:ListAgentSpaces`, `BatchGetAgentSpaces`, `UpdateAgentSpace`, `ListTargetDomains`, `BatchGetTargetDomains`, `VerifyTargetDomain`, `ListPentests`, `BatchGetPentests`, `CreatePentest`, `UpdatePentest`.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `SECURITY_AGENT_REGION` | `AWS_REGION` or `us-east-1` | Region of Security Agent |
+| `SECURITY_AGENT_SPACE_ID` | *(empty)* | Agent space; empty = used automatically if the account has only one |
+| `SECURITY_AGENT_PENTEST_PREFIX` | `autoeasm_` | Pentest name prefix |
+| `SECURITY_AGENT_MAX_TASK_HOURS` | `30` | Max task hours for newly created pentests (empty = no cap) |
+| `SECURITY_AGENT_SERVICE_ROLE` | *(empty)* | Optional IAM service role ARN for newly created pentests |
+
+Test without a full scan (`--dry-run` changes nothing):
+
+```
+python security_agent_sync_test.py -d example.com --assets https://example.com,https://api.example.com --dry-run -v
+```
+
 ## SecurityTrails historical IP checks
 
 If a **PAID** SecurityTrails API key is available in the `SecurityTrails_API_key` environment variable, AutoEASM uses historical DNS (A record) data to look for the real IPs behind the current infrastructure. It runs automatically only if the key is present. If all correct, you will see the `[+] Found SecurityTrails API key...` message in console on the first line.

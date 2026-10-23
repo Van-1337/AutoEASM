@@ -13,11 +13,11 @@ FlagAliases = {
     "-no-crawl": "-dc", "-no-dirs": "-df", "-no-bypass": "-db", "-no-waf": "-dw",
     "-no-inactive": "-di", "-no-social": "-dm", "-no-postman": "-dp", "-no-leakix": "-dl",
     "-no-history": "-dst", "-no-deps": "-dcf", "-no-browser": "-dh", "-no-forms": "-daff",
-    "-qualys": "-q", "-burp": "-bw", "-burp-all": "-ba", "-burp-dirs": "-bf", "-burp-hits": "-bb",
+    "-qualys": "-q", "-aws-security-agent": "-asa", "-burp": "-bw", "-burp-all": "-ba", "-burp-dirs": "-bf", "-burp-hits": "-bb",
     "-proxy": "-p", "-help": "-h",
 }
 
-HelpText = f"""Usage: {argv[0]} -file <file> -domain example.com -report <file> -load <number> -deep <number> -exclude test.example.com -rate <number> -proxy <proxy> -templates <path> -wordlist <file> -user-agent <string> [-help] [-verbose] [-markdown] [-all-ports] [-scan-waf] [-no-forms] [-no-browser] [-ip] [-qualys] [-no-open] [-no-subdomains] [-no-dirs] [-no-vulns] [-no-takeover] [-no-params] [-no-crawl] [-no-bypass] [-no-waf] [-no-inactive] [-no-social] [-no-postman] [-no-leakix] [-no-history] [-no-deps] [-burp-all] [-burp] [-burp-dirs] [-burp-hits]
+HelpText = f"""Usage: {argv[0]} -file <file> -domain example.com -report <file> -load <number> -deep <number> -exclude test.example.com -rate <number> -proxy <proxy> -templates <path> -wordlist <file> -user-agent <string> [-help] [-verbose] [-markdown] [-all-ports] [-scan-waf] [-no-forms] [-no-browser] [-ip] [-qualys] [-aws-security-agent] [-no-open] [-no-subdomains] [-no-dirs] [-no-vulns] [-no-takeover] [-no-params] [-no-crawl] [-no-bypass] [-no-waf] [-no-inactive] [-no-social] [-no-postman] [-no-leakix] [-no-history] [-no-deps] [-burp-all] [-burp] [-burp-dirs] [-burp-hits]
 
 Each flag has a short form and a long form. Both are accepted, for example -ld and -deep.
 
@@ -67,6 +67,12 @@ QUALYS WAS INTEGRATION:
      immediate scan with the Fast_Scan option profile (off by default; needs Qualys credentials,
      see README). A summary email is sent for the launched scans. Hosts listed in qualys_exclude.txt
      (auto-detected, one host/pattern per line) or in QUALYS_IGNORE_HOSTS are skipped
+
+AWS SECURITY AGENT INTEGRATION:
+-aws-security-agent - add every discovered live domain/subdomain (except hosts in the Qualys exclude list) as a
+       Target URL to an AWS Security Agent pentest - one pentest per root domain, created if missing.
+       Pentests are not started. The root domain must be verified in Security Agent. Needs boto3 and
+       AWS credentials, see README (short: -asa)
 
 SENDING TO PROXY:
 -burp-all - send all collected endpoints to Burp proxy, including those behind a WAF
@@ -205,6 +211,14 @@ QualysDistributionUuids = os.environ.get("QUALYS_DISTRIBUTION_UUIDS", "")  # Ove
 # avoid spamming admins; set QUALYS_SCAN_SENDMAIL=true to let Qualys send it.
 QualysScanSendMail = os.environ.get("QUALYS_SCAN_SENDMAIL", "false").lower() == "true"
 QualysWASResults = []  # List of QualysWebAppResult records, shown in the report
+
+# ---AWS Security Agent integration (enabled with the -asa flag). Uses the default boto3 credential chain---
+SecurityAgentRegion = os.environ.get("SECURITY_AGENT_REGION", "") or os.environ.get("AWS_REGION", "") or "us-east-1"
+SecurityAgentSpaceId = os.environ.get("SECURITY_AGENT_SPACE_ID", "")  # Empty => used automatically if the account has exactly one agent space
+SecurityAgentPentestPrefix = os.environ.get("SECURITY_AGENT_PENTEST_PREFIX", "autoeasm_")  # Pentest name = prefix + root domain (dots -> _)
+SecurityAgentMaxTaskHours = os.environ.get("SECURITY_AGENT_MAX_TASK_HOURS", "30")  # For newly created pentests. Empty => no cap
+SecurityAgentServiceRole = os.environ.get("SECURITY_AGENT_SERVICE_ROLE", "")  # Optional IAM service role ARN for newly created pentests
+SecurityAgentResults = []  # List of SecurityAgentResult records, shown in the report
 
 # Email notification for the launched immediate scans
 QualysNotifyEmail = os.environ.get("QUALYS_NOTIFY_EMAIL", "")
