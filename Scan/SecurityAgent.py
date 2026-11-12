@@ -4,7 +4,8 @@ After discovery, every live domain/subdomain that is not excluded (same exclude 
 sync: qualys_exclude.txt + QUALYS_IGNORE_HOSTS) is added as a Target URL to a pentest in AWS
 Security Agent - one pentest per root domain, named <prefix><root> (e.g. autoeasm_doctorsam_ua).
 The pentest is created when missing. Pentests are NOT started unless SECURITY_AGENT_AUTO_START is set:
-then a FULL (billable) run is started for each pentest that got new targets, if none is running yet.
+then every sync (every EASM run) starts a FULL (billable) run of each synced root's pentest, unless
+a run of it is still in progress.
 
 Security Agent only tests verified domains, and a verified root domain covers its subdomains. The
 root's verification is re-checked live (VerifyTargetDomain) because a pentest run fails when the
@@ -239,20 +240,21 @@ def sync_security_agent(dry_run=False):
             for h, _ in hosts:
                 if h in existing:
                     _record(h, root, "already-in-pentest", title)
-            if not new:
-                continue
-            urls = [u for _, u in new]
             pentest_id = (pentest or {}).get("pentestId")
-            if dry_run:
-                action = "would-add" if pentest else "would-create-pentest-and-add"
-            elif pentest is None:
-                pentest_id = create_pentest(sa, space_id, title, urls).get("pentestId")
-                action = "added (new pentest)"
-            else:
-                add_endpoints(sa, space_id, pentest, urls)
-                action = "added"
-            for h, u in new:
-                _record(h, root, action, title, u)
+            if new:
+                urls = [u for _, u in new]
+                if dry_run:
+                    action = "would-add" if pentest else "would-create-pentest-and-add"
+                elif pentest is None:
+                    pentest_id = create_pentest(sa, space_id, title, urls).get("pentestId")
+                    action = "added (new pentest)"
+                else:
+                    add_endpoints(sa, space_id, pentest, urls)
+                    action = "added"
+                for h, u in new:
+                    _record(h, root, action, title, u)
+            # Every EASM run re-tests the root's pentest (new targets or not), so a host added
+            # while the previous run was still in progress is covered by this one.
             if Global.SecurityAgentAutoStart:
                 start_action, msg = start_job(sa, space_id, pentest_id, dry_run)
                 _record(title, root, start_action, title, msg)
