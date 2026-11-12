@@ -71,8 +71,9 @@ QUALYS WAS INTEGRATION:
 AWS SECURITY AGENT INTEGRATION:
 -aws-security-agent - add every discovered live domain/subdomain (except hosts in the Qualys exclude list) as a
        Target URL to an AWS Security Agent pentest - one pentest per root domain, created if missing.
-       Pentests are not started. The root domain must be verified in Security Agent. Needs boto3 and
-       AWS credentials, see README (short: -asa)
+       Pentests are not started unless SECURITY_AGENT_AUTO_START=1 (then a billable FULL run starts for
+       each pentest that got new targets). The root domain must be verified in Security Agent. Needs
+       boto3 and AWS credentials, see README (short: -asa)
 
 SENDING TO PROXY:
 -burp-all - send all collected endpoints to Burp proxy, including those behind a WAF
@@ -217,7 +218,8 @@ SecurityAgentRegion = os.environ.get("SECURITY_AGENT_REGION", "") or os.environ.
 SecurityAgentSpaceId = os.environ.get("SECURITY_AGENT_SPACE_ID", "")  # Empty => used automatically if the account has exactly one agent space
 SecurityAgentPentestPrefix = os.environ.get("SECURITY_AGENT_PENTEST_PREFIX", "autoeasm_")  # Pentest name = prefix + root domain (dots -> _)
 SecurityAgentMaxTaskHours = os.environ.get("SECURITY_AGENT_MAX_TASK_HOURS", "30")  # For newly created pentests. Empty => no cap
-SecurityAgentServiceRole = os.environ.get("SECURITY_AGENT_SERVICE_ROLE", "")  # Optional IAM service role ARN for newly created pentests
+SecurityAgentServiceRole = os.environ.get("SECURITY_AGENT_SERVICE_ROLE", "")  # IAM service role ARN for new pentests; empty = reuse the role of existing pentests in the agent space
+SecurityAgentAutoStart = os.environ.get("SECURITY_AGENT_AUTO_START", "").strip().lower() in ("1", "true", "yes")  # Start a FULL (billable) run when new targets were added
 SecurityAgentResults = []  # List of SecurityAgentResult records, shown in the report
 
 # Email notification for the launched immediate scans

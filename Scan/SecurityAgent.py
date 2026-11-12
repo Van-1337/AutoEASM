@@ -3,7 +3,8 @@
 After discovery, every live domain/subdomain that is not excluded (same exclude list as the Qualys
 sync: qualys_exclude.txt + QUALYS_IGNORE_HOSTS) is added as a Target URL to a pentest in AWS
 Security Agent - one pentest per root domain, named <prefix><root> (e.g. autoeasm_doctorsam_ua).
-The pentest is created when missing. Pentests are NOT started - only their targets are updated.
+The pentest is created when missing. Pentests are NOT started unless SECURITY_AGENT_AUTO_START is set:
+then a FULL (billable) run is started for each pentest that got new targets, if none is running yet.
 
 Security Agent only tests verified domains, and a verified root domain covers its subdomains. The
 root's verification is re-checked live (VerifyTargetDomain) because a pentest run fails when the
@@ -13,11 +14,13 @@ verification TXT record has been removed from DNS - in that case the record to a
 from Global import Flags
 import Global
 import re
+from collections import Counter
 
 from Scan.Helpers import SecurityAgentResult
 from Scan.Qualys import resolve_parent, build_asset_list, is_ignored, _refresh_ignore_patterns
 
 VERIFIED = "VERIFIED"
+RUNNING = ("IN_PROGRESS", "STOPPING")
 TXT_PREFIX = "aws-securityagent-domain-verification="
 
 
@@ -137,14 +140,48 @@ def find_pentest(sa, space_id, title):
     return None
 
 
+def default_service_role(sa, space_id):
+    """Service role used by most existing pentests in the agent space, or None."""
+    ids = [p["pentestId"] for p in _paginate(sa.list_pentests, "pentestSummaries", agentSpaceId=space_id)]
+    roles = Counter()
+    for i in range(0, len(ids), 50):
+        for p in sa.batch_get_pentests(pentestIds=ids[i:i + 50], agentSpaceId=space_id).get("pentests", []):
+            if p.get("serviceRole"):
+                roles[p["serviceRole"]] += 1
+    return roles.most_common(1)[0][0] if roles else None
+
+
 def create_pentest(sa, space_id, title, urls):
+    # CreatePentest requires a service role: use SECURITY_AGENT_SERVICE_ROLE, else reuse the existing pentests' role
+    if not Global.SecurityAgentServiceRole:
+        Global.SecurityAgentServiceRole = default_service_role(sa, space_id) or ""
+    if not Global.SecurityAgentServiceRole:
+        raise SecurityAgentError("set SECURITY_AGENT_SERVICE_ROLE - no existing pentest to take the service role from")
     kwargs = {"agentSpaceId": space_id, "title": title, "testScope": {"type": "WEB_APP"},
-              "assets": {"endpoints": [{"uri": u} for u in urls]}}
+              "assets": {"endpoints": [{"uri": u} for u in urls]},
+              "serviceRole": Global.SecurityAgentServiceRole}
     if Global.SecurityAgentMaxTaskHours:
         kwargs["maxTaskHours"] = float(Global.SecurityAgentMaxTaskHours)
-    if Global.SecurityAgentServiceRole:
-        kwargs["serviceRole"] = Global.SecurityAgentServiceRole
     return sa.create_pentest(**kwargs)
+
+
+def running_job(sa, space_id, pentest_id):
+    """Id of a job of this pentest that is still running, or None."""
+    for j in _paginate(sa.list_pentest_jobs_for_pentest, "pentestJobSummaries", agentSpaceId=space_id, pentestId=pentest_id):
+        if j.get("status") in RUNNING:
+            return j.get("pentestJobId")
+    return None
+
+
+def start_job(sa, space_id, pentest_id, dry_run):
+    """Start a FULL pentest run unless one is already running; returns (action, message)."""
+    job = running_job(sa, space_id, pentest_id) if pentest_id else None
+    if job:
+        return "start-skipped", f"run {job} is still in progress"
+    if dry_run:
+        return "would-start", "FULL run (billable)"
+    resp = sa.start_pentest_job(agentSpaceId=space_id, pentestId=pentest_id, jobType="FULL")
+    return "started", f"FULL run {resp.get('pentestJobId', '')} (billable)"
 
 
 def add_endpoints(sa, space_id, pentest, urls):
@@ -205,19 +242,26 @@ def sync_security_agent(dry_run=False):
             if not new:
                 continue
             urls = [u for _, u in new]
+            pentest_id = (pentest or {}).get("pentestId")
             if dry_run:
                 action = "would-add" if pentest else "would-create-pentest-and-add"
             elif pentest is None:
-                create_pentest(sa, space_id, title, urls)
+                pentest_id = create_pentest(sa, space_id, title, urls).get("pentestId")
                 action = "added (new pentest)"
             else:
                 add_endpoints(sa, space_id, pentest, urls)
                 action = "added"
             for h, u in new:
                 _record(h, root, action, title, u)
+            if Global.SecurityAgentAutoStart:
+                start_action, msg = start_job(sa, space_id, pentest_id, dry_run)
+                _record(title, root, start_action, title, msg)
         except Exception as e:
             _record(root, root, "error", title, str(e))
 
     added = sum(1 for r in Global.SecurityAgentResults if r.action.startswith(("added", "would-add", "would-create")))
     errors = sum(1 for r in Global.SecurityAgentResults if r.action == "error")
-    print(f"[+] Security Agent sync done: {added} new target URL(s), {errors} error(s). Pentests were not started.")
+    started = sum(1 for r in Global.SecurityAgentResults if r.action in ("started", "would-start"))
+    runs = f"{started} pentest run(s) {'would be ' if dry_run else ''}started" if Global.SecurityAgentAutoStart \
+        else "Pentests were not started"
+    print(f"[+] Security Agent sync done: {added} new target URL(s), {errors} error(s). {runs}.")

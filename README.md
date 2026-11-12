@@ -177,10 +177,10 @@ After discovery, every live domain/subdomain that is **not excluded** (same excl
 
 - one pentest per root domain, named `autoeasm_<root>` (e.g. `autoeasm_doctorsam_ua`), created if missing (Web application scope);
 - only hosts not already in the pentest are added; nothing is removed;
-- pentests are **not started** - run them yourself in the console;
+- pentests are **not started** by default - run them yourself in the console. With `SECURITY_AGENT_AUTO_START=1` a **FULL (billable)** run is started for every pentest that got new targets in this sync, unless a run of it is already in progress. Each run is billed up to the pentest's max task hours;
 - the root domain must be a verified target domain (a verified root covers its subdomains). Verification is re-checked on every run; if the `_aws_securityagent-challenge` TXT record was removed from DNS, the root is skipped and the record to add is printed.
 
-Requirements: `pip install -U boto3` (with the `securityagent` client) and AWS credentials (default boto3 chain). IAM: `securityagent:ListAgentSpaces`, `BatchGetAgentSpaces`, `UpdateAgentSpace`, `ListTargetDomains`, `BatchGetTargetDomains`, `VerifyTargetDomain`, `ListPentests`, `BatchGetPentests`, `CreatePentest`, `UpdatePentest`.
+Requirements: `pip install -U boto3` (with the `securityagent` client) and AWS credentials (default boto3 chain). IAM: `securityagent:ListAgentSpaces`, `BatchGetAgentSpaces`, `UpdateAgentSpace`, `ListTargetDomains`, `BatchGetTargetDomains`, `VerifyTargetDomain`, `ListPentests`, `BatchGetPentests`, `CreatePentest`, `UpdatePentest`; with auto-start also `StartPentestJob`, `ListPentestJobsForPentest`.
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -188,7 +188,8 @@ Requirements: `pip install -U boto3` (with the `securityagent` client) and AWS c
 | `SECURITY_AGENT_SPACE_ID` | *(empty)* | Agent space; empty = used automatically if the account has only one |
 | `SECURITY_AGENT_PENTEST_PREFIX` | `autoeasm_` | Pentest name prefix |
 | `SECURITY_AGENT_MAX_TASK_HOURS` | `30` | Max task hours for newly created pentests (empty = no cap) |
-| `SECURITY_AGENT_SERVICE_ROLE` | *(empty)* | Optional IAM service role ARN for newly created pentests |
+| `SECURITY_AGENT_AUTO_START` | *(empty)* | `1` = start a FULL (billable) run for each pentest that got new targets |
+| `SECURITY_AGENT_SERVICE_ROLE` | *(empty)* | IAM service role ARN for new pentests (required by AWS). Empty = reuse the role of existing pentests in the agent space |
 
 Test without a full scan (`--dry-run` changes nothing):
 
